@@ -1,0 +1,407 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Análisis de Claims";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Análisis Avanzado de Claims
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-list-ul fa-2x text-primary mb-2"></i>
+                                    <h4 class="text-primary">@Model.TotalClaims</h4>
+                                    <p class="mb-0">Total de Claims</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-tags fa-2x text-success mb-2"></i>
+                                    <h4 class="text-success">@Model.UniqueClaims</h4>
+                                    <p class="mb-0">Tipos Únicos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-user-shield fa-2x text-warning mb-2"></i>
+                                    <h4 class="text-warning">@Model.SecurityClaims.Count</h4>
+                                    <p class="mb-0">Claims de Seguridad</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-user-tag fa-2x text-info mb-2"></i>
+                                    <h4 class="text-info">@Model.PersonalClaims.Count</h4>
+                                    <p class="mb-0">Claims Personales</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="text-info">Distribución por Tipo</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Tipo de Claim</th>
+                                            <th>Cantidad</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var claimType in Model.ClaimsByType)
+                                        {
+                                            <tr>
+                                                <td><code>@claimType.Type</code></td>
+                                                <td><span class="badge bg-primary">@claimType.Count</span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-info">Claims de Seguridad</h5>
+                            @if (Model.SecurityClaims.Count > 0)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Tipo</th>
+                                                <th>Valor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var claim in Model.SecurityClaims)
+                                            {
+                                                <tr>
+                                                    <td><code class="text-warning">@claim.Type</code></td>
+                                                    <td><span class="badge bg-warning">@claim.Value</span></td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    No se encontraron claims de seguridad específicos
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="text-info">Claims Personales</h5>
+                            @if (Model.PersonalClaims.Count > 0)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Tipo</th>
+                                                <th>Valor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var claim in Model.PersonalClaims)
+                                            {
+                                                <tr>
+                                                    <td><code class="text-info">@claim.Type</code></td>
+                                                    <td><strong>@claim.Value</strong></td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    No se encontraron claims personales
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-info">Claims de Roles</h5>
+                            @if (Model.RoleClaims.Count > 0)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Tipo</th>
+                                                <th>Valor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var claim in Model.RoleClaims)
+                                            {
+                                                <tr>
+                                                    <td><code class="text-success">@claim.Type</code></td>
+                                                    <td><span class="badge bg-success">@claim.Value</span></td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    No se encontraron claims de roles
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="text-info">Claims de Azure AD</h5>
+                            @if (Model.AzureAdClaims.Count > 0)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Tipo</th>
+                                                <th>Valor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var claim in Model.AzureAdClaims)
+                                            {
+                                                <tr>
+                                                    <td><code class="text-primary">@claim.Type</code></td>
+                                                    <td>@claim.Value</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    No se encontraron claims específicos de Azure AD
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-info">Claims Personalizados</h5>
+                            @if (Model.CustomClaims.Count > 0)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Tipo</th>
+                                                <th>Valor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var claim in Model.CustomClaims)
+                                            {
+                                                <tr>
+                                                    <td><code class="text-secondary">@claim.Type</code></td>
+                                                    <td>@claim.Value</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    No se encontraron claims personalizados
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="text-info">Análisis de Seguridad</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card border-success">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="fas fa-shield-alt text-success me-2"></i>
+                                                Nivel de Seguridad
+                                            </h6>
+                                            <p class="card-text">
+                                                @{
+                                                    var securityLevel = "Básico";
+                                                    var securityClass = "warning";
+                                                    if (Model.SecurityClaims.Count > 2) 
+                                                    { 
+                                                        securityLevel = "Alto"; 
+                                                        securityClass = "success";
+                                                    }
+                                                    else if (Model.SecurityClaims.Count > 0) 
+                                                    { 
+                                                        securityLevel = "Medio"; 
+                                                        securityClass = "info";
+                                                    }
+                                                }
+                                                <span class="badge bg-@securityClass">@securityLevel</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-info">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="fas fa-user-check text-info me-2"></i>
+                                                Identificación
+                                            </h6>
+                                            <p class="card-text">
+                                                @{
+                                                    var identityLevel = Model.PersonalClaims.Count > 2 ? "Completa" : "Básica";
+                                                    var identityClass = Model.PersonalClaims.Count > 2 ? "success" : "warning";
+                                                }
+                                                <span class="badge bg-@identityClass">@identityLevel</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-warning">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="fas fa-key text-warning me-2"></i>
+                                                Autorización
+                                            </h6>
+                                            <p class="card-text">
+                                                @{
+                                                    var authLevel = Model.RoleClaims.Count > 0 ? "Con Roles" : "Sin Roles";
+                                                    var authClass = Model.RoleClaims.Count > 0 ? "success" : "secondary";
+                                                }
+                                                <span class="badge bg-@authClass">@authLevel</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>Información sobre Claims</h6>
+                                <ul class="mb-0">
+                                    <li><strong>Claims Personales:</strong> Contienen información de identificación del usuario</li>
+                                    <li><strong>Claims de Seguridad:</strong> Relacionados con autenticación y autorización</li>
+                                    <li><strong>Claims de Roles:</strong> Definen permisos y accesos del usuario</li>
+                                    <li><strong>Claims de Azure AD:</strong> Específicos de Microsoft Azure Active Directory</li>
+                                    <li><strong>Claims Personalizados:</strong> Definidos por la aplicación o administrador</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-between">
+                                <div>
+                                    <a href="@Url.Action("Profile", "Account")" class="btn btn-primary">
+                                        <i class="fas fa-user me-2"></i>Ver Perfil
+                                    </a>
+                                    <a href="@Url.Action("TokenInfo", "Account")" class="btn btn-info">
+                                        <i class="fas fa-key me-2"></i>Info Tokens
+                                    </a>
+                                    <a href="@Url.Action("TestAuthentication", "Account")" class="btn btn-success">
+                                        <i class="fas fa-bug me-2"></i>Testing
+                                    </a>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-warning" onclick="exportAnalysis()">
+                                        <i class="fas fa-download me-2"></i>Exportar Análisis
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="location.reload()">
+                                        <i class="fas fa-sync me-2"></i>Refrescar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Función para exportar análisis
+    function exportAnalysis() {
+        const analysisData = {
+            timestamp: new Date().toISOString(),
+            summary: {
+                totalClaims: @Model.TotalClaims,
+                uniqueClaims: @Model.UniqueClaims,
+                securityClaims: @Model.SecurityClaims.Count,
+                personalClaims: @Model.PersonalClaims.Count,
+                roleClaims: @Model.RoleClaims.Count,
+                azureAdClaims: @Model.AzureAdClaims.Count,
+                customClaims: @Model.CustomClaims.Count
+            },
+            claims: {
+                security: @Html.Raw(Json.Serialize(Model.SecurityClaims)),
+                personal: @Html.Raw(Json.Serialize(Model.PersonalClaims)),
+                roles: @Html.Raw(Json.Serialize(Model.RoleClaims)),
+                azureAd: @Html.Raw(Json.Serialize(Model.AzureAdClaims)),
+                custom: @Html.Raw(Json.Serialize(Model.CustomClaims))
+            }
+        };
+
+        const dataStr = JSON.stringify(analysisData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = 'claims-analysis-' + new Date().toISOString().slice(0,10) + '.json';
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    }
+
+    // Función para generar gráfico de distribución
+    function generateChart() {
+        // Implementar gráfico usando Chart.js si está disponible
+        console.log('Generating claims distribution chart...');
+    }
+
+    // Inicializar cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Claims analysis page loaded');
+        // generateChart();
+    });
+</script> 

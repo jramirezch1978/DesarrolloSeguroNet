@@ -1,0 +1,261 @@
+@{
+    ViewData["Title"] = "Análisis de Tokens JWT - .NET 9";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4><i class="fas fa-key"></i> Análisis Completo de Tokens JWT (.NET 9)</h4>
+                <small>Información detallada de tokens OAuth 2.0/OpenID Connect</small>
+            </div>
+            <div class="card-body">
+                <div id="tokenData">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando tokens...</span>
+                        </div>
+                        <p class="mt-2">Obteniendo información de tokens...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar token completo -->
+<div class="modal fade" id="tokenModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Token Completo (Solo Desarrollo)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>⚠️ Advertencia:</strong> Esta información solo está disponible en desarrollo. 
+                    Nunca expongan tokens completos en producción.
+                </div>
+                <div id="fullTokenContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="copyToClipboard()">📋 Copiar Token</button>
+                <a href="https://jwt.io/" target="_blank" class="btn btn-info">🔍 Analizar en JWT.io</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentFullToken = '';
+
+        // Cargar información de tokens al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTokenInfo();
+        });
+
+        async function loadTokenInfo() {
+            try {
+                const response = await fetch('@Url.Action("GetTokenInfo", "Account")');
+                const data = await response.json();
+                
+                displayTokenInfo(data);
+            } catch (error) {
+                document.getElementById('tokenData').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>Error al cargar tokens</h5>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayTokenInfo(data) {
+            const tokenDataDiv = document.getElementById('tokenData');
+            
+            let html = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5>👤 Información del Usuario</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Nombre:</strong></td>
+                                        <td>${data.user.name || 'No disponible'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Autenticado:</strong></td>
+                                        <td><span class="badge ${data.user.isAuthenticated ? 'bg-success' : 'bg-danger'}">${data.user.isAuthenticated ? 'Sí' : 'No'}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tipo de Auth:</strong></td>
+                                        <td><span class="badge bg-primary">${data.user.authenticationType || 'No disponible'}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Claims:</strong></td>
+                                        <td><span class="badge bg-info">${data.user.claims.length}</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h5>🔑 Estado de Tokens</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Access Token:</strong></td>
+                                        <td><span class="badge ${data.tokens.accessTokenPresent ? 'bg-success' : 'bg-danger'}">${data.tokens.accessTokenPresent ? 'Presente' : 'Ausente'}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>ID Token:</strong></td>
+                                        <td><span class="badge ${data.tokens.idTokenPresent ? 'bg-success' : 'bg-danger'}">${data.tokens.idTokenPresent ? 'Presente' : 'Ausente'}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Refresh Token:</strong></td>
+                                        <td><span class="badge ${data.tokens.refreshTokenPresent ? 'bg-success' : 'bg-danger'}">${data.tokens.refreshTokenPresent ? 'Presente' : 'Ausente'}</span></td>
+                                    </tr>
+                                </table>
+                                
+                                ${data.tokens.idTokenPresent ? `
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="showFullToken()">
+                                        🔍 Ver ID Token Completo
+                                    </button>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>📋 Claims Detallados</h5>
+                                <small class="text-muted">Click en cualquier valor para copiarlo al portapapeles</small>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Claim Type</th>
+                                                <th>Value</th>
+                                                <th>Descripción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+            `;
+            
+            data.user.claims.forEach((claim, index) => {
+                const description = getClaimDescription(claim.type);
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><code class="text-primary">${claim.type}</code></td>
+                        <td><span class="copyable" onclick="copyToClipboard('${claim.value}')" style="cursor: pointer;" title="Click para copiar">${claim.value}</span></td>
+                        <td><small class="text-muted">${description}</small></td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            tokenDataDiv.innerHTML = html;
+        }
+
+        function getClaimDescription(claimType) {
+            const descriptions = {
+                'sub': 'Subject - Identificador único del usuario',
+                'name': 'Nombre completo del usuario',
+                'preferred_username': 'Nombre de usuario preferido (típicamente email)',
+                'email': 'Dirección de correo electrónico',
+                'iss': 'Issuer - Quien emitió el token',
+                'aud': 'Audience - Para quién está destinado el token',
+                'exp': 'Expiration - Cuándo expira el token',
+                'iat': 'Issued At - Cuándo fue emitido el token',
+                'auth_time': 'Authentication Time - Cuándo se autenticó el usuario',
+                'tid': 'Tenant ID - Identificador del tenant de Azure AD',
+                'oid': 'Object ID - ID del objeto de usuario en Azure AD',
+                'amr': 'Authentication Method Reference - Cómo se autenticó',
+                'family_name': 'Apellido del usuario',
+                'given_name': 'Nombre del usuario',
+                'ver': 'Version - Versión del token',
+                'aio': 'Azure Internal Object - Uso interno de Azure'
+            };
+            
+            return descriptions[claimType] || 'Claim personalizado o no estándar';
+        }
+
+        async function showFullToken() {
+            try {
+                const response = await fetch('@Url.Action("GetFullIdToken", "Account")');
+                const data = await response.json();
+                
+                currentFullToken = data.idToken;
+                
+                document.getElementById('fullTokenContent').innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>📝 Instrucciones:</strong>
+                        <ol>
+                            <li>Copie el token completo usando el botón "📋 Copiar Token"</li>
+                            <li>Visite <a href="https://jwt.io/" target="_blank">jwt.io</a> usando el botón "🔍 Analizar en JWT.io"</li>
+                            <li>Pegue el token en la sección "Encoded" de jwt.io</li>
+                            <li>Analice la estructura: Header, Payload, y Signature</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h6>🔗 Token JWT Completo</h6>
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control" rows="10" readonly style="font-family: monospace; font-size: 12px;">${data.idToken}</textarea>
+                        </div>
+                    </div>
+                `;
+                
+                new bootstrap.Modal(document.getElementById('tokenModal')).show();
+            } catch (error) {
+                alert('Error al obtener token completo: ' + error.message);
+            }
+        }
+
+        function copyToClipboard(text) {
+            if (text) {
+                navigator.clipboard.writeText(text).then(function() {
+                    // Mostrar feedback visual
+                    const element = event.target;
+                    const originalBg = element.style.backgroundColor;
+                    element.style.backgroundColor = '#28a745';
+                    setTimeout(() => {
+                        element.style.backgroundColor = originalBg;
+                    }, 1000);
+                });
+            } else {
+                navigator.clipboard.writeText(currentFullToken).then(function() {
+                    alert('Token copiado al portapapeles');
+                });
+            }
+        }
+    </script>
+} 

@@ -1,0 +1,262 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Información del Token";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-key me-2"></i>
+                        Información del Token JWT
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-info">Estado de Autenticación</h5>
+                            <table class="table table-striped">
+                                <tr>
+                                    <th>Autenticado:</th>
+                                    <td>
+                                        @if (Model.IsAuthenticated)
+                                        {
+                                            <span class="badge bg-success">Sí</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">No</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Tipo de Autenticación:</th>
+                                    <td><code>@Model.AuthenticationType</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Nombre del Usuario:</th>
+                                    <td><strong>@Model.Name</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Total de Claims:</th>
+                                    <td><span class="badge bg-info">@Model.Claims.Count</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-info">Información del Token</h5>
+                            <table class="table table-striped">
+                                <tr>
+                                    <th>Emisor (Issuer):</th>
+                                    <td><code>@Model.Issuer</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Audiencia (Audience):</th>
+                                    <td><code>@Model.Audience</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Sujeto (Subject):</th>
+                                    <td><code>@Model.Subject</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Tenant ID:</th>
+                                    <td><code>@Model.TenantId</code></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="text-info">Tiempos del Token</h5>
+                            <table class="table table-striped">
+                                <tr>
+                                    <th>Expira en:</th>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(Model.ExpiresAt))
+                                        {
+                                            var exp = DateTimeOffset.FromUnixTimeSeconds(long.Parse(Model.ExpiresAt));
+                                            <span class="@(exp < DateTimeOffset.UtcNow ? "text-danger" : "text-success")">
+                                                @exp.ToString("yyyy-MM-dd HH:mm:ss UTC")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No disponible</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Emitido en:</th>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(Model.IssuedAt))
+                                        {
+                                            var iat = DateTimeOffset.FromUnixTimeSeconds(long.Parse(Model.IssuedAt));
+                                            <span>@iat.ToString("yyyy-MM-dd HH:mm:ss UTC")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No disponible</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>No antes de:</th>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(Model.NotBefore))
+                                        {
+                                            var nbf = DateTimeOffset.FromUnixTimeSeconds(long.Parse(Model.NotBefore));
+                                            <span>@nbf.ToString("yyyy-MM-dd HH:mm:ss UTC")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No disponible</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Tiempo de Auth:</th>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(Model.AuthTime))
+                                        {
+                                            var authTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(Model.AuthTime));
+                                            <span>@authTime.ToString("yyyy-MM-dd HH:mm:ss UTC")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No disponible</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-info">Información Adicional</h5>
+                            <table class="table table-striped">
+                                <tr>
+                                    <th>Client ID:</th>
+                                    <td><code>@Model.ClientId</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Scope:</th>
+                                    <td><code>@Model.Scope</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Uso del Token:</th>
+                                    <td><code>@Model.TokenUse</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Versión:</th>
+                                    <td><code>@Model.Version</code></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="text-info">Todos los Claims</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Tipo de Claim</th>
+                                            <th>Valor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var claim in Model.Claims)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <code class="text-primary">@claim.Type</code>
+                                                </td>
+                                                <td>
+                                                    @if (claim.Type.Contains("email") || claim.Type.Contains("name"))
+                                                    {
+                                                        <strong>@claim.Value</strong>
+                                                    }
+                                                    else if (claim.Type.Contains("role") || claim.Type.Contains("group"))
+                                                    {
+                                                        <span class="badge bg-warning">@claim.Value</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>@claim.Value</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>Información Técnica</h6>
+                                <ul class="mb-0">
+                                    <li>Los tokens JWT contienen información sobre el usuario y permisos</li>
+                                    <li>Los claims son declaraciones sobre la identidad del usuario</li>
+                                    <li>Los tiempos están en formato Unix timestamp (UTC)</li>
+                                    <li>Un token expirado requiere una nueva autenticación</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <a href="@Url.Action("Profile", "Account")" class="btn btn-primary">
+                                    <i class="fas fa-user me-2"></i>Ver Perfil
+                                </a>
+                                <a href="@Url.Action("TestAuthentication", "Account")" class="btn btn-info">
+                                    <i class="fas fa-bug me-2"></i>Testing
+                                </a>
+                                <a href="@Url.Action("ClaimsAnalysis", "Account")" class="btn btn-success">
+                                    <i class="fas fa-chart-bar me-2"></i>Análisis de Claims
+                                </a>
+                                <button type="button" class="btn btn-secondary" onclick="location.reload()">
+                                    <i class="fas fa-sync me-2"></i>Refrescar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Función para formatear timestamps
+    function formatTimestamp(timestamp) {
+        if (!timestamp) return 'No disponible';
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleString();
+    }
+
+    // Función para verificar si el token está expirado
+    function isTokenExpired(expiresAt) {
+        if (!expiresAt) return false;
+        const now = Math.floor(Date.now() / 1000);
+        return parseInt(expiresAt) < now;
+    }
+
+    // Destacar token expirado
+    document.addEventListener('DOMContentLoaded', function() {
+        const expCell = document.querySelector('[data-exp]');
+        if (expCell) {
+            const exp = expCell.getAttribute('data-exp');
+            if (isTokenExpired(exp)) {
+                expCell.classList.add('text-danger');
+                expCell.innerHTML += ' <i class="fas fa-exclamation-triangle"></i>';
+            }
+        }
+    });
+</script> 

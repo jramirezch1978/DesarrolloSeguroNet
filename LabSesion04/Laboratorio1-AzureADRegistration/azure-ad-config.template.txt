@@ -1,0 +1,66 @@
+=== CONFIGURACIÓN AZURE AD - LABORATORIO 1 ===
+Fecha de configuración: [FECHA]
+Nombre del estudiante: [SU-NOMBRE]
+Nombre de la aplicación: DevSeguroApp-[SU-NOMBRE]
+
+==== IDENTIFICADORES PRINCIPALES ====
+Application (client) ID: [SU-CLIENT-ID-AQUÍ]
+Directory (tenant) ID: [SU-TENANT-ID-AQUÍ]
+Client Secret: [SU-CLIENT-SECRET-AQUÍ]
+
+==== CONFIGURACIÓN DE AUTENTICACIÓN ====
+Redirect URIs:
+- https://localhost:7001/signin-oidc
+- https://localhost:7001/signout-callback-oidc
+
+Logout URL:
+- https://localhost:7001/signout-oidc
+
+Token Settings:
+- ID tokens: Habilitado
+- Access tokens: Deshabilitado
+- Public client flows: No
+
+==== PERMISOS API ====
+Microsoft Graph (Delegated):
+- User.Read
+- email
+- profile
+- openid
+
+==== INFORMACIÓN ADICIONAL ====
+Tenant Type: Single tenant
+Account Types: Accounts in this organizational directory only
+
+==== CONFIGURACIÓN PARA APPSETTINGS.JSON ====
+{
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
+    "TenantId": "[SU-TENANT-ID-AQUÍ]",
+    "ClientId": "[SU-CLIENT-ID-AQUÍ]",
+    "ClientSecret": "[SU-CLIENT-SECRET-AQUÍ]",
+    "CallbackPath": "/signin-oidc",
+    "SignedOutCallbackPath": "/signout-callback-oidc"
+  }
+}
+
+==== NOTAS IMPORTANTES ====
+- ⚠️ NO COMPARTIR el Client Secret
+- ⚠️ GUARDAR en lugar seguro
+- ⚠️ Si pierde el Client Secret, crear uno nuevo
+- ✅ Configuración completada en: [FECHA]
+- ✅ Próximo paso: Laboratorio 2 - Desarrollo .NET 9
+
+==== VERIFICACIÓN REALIZADA ====
+[ ] Aplicación registrada en Azure AD
+[ ] Client ID y Tenant ID documentados
+[ ] Redirect URIs configurados correctamente
+[ ] Front-channel logout URL configurado
+[ ] ID tokens habilitados
+[ ] API Permissions configurados
+[ ] Client Secret generado y guardado
+[ ] Archivo de configuración creado
+
+==== URLS DE VERIFICACIÓN ====
+Azure Portal App Registration: https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/Overview/appId/[SU-CLIENT-ID-AQUÍ]
+Azure AD Portal: https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Overview 

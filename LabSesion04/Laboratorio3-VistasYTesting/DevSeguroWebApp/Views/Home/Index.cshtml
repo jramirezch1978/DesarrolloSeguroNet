@@ -1,0 +1,140 @@
+﻿@{
+    ViewData["Title"] = "Laboratorio 3 - Vistas y Testing";
+}
+
+<div class="text-center">
+    <h1 class="display-4">🔍 Laboratorio 3: Vistas y Testing</h1>
+    <p class="lead">Implementación de vistas completas y testing con <strong>.NET 9</strong> y autenticación OAuth 2.0/OpenID Connect</p>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">✅ ¡Autenticación Exitosa!</h4>
+                <p>Bienvenido <strong>@(User.Identity.Name)</strong>. Su sesión está activa y segura.</p>
+                <hr>
+                <div class="d-flex gap-2">
+                    <a asp-controller="Account" asp-action="Profile" class="btn btn-primary">
+                        👤 Ver Mi Perfil Completo
+                    </a>
+                    <a asp-controller="Account" asp-action="TokenInfo" class="btn btn-info">
+                        🔍 Analizar Tokens JWT
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>📊 Resumen de Su Sesión Actual</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Estado:</span>
+                                    <span class="badge bg-success">Autenticado</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Método:</span>
+                                    <span class="badge bg-primary">@(User.Identity.AuthenticationType)</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Claims:</span>
+                                    <span class="badge bg-info">@User.Claims.Count()</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>🔐 Información de Seguridad:</h6>
+                            <ul class="list-unstyled">
+                                <li>✅ Conexión HTTPS activa</li>
+                                <li>✅ Tokens JWT válidos</li>
+                                <li>✅ Sesión encriptada</li>
+                                <li>✅ Azure AD verificado</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">🔒 Acceso No Autenticado</h4>
+                <p>Para acceder a todas las funcionalidades, debe iniciar sesión con su cuenta de Azure AD.</p>
+                <hr>
+                <a asp-controller="Account" asp-action="SignIn" class="btn btn-primary btn-lg">
+                    🔑 Iniciar Sesión con Azure AD
+                </a>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>🛡️ Características de Seguridad</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>OAuth 2.0 / OpenID Connect:</h6>
+                            <ul>
+                                <li>Authorization Code Flow</li>
+                                <li>PKCE (Proof Key for Code Exchange)</li>
+                                <li>Tokens JWT firmados</li>
+                                <li>Refresh tokens seguros</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Tecnologías Utilizadas:</h6>
+                            <ul>
+                                <li>.NET 9 (última versión)</li>
+                                <li>Microsoft.Identity.Web</li>
+                                <li>Azure Active Directory</li>
+                                <li>Bootstrap 5</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h6>🚀 Información del Sistema</h6>
+            </div>
+            <div class="card-body">
+                <small>
+                    <strong>Framework:</strong> .NET @Environment.Version<br/>
+                    <strong>Servidor:</strong> @Environment.MachineName<br/>
+                    <strong>SO:</strong> @Environment.OSVersion.Platform<br/>
+                    <strong>Cultura:</strong> @System.Globalization.CultureInfo.CurrentCulture.Name<br/>
+                    <strong>Zona Horaria:</strong> @TimeZoneInfo.Local.DisplayName<br/>
+                    <strong>Hora del Servidor:</strong> @DateTime.Now.ToString("HH:mm:ss")
+                </small>
+            </div>
+        </div>
+        
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <div class="card mt-3">
+                <div class="card-header bg-primary text-white">
+                    <h6>🔑 Proceso de Autenticación</h6>
+                </div>
+                <div class="card-body">
+                    <ol class="list-group list-group-numbered list-group-flush">
+                        <li class="list-group-item">Click en "Iniciar Sesión"</li>
+                        <li class="list-group-item">Redirección a Azure AD</li>
+                        <li class="list-group-item">Ingresar credenciales</li>
+                        <li class="list-group-item">Autorizar permisos</li>
+                        <li class="list-group-item">Redirección de vuelta</li>
+                        <li class="list-group-item">¡Acceso completo!</li>
+                    </ol>
+                </div>
+            </div>
+        }
+    </div>
+</div>

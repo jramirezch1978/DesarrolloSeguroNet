@@ -1,0 +1,220 @@
+﻿@{
+    ViewData["Title"] = "Laboratorio 4 - Análisis de Tokens JWT";
+}
+
+<div class="text-center">
+    <h1 class="display-4">🔍 Laboratorio 4: Análisis de Tokens JWT</h1>
+    <p class="lead">Análisis avanzado de tokens JWT y debugging con <strong>.NET 9</strong> y Azure AD</p>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">🎯 ¡Análisis de Tokens Disponible!</h4>
+                <p>Bienvenido <strong>@(User.Identity.Name)</strong>. Puedes acceder a todas las herramientas de análisis de tokens JWT.</p>
+                <hr>
+                <div class="d-flex gap-2">
+                    <a asp-controller="Account" asp-action="TokenInfo" class="btn btn-primary">
+                        🔍 Análisis Completo de Tokens
+                    </a>
+                    <a asp-controller="Account" asp-action="Profile" class="btn btn-info">
+                        👤 Ver Mi Perfil
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>🔑 Herramientas de Análisis JWT</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-key fa-2x text-primary mb-3"></i>
+                                    <h6>Análisis de Tokens</h6>
+                                    <p class="text-muted">Información detallada de Access, ID y Refresh tokens</p>
+                                    <a href="@Url.Action("TokenInfo", "Account")" class="btn btn-primary btn-sm">
+                                        🔍 Analizar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-bug fa-2x text-success mb-3"></i>
+                                    <h6>Testing de Autenticación</h6>
+                                    <p class="text-muted">Herramientas para debugging y pruebas</p>
+                                    <a href="@Url.Action("TestAuthentication", "Account")" class="btn btn-success btn-sm">
+                                        🐛 Testing
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-bar fa-2x text-warning mb-3"></i>
+                                    <h6>Análisis de Claims</h6>
+                                    <p class="text-muted">Categorización y análisis de claims JWT</p>
+                                    <a href="@Url.Action("ClaimsAnalysis", "Account")" class="btn btn-warning btn-sm">
+                                        📊 Claims
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">🔒 Autenticación Requerida</h4>
+                <p>Para acceder a las herramientas de análisis de tokens JWT, debe iniciar sesión con su cuenta de Azure AD.</p>
+                <hr>
+                <a asp-controller="Account" asp-action="SignIn" class="btn btn-primary btn-lg">
+                    🔑 Iniciar Sesión con Azure AD
+                </a>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>🎯 Objetivos del Laboratorio 4</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Análisis de Tokens JWT:</h6>
+                            <ul>
+                                <li>Decodificación de Access Token</li>
+                                <li>Análisis de ID Token</li>
+                                <li>Información de Refresh Token</li>
+                                <li>Validación de firma y expiración</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Herramientas de Debugging:</h6>
+                            <ul>
+                                <li>Inspección de Claims detallada</li>
+                                <li>Análisis de estructura JWT</li>
+                                <li>Integración con JWT.io</li>
+                                <li>Testing de autenticación</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h6>🚀 Información del Laboratorio 4</h6>
+            </div>
+            <div class="card-body">
+                <small>
+                    <strong>Framework:</strong> .NET @Environment.Version<br/>
+                    <strong>Servidor:</strong> @Environment.MachineName<br/>
+                    <strong>SO:</strong> @Environment.OSVersion.Platform<br/>
+                    <strong>Cultura:</strong> @System.Globalization.CultureInfo.CurrentCulture.Name<br/>
+                    <strong>Zona Horaria:</strong> @TimeZoneInfo.Local.DisplayName<br/>
+                    <strong>Hora del Servidor:</strong> @DateTime.Now.ToString("HH:mm:ss")
+                </small>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h6>🔍 Estructura de Tokens JWT</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="badge bg-primary">Header</span>
+                    <small class="text-muted d-block">Algoritmo y tipo de token</small>
+                </div>
+                <div class="mb-3">
+                    <span class="badge bg-success">Payload</span>
+                    <small class="text-muted d-block">Claims y datos del usuario</small>
+                </div>
+                <div class="mb-3">
+                    <span class="badge bg-warning">Signature</span>
+                    <small class="text-muted d-block">Verificación de integridad</small>
+                </div>
+                <hr>
+                <p class="text-muted mb-0">
+                    <small>Un token JWT se compone de tres partes separadas por puntos (.)</small>
+                </p>
+            </div>
+        </div>
+        
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <div class="card mt-3">
+                <div class="card-header bg-primary text-white">
+                    <h6>🔑 Proceso de Autenticación</h6>
+                </div>
+                <div class="card-body">
+                    <ol class="list-group list-group-numbered list-group-flush">
+                        <li class="list-group-item">Click en "Iniciar Sesión"</li>
+                        <li class="list-group-item">Redirección a Azure AD</li>
+                        <li class="list-group-item">Ingresar credenciales</li>
+                        <li class="list-group-item">Obtener tokens JWT</li>
+                        <li class="list-group-item">Analizar tokens</li>
+                        <li class="list-group-item">¡Debugging completo!</li>
+                    </ol>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>📊 Resumen de Funcionalidades</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-key fa-2x text-primary mb-2"></i>
+                                <h6>Análisis de Tokens</h6>
+                                <p class="text-muted">Información detallada de Access, ID y Refresh tokens</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-clipboard-list fa-2x text-success mb-2"></i>
+                                <h6>Claims Detallados</h6>
+                                <p class="text-muted">Análisis completo de claims con descripciones</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-external-link-alt fa-2x text-info mb-2"></i>
+                                <h6>JWT.io Integration</h6>
+                                <p class="text-muted">Análisis externo de tokens en JWT.io</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-copy fa-2x text-warning mb-2"></i>
+                                <h6>Copia de Claims</h6>
+                                <p class="text-muted">Funcionalidad de copia al portapapeles</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

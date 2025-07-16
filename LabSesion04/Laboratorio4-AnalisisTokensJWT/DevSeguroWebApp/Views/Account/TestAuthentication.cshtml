@@ -1,0 +1,308 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Testing de Autenticación";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-bug me-2"></i>
+                        Testing de Autenticación
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-success">Estado de Autenticación</h5>
+                            <table class="table table-striped">
+                                <tr>
+                                    <th>Está Autenticado:</th>
+                                    <td>
+                                        @if (Model.IsAuthenticated)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Sí
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>No
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Nombre de Usuario:</th>
+                                    <td><strong>@Model.UserName</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Tipo de Autenticación:</th>
+                                    <td><code>@Model.AuthenticationType</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Cantidad de Claims:</th>
+                                    <td><span class="badge bg-info">@Model.ClaimsCount</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-success">Información del Servidor</h5>
+                            <table class="table table-striped">
+                                <tr>
+                                    <th>Hora del Servidor:</th>
+                                    <td><code>@Model.ServerTime</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Esquema de Petición:</th>
+                                    <td><code>@Model.RequestScheme</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Host:</th>
+                                    <td><code>@Model.RequestHost</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Ruta:</th>
+                                    <td><code>@Model.RequestPath</code></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="text-success">Información de Sesión</h5>
+                            <table class="table table-striped">
+                                <tr>
+                                    <th>Tiene Session ID:</th>
+                                    <td>
+                                        @if (Model.HasSessionId)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Sí
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-exclamation me-1"></i>No
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Session ID:</th>
+                                    <td><code>@Model.SessionId</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Cantidad de Cookies:</th>
+                                    <td><span class="badge bg-info">@Model.CookieCount</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Cantidad de Headers:</th>
+                                    <td><span class="badge bg-info">@Model.HeaderCount</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-success">Información de Red</h5>
+                            <table class="table table-striped">
+                                <tr>
+                                    <th>Dirección IP Remota:</th>
+                                    <td><code>@Model.RemoteIpAddress</code></td>
+                                </tr>
+                                <tr>
+                                    <th>User Agent:</th>
+                                    <td>
+                                        <small class="text-muted">
+                                            @Model.UserAgent
+                                        </small>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="text-success">Herramientas de Testing</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card border-primary">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-key fa-2x text-primary mb-2"></i>
+                                            <h6>Información de Tokens</h6>
+                                            <p class="text-muted">Ver detalles del JWT</p>
+                                            <a href="@Url.Action("TokenInfo", "Account")" class="btn btn-primary">
+                                                <i class="fas fa-eye me-1"></i>Ver Tokens
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-success">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-chart-bar fa-2x text-success mb-2"></i>
+                                            <h6>Análisis de Claims</h6>
+                                            <p class="text-muted">Analizar claims en detalle</p>
+                                            <a href="@Url.Action("ClaimsAnalysis", "Account")" class="btn btn-success">
+                                                <i class="fas fa-microscope me-1"></i>Analizar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-info">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-download fa-2x text-info mb-2"></i>
+                                            <h6>Descargar Tokens</h6>
+                                            <p class="text-muted">Obtener tokens completos</p>
+                                            <button class="btn btn-info" onclick="downloadTokens()">
+                                                <i class="fas fa-download me-1"></i>Descargar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>Información de Testing</h6>
+                                <ul class="mb-0">
+                                    <li>Esta página muestra información técnica útil para debugging</li>
+                                    <li>El Session ID se genera automáticamente para cada sesión</li>
+                                    <li>Los cookies contienen información de autenticación cifrada</li>
+                                    <li>La IP remota puede ser útil para audit logs</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-between">
+                                <div>
+                                    <a href="@Url.Action("Profile", "Account")" class="btn btn-primary">
+                                        <i class="fas fa-user me-2"></i>Ver Perfil
+                                    </a>
+                                    <a href="@Url.Action("Index", "Home")" class="btn btn-outline-primary">
+                                        <i class="fas fa-home me-2"></i>Inicio
+                                    </a>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-secondary" onclick="location.reload()">
+                                        <i class="fas fa-sync me-2"></i>Refrescar
+                                    </button>
+                                    <button type="button" class="btn btn-warning" onclick="runTests()">
+                                        <i class="fas fa-play me-2"></i>Ejecutar Tests
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar resultados de tests -->
+<div class="modal fade" id="testResultsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resultados de Tests</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="testResults"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Función para descargar tokens
+    function downloadTokens() {
+        fetch('@Url.Action("GetFullIdToken", "Account")')
+            .then(response => response.json())
+            .then(data => {
+                const dataStr = JSON.stringify(data, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = 'tokens-' + new Date().toISOString().slice(0,10) + '.json';
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            })
+            .catch(error => {
+                alert('Error al descargar tokens: ' + error.message);
+            });
+    }
+
+    // Función para ejecutar tests básicos
+    function runTests() {
+        const testResults = [];
+        
+        // Test 1: Verificar autenticación
+        testResults.push({
+            name: 'Verificar Autenticación',
+            result: @Model.IsAuthenticated.ToString().ToLower(),
+            status: @Model.IsAuthenticated ? 'PASS' : 'FAIL'
+        });
+        
+        // Test 2: Verificar nombre de usuario
+        testResults.push({
+            name: 'Verificar Nombre de Usuario',
+            result: '@Model.UserName' !== '',
+            status: '@Model.UserName' !== '' ? 'PASS' : 'FAIL'
+        });
+        
+        // Test 3: Verificar claims
+        testResults.push({
+            name: 'Verificar Claims',
+            result: @Model.ClaimsCount > 0,
+            status: @Model.ClaimsCount > 0 ? 'PASS' : 'FAIL'
+        });
+        
+        // Test 4: Verificar sesión
+        testResults.push({
+            name: 'Verificar Sesión',
+            result: @Model.HasSessionId.ToString().ToLower(),
+            status: @Model.HasSessionId ? 'PASS' : 'FAIL'
+        });
+        
+        // Mostrar resultados
+        let html = '<div class="list-group">';
+        testResults.forEach(test => {
+            const badgeClass = test.status === 'PASS' ? 'bg-success' : 'bg-danger';
+            html += `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">${test.name}</h6>
+                        <small class="text-muted">Resultado: ${test.result}</small>
+                    </div>
+                    <span class="badge ${badgeClass}">${test.status}</span>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        document.getElementById('testResults').innerHTML = html;
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('testResultsModal'));
+        modal.show();
+    }
+</script> 

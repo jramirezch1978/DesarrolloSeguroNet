@@ -1,0 +1,1280 @@
+Laboratorios Prácticos - Sesión 4: Diseño Seguro de Aplicaciones .NET en Azure - Parte 1
+Curso: Diseño Seguro de Aplicaciones (.NET en Azure)
+Duración Total: 100 minutos (5 laboratorios)
+Modalidad: Instructor-led con práctica individual
+Herramientas: Visual Studio Code + .NET 9 + C#
+________________________________________
+🛠️ LABORATORIO 0: CONFIGURACIÓN DEL ENTORNO DE DESARROLLO
+⏱️ Duración: 15 minutos
+🎯 Objetivo: Instalar y configurar todas las herramientas necesarias para el desarrollo
+Paso 1: Instalación de Chocolatey (5 minutos)
+Chocolatey es un gestor de paquetes para Windows que facilita la instalación de herramientas de desarrollo.
+1.	Abrir PowerShell como Administrador:
+2.	Click derecho en el botón de Windows → Windows PowerShell (Admin)
+3.	O presionar Win + X → Windows PowerShell (Admin)
+4.	Verificar Política de Ejecución:
+5.	Get-ExecutionPolicy
+Si aparece "Restricted", ejecutar:
+Set-ExecutionPolicy AllSigned
+6.	Instalar Chocolatey:
+7.	Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+8.	Verificar Instalación:
+9.	choco --version
+Deberían ver algo como: 2.2.2 (o versión más reciente)
+Paso 2: Instalación de .NET 9 Core (3 minutos)
+1.	Instalar .NET 9 SDK usando Chocolatey:
+2.	choco install dotnet-9.0-sdk -y
+3.	Verificar Instalación:
+4.	# Cerrar y reabrir PowerShell (como usuario normal)
+5.	dotnet --version
+Deberían ver: 9.0.x (donde x es el número de build)
+6.	Verificar SDKs Instalados:
+7.	dotnet --list-sdks
+Deberían ver .NET 9.0.x listado
+Paso 3: Instalación de Visual Studio Code (2 minutos)
+1.	Instalar VS Code usando Chocolatey:
+2.	choco install vscode -y
+3.	Verificar Instalación:
+4.	code --version
+Paso 4: Instalación de Extensiones Esenciales para VS Code (5 minutos)
+1.	Abrir Visual Studio Code:
+2.	code
+3.	Instalar Extensiones desde la Terminal de VS Code:
+Presionar Ctrl + Shift + P y escribir "Terminal: Create New Terminal"
+# Extensión principal para C# y .NET
+code --install-extension ms-dotnettools.csharp
+
+# IntelliSense mejorado para C#
+code --install-extension ms-dotnettools.csdevkit
+
+# Soporte para Azure
+code --install-extension ms-vscode.vscode-node-azure-pack
+
+# Herramientas para desarrollo web
+code --install-extension ms-vscode.vscode-json
+
+# Git integration mejorada
+code --install-extension eamodio.gitlens
+
+# Resaltado de sintaxis mejorado
+code --install-extension ms-vscode.PowerShell
+
+# Debugger para .NET
+code --install-extension ms-dotnettools.vscode-dotnet-runtime
+4.	Verificar Extensiones Instaladas:
+5.	Ctrl + Shift + X (abrir panel de extensiones)
+6.	Verificar que aparezcan instaladas:
+7.	✅ C# Dev Kit
+8.	✅ C# 
+9.	✅ Azure Account
+10.	✅ Azure Resources
+11.	✅ GitLens
+12.	✅ PowerShell
+13.	Configurar VS Code para .NET 9:
+14.	Presionar Ctrl + Shift + P
+15.	Escribir: ".NET: New Project"
+16.	Si aparece la opción, significa que .NET está correctamente integrado
+✅ Verificación Final del Entorno:
+Ejecutar estos comandos para verificar que todo está funcionando:
+# Verificar Chocolatey
+choco --version
+
+# Verificar .NET 9
+dotnet --version
+dotnet --info
+
+# Verificar VS Code
+code --version
+
+# Crear proyecto de prueba
+mkdir test-dotnet9
+cd test-dotnet9
+dotnet new console
+dotnet run
+Resultado esperado del proyecto de prueba:
+Hello, World!
+🚨 Troubleshooting Común:
+Error: "choco no se reconoce como comando"
+Solución: Cerrar y reabrir PowerShell como administrador, o reiniciar Windows
+Error: ".NET 9 no se encuentra"
+Solución: 
+1. Reiniciar VS Code
+2. Verificar variables de entorno PATH
+3. Reinstalar: choco uninstall dotnet-9.0-sdk && choco install dotnet-9.0-sdk -y
+Error: "Extensiones de C# no funcionan"
+Solución:
+1. Reiniciar VS Code
+2. Ctrl + Shift + P → "Developer: Reload Window"
+3. Verificar que .NET 9 SDK está instalado: dotnet --version
+________________________________________
+📋 PRERREQUISITOS Y VERIFICACIÓN INICIAL
+Actividades Previas Requeridas (Sesiones 1-3)
+Antes de comenzar con estos laboratorios, verifiquen que tienen configurado lo siguiente de sesiones anteriores:
+✅ De Sesión 1:
+•	Azure AD Tenant configurado con Security Defaults habilitados
+•	Usuario administrativo creado y funcional
+•	Grupo "gu_desarrollo_seguro_aplicacion" con todos los participantes
+✅ De Sesión 2:
+•	Multi-Factor Authentication (MFA) configurado
+•	Conditional Access básico implementado
+✅ De Sesión 3:
+•	Network Security Groups (NSGs) configurados
+•	Virtual Network (VNet) básica creada
+🔧 Verificación Rápida de Configuraciones Previas (5 minutos)
+Si NO tienen las configuraciones previas, sigan estos pasos rápidos:
+1.	Acceso a Azure Portal:
+2.	- Naveguen a: https://portal.azure.com
+3.	- Inicien sesión con sus credenciales de usuario invitado
+4.	- Verificar que aparecen en el tenant correcto
+5.	Verificar Grupo de Desarrollo:
+6.	- Azure Active Directory → Groups
+7.	- Buscar: "gu_desarrollo_seguro_aplicacion"
+8.	- Verificar que están listados como miembros
+9.	Configuración Básica Azure AD (Si es necesario):
+10.	- Azure Active Directory → Properties
+11.	- Verificar que Security Defaults están habilitados
+12.	- Si no están habilitados, activarlos ahora
+________________________________________
+🧪 LABORATORIO 1: REGISTRO Y CONFIGURACIÓN DE APLICACIÓN EN AZURE AD
+⏱️ Duración: 20 minutos
+🎯 Objetivo: Crear y configurar una aplicación .NET en Azure AD para autenticación OAuth 2.0/OpenID Connect
+Paso 1: Crear App Registration (8 minutos)
+1.	Navegar a App Registrations:
+2.	Azure Portal → Azure Active Directory → App registrations → New registration
+3.	Configurar Application Registration:
+4.	Name: DevSeguroApp-[SuNombre]
+5.	(Ejemplo: DevSeguroApp-Juan)
+6.	
+7.	Supported account types: 
+8.	✅ Accounts in this organizational directory only (Single tenant)
+9.	
+10.	Redirect URI: 
+11.	Platform: Web
+12.	URI: https://localhost:7001/signin-oidc
+13.	Completar Registration:
+o	Click "Register"
+o	⚠️ IMPORTANTE: Anoten el Application (client) ID - lo necesitarán después
+o	⚠️ IMPORTANTE: Anoten el Directory (tenant) ID
+Paso 2: Configurar Authentication Settings (7 minutos)
+1.	Navegar a Authentication:
+2.	Su App Registration → Authentication
+3.	Configurar Redirect URIs:
+4.	Web Redirect URIs:
+5.	✅ https://localhost:7001/signin-oidc
+6.	✅ https://localhost:7001/signout-callback-oidc
+7.	
+8.	Front-channel logout URL:
+9.	https://localhost:7001/signout-oidc
+10.	Advanced Settings:
+11.	✅ ID tokens (used for implicit and hybrid flows)
+12.	❌ Access tokens (used for implicit flows) - Mantener deshabilitado
+13.	
+14.	Allow public client flows: No
+Paso 3: Configurar API Permissions (5 minutos)
+1.	Navegar a API Permissions:
+2.	Su App Registration → API permissions
+3.	Verificar Permissions por Defecto:
+4.	Microsoft Graph:
+5.	✅ User.Read (Delegated) - Ya debe estar presente
+6.	Agregar Additional Permissions:
+7.	Add a permission → Microsoft Graph → Delegated permissions
+8.	
+9.	Buscar y agregar:
+10.	✅ email
+11.	✅ profile
+12.	✅ openid (normalmente ya está incluido)
+✅ Resultado Esperado:
+•	Aplicación registrada en Azure AD
+•	Client ID y Tenant ID documentados
+•	Redirect URIs configurados para desarrollo local
+•	Permissions configurados correctamente
+________________________________________
+🧪 LABORATORIO 2: DESARROLLO DE APLICACIÓN .NET 9 CON OAUTH 2.0
+⏱️ Duración: 25 minutos
+🎯 Objetivo: Crear aplicación .NET 9 que implementa autenticación con Azure AD
+Paso 1: Crear Proyecto .NET 9 (5 minutos)
+1.	Abrir Visual Studio Code:
+# Crear directorio para el proyecto
+mkdir DevSeguroApp
+cd DevSeguroApp
+code .
+2.	Crear Proyecto Web MVC con .NET 9:
+# En la terminal integrada de VS Code (Ctrl + `)
+dotnet new mvc -n DevSeguroWebApp --framework net9.0
+cd DevSeguroWebApp
+Verificar Estructura del Proyecto:
+DevSeguroWebApp/
+├── Controllers/
+├── Views/
+├── wwwroot/
+├── Program.cs
+├── DevSeguroWebApp.csproj
+└── appsettings.json
+3.	Agregar Packages Necesarios para .NET 9:
+# Cliente MSAL para .NET (Microsoft Authentication Library)
+dotnet add package Microsoft.Identity.Web --version 3.2.0
+
+# Verificar packages instalados
+dotnet list package
+Paso 2: Configurar appsettings.json para .NET 9 (4 minutos)
+Editar appsettings.json:
+{
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
+    "TenantId": "[SU-TENANT-ID-AQUÍ]",
+    "ClientId": "[SU-CLIENT-ID-AQUÍ]",
+    "CallbackPath": "/signin-oidc",
+    "SignedOutCallbackPath": "/signout-callback-oidc"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.AspNetCore.Authentication": "Information"
+    }
+  },
+  "AllowedHosts": "*",
+  "Kestrel": {
+    "Endpoints": {
+      "Https": {
+        "Url": "https://localhost:7001"
+      }
+    }
+  }
+}
+Configurar appsettings.Development.json:
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.AspNetCore.Authentication": "Debug",
+      "Microsoft.Identity.Web": "Debug"
+    }
+  }
+}
+Paso 3: Configurar Program.cs para .NET 9 (8 minutos)
+1.	Reemplazar Program.cs completamente: 
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Logging;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Habilitar logging detallado de Identity Model (solo en desarrollo)
+if (builder.Environment.IsDevelopment())
+{
+    IdentityModelEventSource.ShowPII = true;
+}
+
+// Configurar servicios
+builder.Services.AddControllersWithViews();
+
+// Configurar Microsoft Identity Web (nueva forma en .NET 9)
+builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+
+// Configurar autorización
+builder.Services.AddAuthorization(options =>
+{
+    // Política por defecto: usuario debe estar autenticado
+    options.FallbackPolicy = options.DefaultPolicy;
+});
+
+// Configurar Razor Pages (necesario para Microsoft.Identity.Web)
+builder.Services.AddRazorPages();
+
+var app = builder.Build();
+
+// Configurar pipeline de la aplicación
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    // HSTS por defecto en .NET 9
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+// ⚠️ ORDEN CRÍTICO en .NET 9
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Configurar rutas
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Mapear Razor Pages (requerido por Microsoft.Identity.Web)
+app.MapRazorPages();
+
+app.Run();
+
+Paso 4: Crear Client Secret en Azure AD (3 minutos)
+1.	Navegar a Certificates & secrets:
+Su App Registration → Certificates & secrets → Client secrets → New client secret
+2.	Configurar Secret:
+Description: DevSeguroApp-Secret
+Expires: 6 months
+3.	Guardar Secret y Actualizar appsettings.json:
+⚠️ CRÍTICO: Copien el VALUE del secret INMEDIATAMENTE
+
+Agregar a appsettings.json en la sección AzureAd:
+"ClientSecret": "[SU-CLIENT-SECRET-AQUÍ]"
+Paso 5: Crear AccountController para .NET 9 (5 minutos)
+Crear Controllers/AccountController.cs: 
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web;
+using System.Security.Claims;
+
+namespace DevSeguroWebApp.Controllers
+{
+    [AllowAnonymous]
+    public class AccountController : Controller
+    {
+        [HttpGet]
+        public IActionResult SignIn()
+        {
+            var redirectUrl = Url.Action(nameof(HomeController.Index), "Home");
+            return Challenge(
+                new AuthenticationProperties { RedirectUri = redirectUrl },
+                OpenIdConnectDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet]
+        public IActionResult SignOut()
+        {
+            return SignOut(
+                new AuthenticationProperties 
+                { 
+                    RedirectUri = Url.Action(nameof(SignedOut), "Account") 
+                },
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                OpenIdConnectDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult SignedOut()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [Authorize]
+        public IActionResult Profile()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
+        // Método para obtener información de tokens (solo desarrollo)
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> TokenInfo()
+        {
+            if (!HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment())
+            {
+                return BadRequest("Solo disponible en desarrollo");
+            }
+
+            var accessToken = await HttpContext.GetTokenAsync("access_token");
+            var idToken = await HttpContext.GetTokenAsync("id_token");
+            var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
+
+            var model = new
+            {
+                User = new
+                {
+                    Name = User.Identity?.Name,
+                    IsAuthenticated = User.Identity?.IsAuthenticated,
+                    AuthenticationType = User.Identity?.AuthenticationType,
+                    Claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
+                },
+                Tokens = new
+                {
+                    AccessTokenPresent = !string.IsNullOrEmpty(accessToken),
+                    IdTokenPresent = !string.IsNullOrEmpty(idToken),
+                    RefreshTokenPresent = !string.IsNullOrEmpty(refreshToken),
+                    AccessTokenPreview = accessToken?.Substring(0, Math.Min(50, accessToken.Length ?? 0)) + "...",
+                    IdTokenPreview = idToken?.Substring(0, Math.Min(50, idToken.Length ?? 0)) + "..."
+                }
+            };
+
+            return Json(model);
+        }
+
+        // Método para obtener ID Token completo (solo desarrollo)
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetFullIdToken()
+        {
+            if (!HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment())
+            {
+                return BadRequest("Solo disponible en desarrollo");
+            }
+            
+            var idToken = await HttpContext.GetTokenAsync("id_token");
+            return Json(new { IdToken = idToken });
+        }
+    }
+}
+✅ Resultado Esperado:
+•	Proyecto .NET 9 creado con estructura correcta
+•	Microsoft.Identity.Web instalado y configurado
+•	appsettings.json configurado con datos completos de Azure AD
+•	Program.cs configurado para .NET 9
+•	AccountController con métodos de autenticación implementados
+________________________________________
+🧪 LABORATORIO 3: IMPLEMENTACIÓN DE VISTAS Y TESTING
+⏱️ Duración: 25 minutos
+🎯 Objetivo: Crear vistas para autenticación y probar el flujo completo con .NET 9
+Paso 1: Modificar Layout Principal para .NET 9 (8 minutos)
+1.	Editar Views/Shared/_Layout.cshtml: 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - DevSeguroApp (.NET 9)</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/DevSeguroWebApp.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand text-primary fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
+                    🔐 DevSeguroApp (.NET 9)
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index">🏠 Inicio</a>
+                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-area="" asp-controller="Account" asp-action="Profile">👤 Mi Perfil</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-area="" asp-controller="Account" asp-action="TokenInfo">🔍 Info Tokens</a>
+                            </li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-success" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    👋 Hola, @(User.Identity.Name ?? "Usuario")
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Mi Perfil</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="TokenInfo">Información de Tokens</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="SignOut">🚪 Cerrar Sesión</a></li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-primary text-white mx-2" asp-controller="Account" asp-action="SignIn">
+                                    🔑 Iniciar Sesión
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted bg-light">
+        <div class="container text-center py-3">
+            <small>
+                DevSeguroApp con .NET 9 🚀 | 
+                Autenticación: @(User.Identity?.IsAuthenticated == true ? "✅ Activa" : "❌ Inactiva") |
+                Servidor: @Environment.MachineName
+            </small>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+Paso 2: Crear Vista de Perfil Avanzada (8 minutos)
+1.	Crear Views/Account/Profile.cshtml: 
+@{
+    ViewData["Title"] = "Mi Perfil - Información de Usuario";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4><i class="fas fa-user"></i> Información del Usuario (.NET 9)</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td><strong>🏷️ Nombre Completo:</strong></td>
+                                    <td><span class="badge bg-info">@(User.Identity?.Name ?? "No disponible")</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>📧 Email:</strong></td>
+                                    <td><span class="badge bg-secondary">@(User.FindFirst("preferred_username")?.Value ?? User.FindFirst("email")?.Value ?? "No disponible")</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>🆔 ID de Usuario:</strong></td>
+                                    <td><code>@(User.FindFirst("sub")?.Value ?? "No disponible")</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>🏢 Tenant ID:</strong></td>
+                                    <td><code>@(User.FindFirst("tid")?.Value ?? "No disponible")</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>🕐 Autenticado en:</strong></td>
+                                    <td>@(User.FindFirst("auth_time")?.Value != null ? DateTimeOffset.FromUnixTimeSeconds(long.Parse(User.FindFirst("auth_time").Value)).ToString("dd/MM/yyyy HH:mm:ss") : "No disponible")</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><strong>🔐 Estado de Autenticación:</strong></h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Autenticado:</span>
+                                <span class="badge @(User.Identity?.IsAuthenticated == true ? "bg-success" : "bg-danger")">
+                                    @(User.Identity?.IsAuthenticated == true ? "✅ Sí" : "❌ No")
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Tipo de Autenticación:</span>
+                                <span class="badge bg-primary">@(User.Identity?.AuthenticationType ?? "No disponible")</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Método de Autenticación:</span>
+                                <span class="badge bg-info">@(User.FindFirst("amr")?.Value ?? "No disponible")</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Framework:</span>
+                                <span class="badge bg-warning text-dark">.NET 9</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4 shadow">
+            <div class="card-header bg-secondary text-white">
+                <h5><i class="fas fa-list"></i> Claims Recibidos de Azure AD</h5>
+                <small>Total de claims: @User.Claims.Count()</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Claim Type</th>
+                                <th>Value</th>
+                                <th>Issuer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var claimIndex = 1;
+                            }
+                            @foreach (var claim in User.Claims.OrderBy(c => c.Type))
+                            {
+                                <tr>
+                                    <td>@claimIndex</td>
+                                    <td>
+                                        <code class="text-primary">@claim.Type</code>
+                                    </td>
+                                    <td>
+                                        @if (claim.Type.Contains("tid") || claim.Type.Contains("sub") || claim.Type.Contains("oid"))
+                                        {
+                                            <code class="text-muted">@claim.Value</code>
+                                        }
+                                        else
+                                        {
+                                            <span>@claim.Value</span>
+                                        }
+                                    </td>
+                                    <td><small class="text-muted">@claim.Issuer</small></td>
+                               </tr>
+                               claimIndex++;
+                           }
+                       </tbody>
+                   </table>
+               </div>
+           </div>
+       </div>
+   </div>
+   
+   <div class="col-md-4">
+       <div class="card shadow">
+           <div class="card-header bg-success text-white">
+               <h5><i class="fas fa-shield-alt"></i> Información de Seguridad</h5>
+           </div>
+           <div class="card-body">
+               <div class="d-grid gap-2">
+                   <a href="@Url.Action("TokenInfo", "Account")" class="btn btn-outline-primary">
+                       🔍 Ver Información de Tokens
+                   </a>
+                   <a href="@Url.Action("SignOut", "Account")" class="btn btn-outline-danger">
+                       🚪 Cerrar Sesión Segura
+                   </a>
+               </div>
+               
+               <hr />
+               
+               <h6>📊 Estadísticas de Sesión:</h6>
+               <ul class="list-unstyled">
+                   <li><strong>Claims disponibles:</strong> @User.Claims.Count()</li>
+                   <li><strong>Roles asignados:</strong> @User.Claims.Count(c => c.Type.Contains("role"))</li>
+                   <li><strong>Grupos:</strong> @User.Claims.Count(c => c.Type.Contains("group"))</li>
+               </ul>
+           </div>
+       </div>
+
+       <div class="card mt-3 shadow">
+           <div class="card-header bg-info text-white">
+               <h6><i class="fas fa-info-circle"></i> Información Técnica</h6>
+           </div>
+           <div class="card-body">
+               <small>
+                   <strong>Servidor:</strong> @Environment.MachineName<br/>
+                   <strong>Framework:</strong> .NET @Environment.Version<br/>
+                   <strong>OS:</strong> @Environment.OSVersion<br/>
+                   <strong>Hora del servidor:</strong> @DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")
+               </small>
+           </div>
+       </div>
+   </div>
+</div> 
+@section Scripts { <script> // Agregar funcionalidad para copiar claims document.addEventListener('DOMContentLoaded', function() { const table = document.querySelector('table'); if (table) { table.addEventListener('click', function(e) { if (e.target.tagName === 'CODE') { navigator.clipboard.writeText(e.target.textContent); e.target.style.backgroundColor = '#28a745'; setTimeout(() => { e.target.style.backgroundColor = ''; }, 1000); } }); } }); </script> }
+
+2. **Crear Views/Account/SignedOut.cshtml:**
+```html
+@{
+    ViewData["Title"] = "Sesión Cerrada";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h3 class="card-title text-success">Sesión Cerrada Exitosamente</h3>
+                <p class="card-text text-muted">
+                    Su sesión ha sido cerrada de forma segura en Azure AD y en la aplicación.
+                    <br/>
+                    <small>Powered by .NET 9 🚀</small>
+                </p>
+                
+                <hr />
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-lg">
+                        🏠 Volver al Inicio
+                    </a>
+                    <a asp-controller="Account" asp-action="SignIn" class="btn btn-success btn-lg">
+                        🔑 Iniciar Sesión Nuevamente
+                    </a>
+                </div>
+                
+                <div class="mt-4">
+                    <small class="text-muted">
+                        <strong>Información de Seguridad:</strong><br/>
+                        ✅ Sesión local eliminada<br/>
+                        ✅ Tokens invalidados<br/>
+                        ✅ Redirección segura completada
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+Paso 3: Actualizar Vista Home para mostrar estado de autenticación (4 minutos)
+1.	Editar Views/Home/Index.cshtml: 
+html
+@{
+    ViewData["Title"] = "Inicio - DevSeguroApp";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Bienvenido a DevSeguroApp</h1>
+    <p class="lead">Aplicación segura desarrollada con <strong>.NET 9</strong> y autenticación OAuth 2.0/OpenID Connect</p>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">✅ ¡Autenticación Exitosa!</h4>
+                <p>Bienvenido <strong>@(User.Identity.Name)</strong>. Su sesión está activa y segura.</p>
+                <hr>
+                <div class="d-flex gap-2">
+                    <a asp-controller="Account" asp-action="Profile" class="btn btn-primary">
+                        👤 Ver Mi Perfil Completo
+                    </a>
+                    <a asp-controller="Account" asp-action="TokenInfo" class="btn btn-info">
+                        🔍 Analizar Tokens JWT
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>📊 Resumen de Su Sesión Actual</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Estado:</span>
+                                    <span class="badge bg-success">Autenticado</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Método:</span>
+                                    <span class="badge bg-primary">@(User.Identity.AuthenticationType)</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Claims:</span>
+                                    <span class="badge bg-info">@User.Claims.Count()</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>🔐 Información de Seguridad:</h6>
+                            <ul class="list-unstyled">
+                                <li>✅ Conexión HTTPS activa</li>
+                                <li>✅ Tokens JWT válidos</li>
+                                <li>✅ Sesión encriptada</li>
+                                <li>✅ Azure AD verificado</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">🔒 Acceso No Autenticado</h4>
+                <p>Para acceder a todas las funcionalidades, debe iniciar sesión con su cuenta de Azure AD.</p>
+                <hr>
+                <a asp-controller="Account" asp-action="SignIn" class="btn btn-primary btn-lg">
+                    🔑 Iniciar Sesión con Azure AD
+                </a>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>🛡️ Características de Seguridad</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>OAuth 2.0 / OpenID Connect:</h6>
+                            <ul>
+                                <li>Authorization Code Flow</li>
+                                <li>PKCE (Proof Key for Code Exchange)</li>
+                                <li>Tokens JWT firmados</li>
+                                <li>Refresh tokens seguros</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Tecnologías Utilizadas:</h6>
+                            <ul>
+                                <li>.NET 9 (última versión)</li>
+                                <li>Microsoft.Identity.Web</li>
+                                <li>Azure Active Directory</li>
+                                <li>Bootstrap 5</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h6>🚀 Información del Sistema</h6>
+            </div>
+            <div class="card-body">
+                <small>
+                    <strong>Framework:</strong> .NET @Environment.Version<br/>
+                    <strong>Servidor:</strong> @Environment.MachineName<br/>
+                    <strong>SO:</strong> @Environment.OSVersion.Platform<br/>
+                    <strong>Cultura:</strong> @System.Globalization.CultureInfo.CurrentCulture.Name<br/>
+                    <strong>Zona Horaria:</strong> @TimeZoneInfo.Local.DisplayName<br/>
+                    <strong>Hora del Servidor:</strong> @DateTime.Now.ToString("HH:mm:ss")
+                </small>
+            </div>
+        </div>
+        
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <div class="card mt-3">
+                <div class="card-header bg-primary text-white">
+                    <h6>🔑 Proceso de Autenticación</h6>
+                </div>
+                <div class="card-body">
+                    <ol class="list-group list-group-numbered list-group-flush">
+                        <li class="list-group-item">Click en "Iniciar Sesión"</li>
+                        <li class="list-group-item">Redirección a Azure AD</li>
+                        <li class="list-group-item">Ingresar credenciales</li>
+                        <li class="list-group-item">Autorizar permisos</li>
+                        <li class="list-group-item">Redirección de vuelta</li>
+                        <li class="list-group-item">¡Acceso completo!</li>
+                    </ol>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+Paso 4: Testing Completo del Flujo de Autenticación (5 minutos)
+1.	Compilar y Ejecutar la Aplicación: 
+bash
+# En la terminal integrada de VS Code
+dotnet build
+dotnet run
+2.	Verificar la Aplicación: 
+3.	✅ Verificar que la aplicación se ejecuta en: https://localhost:7001
+4.	✅ Si aparece advertencia de certificado, aceptar (desarrollo local)
+✅ Verificar que aparece la página de inicio actualizada
+5.	Probar el Flujo Completo de Autenticación: 
+6.	Secuencia de Testing:
+7.	
+8.	1. 🏠 Página de Inicio:
+9.	   - Verificar estado "No Autenticado"
+10.	   - Verificar información del sistema (.NET 9)
+11.	   - Click en "Iniciar Sesión con Azure AD"
+12.	
+13.	2. 🔄 Redirección a Azure AD:
+14.	   - Verificar URL contiene login.microsoftonline.com
+15.	   - Ingresar credenciales de usuario invitado
+16.	   - Aceptar permisos si se solicita
+17.	
+18.	3. ↩️ Redirección de Vuelta:
+19.	   - Verificar regreso a https://localhost:7001
+20.	   - Verificar que aparece "Hola, [nombre]" en navbar
+21.	   - Verificar estado "Autenticado" en página inicio
+22.	
+23.	4. 👤 Página de Perfil:
+24.	   - Click en "Ver Mi Perfil Completo"
+25.	   - Verificar información de usuario completa
+26.	   - Verificar tabla de claims poblada
+27.	   - Verificar información técnica (.NET 9)
+28.	
+29.	5. 🔍 Información de Tokens:
+30.	   - Click en "Analizar Tokens JWT"
+31.	   - Verificar JSON con información de tokens
+32.	   - Notar qué tokens están disponibles
+33.	
+34.	6. 🚪 Logout:
+35.	   - Click en "Cerrar Sesión"
+36.	   - Verificar redirección a Azure AD logout
+37.	   - Verificar página "Sesión Cerrada Exitosamente"
+   - Verificar que estado vuelve a "No Autenticado"
+✅ Resultado Esperado:
+•	Interfaz de usuario moderna y responsive con Bootstrap 5
+•	Flujo de autenticación funcionando perfectamente end-to-end
+•	Información detallada del usuario y claims visible
+•	Estados de autenticación claramente diferenciados
+•	Información técnica de .NET 9 visible
+•	Logout seguro funcionando correctamente
+________________________________________
+🧪 LABORATORIO 4: ANÁLISIS AVANZADO DE TOKENS JWT Y DEBUGGING
+⏱️ Duración: 15 minutos
+🎯 Objetivo: Analizar tokens JWT en profundidad y implementar debugging avanzado para .NET 9
+Paso 1: Crear Vista de Análisis de Tokens (10 minutos)
+1.	Crear Views/Account/TokenInfo.cshtml: 
+html
+@{
+    ViewData["Title"] = "Análisis de Tokens JWT - .NET 9";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4><i class="fas fa-key"></i> Análisis Completo de Tokens JWT (.NET 9)</h4>
+                <small>Información detallada de tokens OAuth 2.0/OpenID Connect</small>
+            </div>
+            <div class="card-body">
+                <div id="tokenData">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando tokens...</span>
+                        </div>
+                        <p class="mt-2">Obteniendo información de tokens...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar token completo -->
+<div class="modal fade" id="tokenModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Token Completo (Solo Desarrollo)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>⚠️ Advertencia:</strong> Esta información solo está disponible en desarrollo. 
+                    Nunca expongan tokens completos en producción.
+                </div>
+                <div id="fullTokenContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="copyToClipboard()">📋 Copiar Token</button>
+                <a href="https://jwt.io/" target="_blank" class="btn btn-info">🔍 Analizar en JWT.io</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentFullToken = '';
+
+        // Cargar información de tokens al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTokenInfo();
+        });
+
+        async function loadTokenInfo() {
+            try {
+                const response = await fetch('@Url.Action("TokenInfo", "Account")');
+                const data = await response.json();
+                
+                displayTokenInfo(data);
+            } catch (error) {
+                document.getElementById('tokenData').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>Error al cargar tokens</h5>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayTokenInfo(data) {
+            const tokenDataDiv = document.getElementById('tokenData');
+            
+            let html = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5>👤 Información del Usuario</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Nombre:</strong></td>
+                                        <td>${data.user.name || 'No disponible'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Autenticado:</strong></td>
+                                        <td><span class="badge ${data.user.isAuthenticated ? 'bg-success' : 'bg-danger'}">${data.user.isAuthenticated ? 'Sí' : 'No'}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tipo de Auth:</strong></td>
+                                        <td><span class="badge bg-primary">${data.user.authenticationType || 'No disponible'}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Claims:</strong></td>
+                                        <td><span class="badge bg-info">${data.user.claims.length}</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h5>🔑 Estado de Tokens</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Access Token:</strong></td>
+                                        <td><span class="badge ${data.tokens.accessTokenPresent ? 'bg-success' : 'bg-danger'}">${data.tokens.accessTokenPresent ? 'Presente' : 'Ausente'}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>ID Token:</strong></td>
+                                        <td><span class="badge ${data.tokens.idTokenPresent ? 'bg-success' : 'bg-danger'}">${data.tokens.idTokenPresent ? 'Presente' : 'Ausente'}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Refresh Token:</strong></td>
+                                        <td><span class="badge ${data.tokens.refreshTokenPresent ? 'bg-success' : 'bg-danger'}">${data.tokens.refreshTokenPresent ? 'Presente' : 'Ausente'}</span></td>
+                                    </tr>
+                                </table>
+                                
+                                ${data.tokens.idTokenPresent ? `
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="showFullToken()">
+                                        🔍 Ver ID Token Completo
+                                    </button>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>📋 Claims Detallados</h5>
+                                <small class="text-muted">Click en cualquier valor para copiarlo al portapapeles</small>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Claim Type</th>
+                                                <th>Value</th>
+                                                <th>Descripción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+            `;
+            
+            data.user.claims.forEach((claim, index) => {
+                const description = getClaimDescription(claim.type);
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><code class="text-primary">${claim.type}</code></td>
+                        <td><span class="copyable" onclick="copyToClipboard('${claim.value}')" style="cursor: pointer;" title="Click para copiar">${claim.value}</span></td>
+                        <td><small class="text-muted">${description}</small></td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            tokenDataDiv.innerHTML = html;
+        }
+
+        function getClaimDescription(claimType) {
+            const descriptions = {
+                'sub': 'Subject - Identificador único del usuario',
+                'name': 'Nombre completo del usuario',
+                'preferred_username': 'Nombre de usuario preferido (típicamente email)',
+                'email': 'Dirección de correo electrónico',
+                'iss': 'Issuer - Quien emitió el token',
+                'aud': 'Audience - Para quién está destinado el token',
+                'exp': 'Expiration - Cuándo expira el token',
+                'iat': 'Issued At - Cuándo fue emitido el token',
+                'auth_time': 'Authentication Time - Cuándo se autenticó el usuario',
+                'tid': 'Tenant ID - Identificador del tenant de Azure AD',
+                'oid': 'Object ID - ID del objeto de usuario en Azure AD',
+                'amr': 'Authentication Method Reference - Cómo se autenticó',
+                'family_name': 'Apellido del usuario',
+                'given_name': 'Nombre del usuario',
+                'ver': 'Version - Versión del token',
+                'aio': 'Azure Internal Object - Uso interno de Azure'
+            };
+            
+            return descriptions[claimType] || 'Claim personalizado o no estándar';
+        }
+
+        async function showFullToken() {
+            try {
+                const response = await fetch('@Url.Action("GetFullIdToken", "Account")');
+                const data = await response.json();
+                
+                currentFullToken = data.idToken;
+                
+                document.getElementById('fullTokenContent').innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>📝 Instrucciones:</strong>
+                        <ol>
+                            <li>Copie el token completo usando el botón "📋 Copiar Token"</li>
+                            <li>Visite <a href="https://jwt.io/" target="_blank">jwt.io</a> usando el botón "🔍 Analizar en JWT.io"</li>
+                            <li>Pegue el token en la sección "Encoded" de jwt.io</li>
+                            <li>Analice la estructura: Header, Payload, y Signature</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h6>🔗 Token JWT Completo</h6>
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control" rows="10" readonly style="font-family: monospace; font-size: 12px;">${data.idToken}</textarea>
+                        </div>
+                    </div>
+                `;
+                
+                new bootstrap.Modal(document.getElementById('tokenModal')).show();
+            } catch (error) {
+                alert('Error al obtener token completo: ' + error.message);
+            }
+        }
+
+        function copyToClipboard(text) {
+            if (text) {
+                navigator.clipboard.writeText(text).then(function() {
+                    // Mostrar feedback visual
+                    const element = event.target;
+                    const originalBg = element.style.backgroundColor;
+                    element.style.backgroundColor = '#28a745';
+                    setTimeout(() => {
+                        element.style.backgroundColor = originalBg;
+                    }, 1000);
+                });
+            } else {
+                navigator.clipboard.writeText(currentFullToken).then(function() {
+                    alert('Token copiado al portapapeles');
+                });
+            }
+        }
+    </script>
+}
+Paso 2: Testing de Análisis de Tokens (5 minutos)
+1.	Probar la Vista de Análisis: 
+Pasos de Testing:
+
+1. 🔑 Autenticarse en la aplicación si no está autenticado
+
+2. 🔍 Navegar a "Info Tokens" desde el menú
+
+3. 📊 Verificar que carga correctamente:
+   - Información del usuario presente
+   - Estado de tokens (Access, ID, Refresh)
+   - Tabla de claims poblada con descripciones
+
+4. 🔗 Probar funcionalidad de copia:
+   - Click en cualquier valor de claim
+   - Verificar que se copia al portapapeles
+   - Verificar feedback visual (cambio de color)
+
+5. 🎯 Probar vista de token completo:
+   - Click en "Ver ID Token Completo"
+   - Verificar que abre modal
+   - Verificar que muestra token completo
+
+6. 📋 Probar copia de token completo:
+   - Click en "Copiar Token"
+   - Verificar que se copia al portapapeles
+
+7. 🌐 Probar análisis en JWT.io:
+   - Click en "Analizar en JWT.io"
+   - Verificar que abre jwt.io en nueva pestaña
+   - Pegar token y analizar estructura
+2.	Análisis en JWT.io: 
+Elementos a verificar en jwt.io:
+
+✅ Header:
+   - alg: RS256 (algoritmo de firma)
+   - typ: JWT (tipo de token)
+   - kid: key ID para verificación
+
+✅ Payload (Claims importantes):
+   - iss: https://login.microsoftonline.com/[tenant]/v2.0
+   - aud: [su-client-id]
+   - sub: [unique-user-identifier]
+   - name: [nombre-del-usuario]
+   - preferred_username: [email-del-usuario]
+   - exp: [timestamp-expiracion]
+   - iat: [timestamp-emision]
+
+✅ Signature:
+   - Aparecerá como "Invalid" (normal, no tenemos la clave pública)
+   - Verificar que la estructura es correcta
+✅ Resultado Esperado:
+•	Vista de análisis de tokens funcionando completamente
+•	Información detallada de usuario y tokens visible
+•	Funcionalidad de copia al portapapeles operativa
+•	Modal de token completo mostrando JWT completo
+•	Integration con jwt.io funcionando
+•	Claims con descripciones explicativas
+•	Comprensión completa de la estructura JWT
+________________________________________
+📊 RESUMEN Y VERIFICACIÓN FINAL
+✅ Checklist de Completación Total
+Laboratorio 0 - Configuración de Entorno:
+•	Chocolatey instalado y funcionando
+•	.NET 9 SDK instalado y verificado
+•	Visual Studio Code instalado
+•	Extensiones de C# y Azure instaladas
+•	Proyecto de prueba funcionando
+Laboratorio 1 - Azure AD Registration:
+•	Aplicación registrada en Azure AD
+•	Client ID, Tenant ID documentados
+•	Redirect URIs configurados correctamente
+•	API Permissions configurados
+•	Client Secret generado
+Laboratorio 2 - Desarrollo .NET 9:
+•	Proyecto .NET 9 creado con estructura correcta
+•	Microsoft.Identity.Web instalado
+•	appsettings.json configurado completamente
+•	Program.cs configurado para .NET 9
+•	AccountController implementado
+Laboratorio 3 - Vistas y Testing:
+•	Layout actualizado con navegación segura
+•	Vista de perfil con información detallada
+•	Vista de logout# Laboratorios Prácticos - Sesión 4: Diseño Seguro de Aplicaciones .NET en Azure - Parte 1
+

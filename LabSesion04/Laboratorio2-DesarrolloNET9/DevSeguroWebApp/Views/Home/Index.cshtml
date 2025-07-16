@@ -1,0 +1,107 @@
+﻿@{
+    ViewData["Title"] = "Laboratorio 2 - Desarrollo .NET 9";
+}
+
+<div class="text-center">
+    <h1 class="display-4">🔐 Laboratorio 2</h1>
+    <h2 class="text-primary">Desarrollo .NET 9 con OAuth 2.0</h2>
+    <p class="lead">Aplicación web segura con Azure AD y Microsoft Identity</p>
+</div>
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <!-- Usuario Autenticado -->
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h4>✅ ¡Bienvenido, @(User.Identity.Name ?? "Usuario")!</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Te has autenticado exitosamente con Azure AD.</p>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="@Url.Action("Profile", "Account")" class="btn btn-primary btn-lg me-md-2">
+                            👤 Ver Mi Perfil
+                        </a>
+                        <a href="@Url.Action("SignOut", "Account")" class="btn btn-outline-secondary btn-lg">
+                            🚪 Cerrar Sesión
+                        </a>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5>📊 Información disponible en tu perfil:</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">🔹 Nombre completo</li>
+                        <li class="list-group-item">🔹 Dirección de email</li>
+                        <li class="list-group-item">🔹 Claims de Azure AD</li>
+                        <li class="list-group-item">🔹 Información de autenticación</li>
+                    </ul>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Usuario No Autenticado -->
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4>🔒 Acceso Restringido</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Para acceder al perfil y funcionalidades completas, necesitas autenticarte con Azure AD.</p>
+                    
+                    <div class="d-grid gap-2 col-6 mx-auto">
+                        <a href="@Url.Action("SignIn", "Account")" class="btn btn-success btn-lg">
+                            🔐 Iniciar Sesión con Azure AD
+                        </a>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5>🎯 ¿Qué puedes hacer después de autenticarte?</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">✨ Ver tu perfil completo</li>
+                        <li class="list-group-item">✨ Acceder a información segura</li>
+                        <li class="list-group-item">✨ Explorar claims de Azure AD</li>
+                        <li class="list-group-item">✨ Probar funcionalidades OAuth 2.0</li>
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5>📚 Sobre este Laboratorio</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>🔧 Tecnologías utilizadas:</h6>
+                        <ul>
+                            <li><strong>.NET 9</strong> - Framework principal</li>
+                            <li><strong>ASP.NET Core MVC</strong> - Arquitectura web</li>
+                            <li><strong>Microsoft.Identity.Web</strong> - Autenticación</li>
+                            <li><strong>Azure AD</strong> - Proveedor de identidad</li>
+                            <li><strong>OAuth 2.0 / OpenID Connect</strong> - Protocolos</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>🎯 Objetivos del laboratorio:</h6>
+                        <ul>
+                            <li>Implementar autenticación segura</li>
+                            <li>Integrar con Azure AD</li>
+                            <li>Manejar tokens JWT</li>
+                            <li>Proteger recursos con [Authorize]</li>
+                            <li>Gestionar sesiones de usuario</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
