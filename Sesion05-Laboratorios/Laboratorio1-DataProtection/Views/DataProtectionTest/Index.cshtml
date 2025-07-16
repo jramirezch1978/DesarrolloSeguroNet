@@ -1,0 +1,104 @@
+@{
+    ViewData["Title"] = "Data Protection Test";
+}
+
+<div class="container">
+    <h2>🔐 Data Protection API Test</h2>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Test Data Protection</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="testData" class="form-label">Datos a Proteger:</label>
+                        <textarea class="form-control" id="testData" rows="3" 
+                            placeholder="Ingrese datos sensibles para proteger..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="purpose" class="form-label">Propósito:</label>
+                        <select class="form-select" id="purpose">
+                            <option value="UserData.Personal.v1">Información Personal</option>
+                            <option value="UserData.Financial.v1">Datos Financieros</option>
+                            <option value="UserData.Medical.v1">Información Médica</option>
+                            <option value="UserData.Custom.v1">Propósito Personalizado</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="testProtection()">
+                        🔒 Probar Protección
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Resultados</h5>
+                </div>
+                <div class="card-body">
+                    <div id="results">
+                        <p class="text-muted">Los resultados aparecerán aquí...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function testProtection() {
+    const data = document.getElementById('testData').value;
+    const purpose = document.getElementById('purpose').value;
+    
+    if (!data.trim()) {
+        alert('Por favor ingrese datos para proteger');
+        return;
+    }
+    
+    try {
+        const response = await fetch('@Url.Action("TestProtection", "DataProtectionTest")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                data: data,
+                purpose: purpose
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('results').innerHTML = `
+                <div class="alert alert-success">
+                    <h6>✅ Protección Exitosa</h6>
+                    <p><strong>Datos Originales:</strong> ${result.originalData}</p>
+                    <p><strong>Datos Protegidos:</strong></p>
+                    <code style="word-break: break-all;">${result.protectedData}</code>
+                    <p class="mt-2"><strong>Verificación:</strong> ${result.unprotectedData}</p>
+                    <p><strong>Tamaño Original:</strong> ${result.originalLength} bytes</p>
+                    <p><strong>Tamaño Protegido:</strong> ${result.protectedLength} bytes</p>
+                </div>
+            `;
+        } else {
+            document.getElementById('results').innerHTML = `
+                <div class="alert alert-danger">
+                    <h6>❌ Error en Protección</h6>
+                    <p>${result.error}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        document.getElementById('results').innerHTML = `
+            <div class="alert alert-danger">
+                <h6>❌ Error de Conexión</h6>
+                <p>${error.message}</p>
+            </div>
+        `;
+    }
+}
+</script> 

@@ -1,0 +1,1412 @@
+Laboratorio Práctico - Sesión 5: Protección de Datos y Azure Key Vault - Parte 2
+Curso: Diseño Seguro de Aplicaciones (.NET en Azure)
+Duración Total: 75 minutos (3 laboratorios)
+Modalidad: Instructor-led con práctica individual
+Herramientas: Visual Studio Code + .NET 9 + C# + Azure Key Vault
+________________________________________
+🛠️ LABORATORIO 0: VERIFICACIÓN Y CONFIGURACIÓN DEL ENTORNO
+⏱️ Duración: 10 minutos
+🎯 Objetivo: Verificar configuraciones previas y preparar entorno para laboratorios avanzados
+Paso 1: Verificación de Configuraciones Previas (3 minutos)
+✅ Verificar que tienen de la Sesión 4:
+# Verificar .NET 9
+dotnet --version
+# Debe mostrar: 9.0.x
+
+# Verificar proyecto anterior existe
+cd DevSeguroApp/DevSeguroWebApp
+dir
+# Debe mostrar estructura del proyecto anterior
+Si NO tienen el proyecto de la Sesión 4, ejecuten setup rápido:
+# Crear estructura base
+mkdir DevSeguroApp
+cd DevSeguroApp
+dotnet new mvc -n DevSeguroWebApp --framework net9.0
+cd DevSeguroWebApp
+
+# Instalar paquetes básicos
+dotnet add package Microsoft.Identity.Web --version 3.2.0
+Paso 2: Instalar Paquetes Adicionales para Sesión 5 (4 minutos)
+# Azure Key Vault y Data Protection packages
+dotnet add package Azure.Security.KeyVault.Keys --version 4.6.0
+dotnet add package Azure.Security.KeyVault.Secrets --version 4.6.0
+dotnet add package Azure.Security.KeyVault.Certificates --version 4.6.0
+dotnet add package Azure.Identity --version 1.12.0
+dotnet add package Azure.Extensions.AspNetCore.Configuration.Secrets --version 1.3.2
+
+# Data Protection con Azure Storage
+dotnet add package Microsoft.AspNetCore.DataProtection.AzureStorage --version 9.0.0
+dotnet add package Microsoft.AspNetCore.DataProtection.AzureKeyVault --version 9.0.0
+
+# Verificar packages instalados
+dotnet list package
+Paso 3: Verificar Acceso a Azure Portal (3 minutos)
+1.	Navegar a Azure Portal:
+o	URL: https://portal.azure.com
+o	Iniciar sesión con usuario invitado
+2.	Verificar Permisos:
+o	Azure Active Directory → Groups
+o	Buscar: "gu_desarrollo_seguro_aplicacion"
+o	Verificar que aparecen como miembro
+3.	Verificar Permisos de Key Vault:
+o	Buscar "Key vaults" en portal
+o	Verificar que pueden crear recursos (botón "+ Create" disponible)
+🚨 Si no tienen acceso: Notificar al instructor inmediatamente.
+________________________________________
+🧪 LABORATORIO 1: IMPLEMENTACIÓN DE DATA PROTECTION API AVANZADA
+⏱️ Duración: 25 minutos
+🎯 Objetivo: Implementar Data Protection API con Azure Storage y Key Vault para protección enterprise-grade
+Paso 1: Configurar Azure Storage Account para Data Protection (8 minutos)
+1.	Crear Storage Account desde Azure Portal:
+2.	Azure Portal → Storage accounts → + Create
+3.	
+4.	Resource group: rg-desarrollo-seguro-[SuNombre]
+5.	Storage account name: stdevsgro[sunombre][numero]
+6.	Region: East US
+7.	Performance: Standard
+8.	Redundancy: LRS (para laboratorio)
+9.	Obtener Connection String:
+10.	Su Storage Account → Access keys → Show keys
+11.	Copiar "Connection string" de key1
+12.	Crear Container para Keys:
+13.	Su Storage Account → Containers → + Container
+14.	Name: dataprotection-keys
+15.	Public access level: Private
+Paso 2: Actualizar appsettings.json con Configuración Completa (5 minutos)
+Editar appsettings.json:
+{
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
+    "TenantId": "[SU-TENANT-ID-AQUÍ]",
+    "ClientId": "[SU-CLIENT-ID-AQUÍ]",
+    "ClientSecret": "[SU-CLIENT-SECRET-AQUÍ]",
+    "CallbackPath": "/signin-oidc",
+    "SignedOutCallbackPath": "/signout-callback-oidc"
+  },
+  "DataProtection": {
+    "ApplicationName": "DevSeguroApp-[SuNombre]",
+    "StorageConnectionString": "[SU-STORAGE-CONNECTION-STRING]",
+    "KeyLifetime": "90.00:00:00"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.AspNetCore.DataProtection": "Debug"
+    }
+  },
+  "AllowedHosts": "*",
+  "Kestrel": {
+    "Endpoints": {
+      "Https": {
+        "Url": "https://localhost:7001"
+      }
+    }
+  }
+}
+Paso 3: Configurar Data Protection en Program.cs (7 minutos)
+Actualizar Program.cs para incluir Data Protection:
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Logging;
+using Microsoft.AspNetCore.DataProtection;
+using Azure.Identity;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Habilitar logging detallado en desarrollo
+if (builder.Environment.IsDevelopment())
+{
+    IdentityModelEventSource.ShowPII = true;
+}
+
+// Configurar servicios básicos
+builder.Services.AddControllersWithViews();
+
+// Configurar Microsoft Identity Web
+builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+
+// 🔐 CONFIGURACIÓN AVANZADA DE DATA PROTECTION
+builder.Services.AddDataProtection(options =>
+{
+    // Nombre único de aplicación para aislamiento
+    options.ApplicationDiscriminator = builder.Configuration["DataProtection:ApplicationName"];
+})
+.SetDefaultKeyLifetime(TimeSpan.Parse(builder.Configuration["DataProtection:KeyLifetime"]))
+.PersistKeysToAzureBlobStorage(
+    builder.Configuration["DataProtection:StorageConnectionString"],
+    "dataprotection-keys",
+    "keys.xml")
+.SetApplicationName(builder.Configuration["DataProtection:ApplicationName"]);
+
+// Configurar autorización
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = options.DefaultPolicy;
+});
+
+builder.Services.AddRazorPages();
+
+var app = builder.Build();
+
+// Configurar pipeline
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+
+// ORDEN CRÍTICO en .NET 9
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapRazorPages();
+
+app.Run();
+Paso 4: Crear Servicio de Protección de Datos (5 minutos)
+Crear Services/SecureDataService.cs:
+using Microsoft.AspNetCore.DataProtection;
+using System.Text.Json;
+
+namespace DevSeguroWebApp.Services
+{
+    public interface ISecureDataService
+    {
+        string ProtectSensitiveData(object data, string purpose);
+        T UnprotectSensitiveData<T>(string protectedData, string purpose);
+        string ProtectPersonalInfo(string data);
+        string UnprotectPersonalInfo(string protectedData);
+        string ProtectFinancialData(string data);
+        string UnprotectFinancialData(string protectedData);
+    }
+
+    public class SecureDataService : ISecureDataService
+    {
+        private readonly IDataProtectionProvider _dataProtectionProvider;
+        private readonly ILogger<SecureDataService> _logger;
+
+        public SecureDataService(
+            IDataProtectionProvider dataProtectionProvider,
+            ILogger<SecureDataService> logger)
+        {
+            _dataProtectionProvider = dataProtectionProvider;
+            _logger = logger;
+        }
+
+        public string ProtectSensitiveData(object data, string purpose)
+        {
+            try
+            {
+                var protector = _dataProtectionProvider.CreateProtector(purpose);
+                var jsonData = JsonSerializer.Serialize(data);
+                var protectedData = protector.Protect(jsonData);
+                
+                _logger.LogInformation("Data protected with purpose: {Purpose}", purpose);
+                return protectedData;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error protecting data with purpose: {Purpose}", purpose);
+                throw;
+            }
+        }
+
+        public T UnprotectSensitiveData<T>(string protectedData, string purpose)
+        {
+            try
+            {
+                var protector = _dataProtectionProvider.CreateProtector(purpose);
+                var jsonData = protector.Unprotect(protectedData);
+                var result = JsonSerializer.Deserialize<T>(jsonData);
+                
+                _logger.LogInformation("Data unprotected with purpose: {Purpose}", purpose);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error unprotecting data with purpose: {Purpose}", purpose);
+                throw;
+            }
+        }
+
+        // Métodos específicos para diferentes tipos de datos
+        public string ProtectPersonalInfo(string data)
+        {
+            var protector = _dataProtectionProvider.CreateProtector("UserData.Personal.v1");
+            return protector.Protect(data);
+        }
+
+        public string UnprotectPersonalInfo(string protectedData)
+        {
+            var protector = _dataProtectionProvider.CreateProtector("UserData.Personal.v1");
+            return protector.Unprotect(protectedData);
+        }
+
+        public string ProtectFinancialData(string data)
+        {
+            var protector = _dataProtectionProvider.CreateProtector("UserData.Financial.v1");
+            return protector.Protect(data);
+        }
+
+        public string UnprotectFinancialData(string protectedData)
+        {
+            var protector = _dataProtectionProvider.CreateProtector("UserData.Financial.v1");
+            return protector.Unprotect(protectedData);
+        }
+    }
+}
+Registrar el servicio en Program.cs (añadir antes de var app = builder.Build();):
+// Registrar servicio de protección de datos
+builder.Services.AddScoped<ISecureDataService, SecureDataService>();
+✅ Resultado Esperado:
+•	Data Protection API configurada con Azure Storage
+•	Keys persistiendo en Blob Storage
+•	Servicio de protección de datos implementado
+•	Múltiples protectores para diferentes tipos de datos
+________________________________________
+🧪 LABORATORIO 2: INTEGRACIÓN COMPLETA CON AZURE KEY VAULT
+⏱️ Duración: 30 minutos
+🎯 Objetivo: Implementar gestión completa de secretos con Azure Key Vault usando Managed Identity
+Paso 1: Crear Azure Key Vault (8 minutos)
+1.	Crear Key Vault desde Azure Portal:
+2.	Azure Portal → Key vaults → + Create
+3.	
+4.	Resource group: rg-desarrollo-seguro-[SuNombre]
+5.	Key vault name: kv-devsgro-[sunombre]-[numero]
+6.	Region: East US
+7.	Pricing tier: Standard (para laboratorio)
+8.	Access configuration: Azure role-based access control (RBAC)
+9.	Configurar RBAC Permissions:
+10.	Su Key Vault → Access control (IAM) → + Add → Add role assignment
+11.	
+12.	Role: Key Vault Secrets Officer
+13.	Assign access to: User, group, or service principal
+14.	Members: Su cuenta de usuario
+15.	Añadir el grupo de desarrollo:
+16.	+ Add role assignment
+17.	Role: Key Vault Secrets User
+18.	Members: gu_desarrollo_seguro_aplicacion
+Paso 2: Crear Secrets en Key Vault (7 minutos)
+Crear secrets desde Azure Portal:
+Su Key Vault → Secrets → + Generate/Import
+
+1. Secret 1:
+   Name: DatabaseConnectionString
+   Value: Server=localhost;Database=DevSeguroApp;Integrated Security=true;TrustServerCertificate=true;
+
+2. Secret 2:
+   Name: ExternalApiKey
+   Value: sk-test-123456789abcdef-external-api-key
+
+3. Secret 3:
+   Name: EncryptionKey
+   Value: MyVerySecretEncryptionKey2024!
+
+4. Secret 4:
+   Name: SmtpPassword
+   Value: smtp-password-super-secret-123
+Paso 3: Configurar Configuration Provider para Key Vault (8 minutos)
+Actualizar appsettings.json para incluir Key Vault:
+{
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
+    "TenantId": "[SU-TENANT-ID-AQUÍ]",
+    "ClientId": "[SU-CLIENT-ID-AQUÍ]",
+    "ClientSecret": "[SU-CLIENT-SECRET-AQUÍ]",
+    "CallbackPath": "/signin-oidc",
+    "SignedOutCallbackPath": "/signout-callback-oidc"
+  },
+  "KeyVault": {
+    "VaultUri": "https://kv-devsgro-[sunombre]-[numero].vault.azure.net/"
+  },
+  "DataProtection": {
+    "ApplicationName": "DevSeguroApp-[SuNombre]",
+    "StorageConnectionString": "[SU-STORAGE-CONNECTION-STRING]",
+    "KeyLifetime": "90.00:00:00"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.AspNetCore.DataProtection": "Debug",
+      "Azure.Security.KeyVault": "Information"
+    }
+  },
+  "AllowedHosts": "*",
+  "Kestrel": {
+    "Endpoints": {
+      "Https": {
+        "Url": "https://localhost:7001"
+      }
+    }
+  }
+}
+Actualizar Program.cs para Key Vault Integration:
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Logging;
+using Microsoft.AspNetCore.DataProtection;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Azure.Security.KeyVault.Keys;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// 🔑 CONFIGURACIÓN DE KEY VAULT
+var keyVaultUri = builder.Configuration["KeyVault:VaultUri"];
+if (!string.IsNullOrEmpty(keyVaultUri))
+{
+    // Usar DefaultAzureCredential para desarrollo local
+    var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+    {
+        // Para desarrollo local, usar Azure CLI credentials
+        ExcludeEnvironmentCredential = false,
+        ExcludeWorkloadIdentityCredential = false,
+        ExcludeManagedIdentityCredential = false
+    });
+
+    // Añadir Key Vault como configuration provider
+    builder.Configuration.AddAzureKeyVault(
+        new Uri(keyVaultUri),
+        credential);
+}
+
+// Habilitar logging detallado en desarrollo
+if (builder.Environment.IsDevelopment())
+{
+    IdentityModelEventSource.ShowPII = true;
+}
+
+// Configurar servicios básicos
+builder.Services.AddControllersWithViews();
+
+// Configurar Microsoft Identity Web
+builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+
+// 🔐 CONFIGURACIÓN AVANZADA DE DATA PROTECTION CON KEY VAULT
+if (!string.IsNullOrEmpty(keyVaultUri))
+{
+    var credential = new DefaultAzureCredential();
+    
+    builder.Services.AddDataProtection(options =>
+    {
+        options.ApplicationDiscriminator = builder.Configuration["DataProtection:ApplicationName"];
+    })
+    .SetDefaultKeyLifetime(TimeSpan.Parse(builder.Configuration["DataProtection:KeyLifetime"]))
+    .PersistKeysToAzureBlobStorage(
+        builder.Configuration["DataProtection:StorageConnectionString"],
+        "dataprotection-keys",
+        "keys.xml")
+    .ProtectKeysWithAzureKeyVault(
+        new Uri($"{keyVaultUri}keys/dataprotection-key"),
+        credential)
+    .SetApplicationName(builder.Configuration["DataProtection:ApplicationName"]);
+}
+
+// Registrar clientes de Key Vault
+if (!string.IsNullOrEmpty(keyVaultUri))
+{
+    builder.Services.AddSingleton(provider =>
+    {
+        var credential = new DefaultAzureCredential();
+        return new SecretClient(new Uri(keyVaultUri), credential);
+    });
+
+    builder.Services.AddSingleton(provider =>
+    {
+        var credential = new DefaultAzureCredential();
+        return new KeyClient(new Uri(keyVaultUri), credential);
+    });
+}
+
+// Registrar servicio de protección de datos
+builder.Services.AddScoped<ISecureDataService, SecureDataService>();
+
+// Configurar autorización
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = options.DefaultPolicy;
+});
+
+builder.Services.AddRazorPages();
+
+var app = builder.Build();
+
+// Configurar pipeline
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapRazorPages();
+
+app.Run();
+Paso 4: Crear Servicio de Key Vault (7 minutos)
+Crear Services/KeyVaultService.cs:
+using Azure.Security.KeyVault.Secrets;
+using Azure.Security.KeyVault.Keys;
+using Azure.Security.KeyVault.Keys.Cryptography;
+using System.Text;
+
+namespace DevSeguroWebApp.Services
+{
+    public interface IKeyVaultService
+    {
+        Task<string> GetSecretAsync(string secretName);
+        Task SetSecretAsync(string secretName, string secretValue);
+        Task<string> EncryptDataAsync(string keyName, string plaintext);
+        Task<string> DecryptDataAsync(string keyName, string ciphertext);
+        Task<Dictionary<string, string>> GetAllSecretsAsync();
+        Task<bool> SecretExistsAsync(string secretName);
+    }
+
+    public class KeyVaultService : IKeyVaultService
+    {
+        private readonly SecretClient _secretClient;
+        private readonly KeyClient _keyClient;
+        private readonly ILogger<KeyVaultService> _logger;
+
+        public KeyVaultService(
+            SecretClient secretClient,
+            KeyClient keyClient,
+            ILogger<KeyVaultService> logger)
+        {
+            _secretClient = secretClient;
+            _keyClient = keyClient;
+            _logger = logger;
+        }
+
+        public async Task<string> GetSecretAsync(string secretName)
+        {
+            try
+            {
+                var secret = await _secretClient.GetSecretAsync(secretName);
+                _logger.LogInformation("Successfully retrieved secret: {SecretName}", secretName);
+                return secret.Value.Value;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving secret: {SecretName}", secretName);
+                throw;
+            }
+        }
+
+        public async Task SetSecretAsync(string secretName, string secretValue)
+        {
+            try
+            {
+                await _secretClient.SetSecretAsync(secretName, secretValue);
+                _logger.LogInformation("Successfully set secret: {SecretName}", secretName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting secret: {SecretName}", secretName);
+                throw;
+            }
+        }
+
+        public async Task<string> EncryptDataAsync(string keyName, string plaintext)
+        {
+            try
+            {
+                var key = await _keyClient.GetKeyAsync(keyName);
+                var cryptoClient = new CryptographyClient(key.Value.Id, new DefaultAzureCredential());
+                
+                var plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
+                var encryptResult = await cryptoClient.EncryptAsync(EncryptionAlgorithm.RsaOaep, plaintextBytes);
+                
+                var encryptedBase64 = Convert.ToBase64String(encryptResult.Ciphertext);
+                _logger.LogInformation("Successfully encrypted data using key: {KeyName}", keyName);
+                
+                return encryptedBase64;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error encrypting data with key: {KeyName}", keyName);
+                throw;
+            }
+        }
+
+        public async Task<string> DecryptDataAsync(string keyName, string ciphertext)
+        {
+            try
+            {
+                var key = await _keyClient.GetKeyAsync(keyName);
+                var cryptoClient = new CryptographyClient(key.Value.Id, new DefaultAzureCredential());
+                
+                var ciphertextBytes = Convert.FromBase64String(ciphertext);
+                var decryptResult = await cryptoClient.DecryptAsync(EncryptionAlgorithm.RsaOaep, ciphertextBytes);
+                
+                var plaintext = Encoding.UTF8.GetString(decryptResult.Plaintext);
+                _logger.LogInformation("Successfully decrypted data using key: {KeyName}", keyName);
+                
+                return plaintext;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error decrypting data with key: {KeyName}", keyName);
+                throw;
+            }
+        }
+
+        public async Task<Dictionary<string, string>> GetAllSecretsAsync()
+        {
+            try
+            {
+                var secrets = new Dictionary<string, string>();
+                
+                await foreach (var secretProperty in _secretClient.GetPropertiesOfSecretsAsync())
+                {
+                    if (secretProperty.Enabled == true)
+                    {
+                        try
+                        {
+                            var secret = await _secretClient.GetSecretAsync(secretProperty.Name);
+                            secrets[secretProperty.Name] = secret.Value.Value;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Could not retrieve secret: {SecretName}", secretProperty.Name);
+                            secrets[secretProperty.Name] = "[Error retrieving secret]";
+                        }
+                    }
+                }
+                
+                _logger.LogInformation("Retrieved {Count} secrets from Key Vault", secrets.Count);
+                return secrets;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving all secrets from Key Vault");
+                throw;
+            }
+        }
+
+        public async Task<bool> SecretExistsAsync(string secretName)
+        {
+            try
+            {
+                await _secretClient.GetSecretAsync(secretName);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+}
+Registrar el servicio en Program.cs (añadir con los otros servicios):
+// Registrar servicio de Key Vault
+builder.Services.AddScoped<IKeyVaultService, KeyVaultService>();
+✅ Resultado Esperado:
+•	Key Vault configurado con RBAC
+•	Secrets almacenados en Key Vault
+•	Configuration provider integrado
+•	Servicio de Key Vault implementado
+•	Data Protection protegida con Key Vault
+________________________________________
+🧪 LABORATORIO 3: IMPLEMENTACIÓN DE VISTAS AVANZADAS Y TESTING COMPLETO
+⏱️ Duración: 10 minutos
+🎯 Objetivo: Crear interfaces avanzadas para gestión de datos protegidos y testing end-to-end
+Paso 1: Crear Controller para Data Protection y Key Vault (4 minutos)
+Crear Controllers/SecureDataController.cs:
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using DevSeguroWebApp.Services;
+using System.ComponentModel.DataAnnotations;
+
+namespace DevSeguroWebApp.Controllers
+{
+    [Authorize]
+    public class SecureDataController : Controller
+    {
+        private readonly ISecureDataService _secureDataService;
+        private readonly IKeyVaultService _keyVaultService;
+        private readonly ILogger<SecureDataController> _logger;
+
+        public SecureDataController(
+            ISecureDataService secureDataService,
+            IKeyVaultService keyVaultService,
+            ILogger<SecureDataController> logger)
+        {
+            _secureDataService = secureDataService;
+            _keyVaultService = keyVaultService;
+            _logger = logger;
+        }
+
+        [HttpGet]
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult ProtectData([Required] string data, [Required] string purpose)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Data and purpose are required");
+            }
+
+            try
+            {
+                var protectedData = _secureDataService.ProtectSensitiveData(data, purpose);
+                return Json(new { 
+                    success = true, 
+                    protectedData = protectedData,
+                    originalLength = data.Length,
+                    protectedLength = protectedData.Length
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error protecting data");
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult UnprotectData([Required] string protectedData, [Required] string purpose)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Protected data and purpose are required");
+            }
+
+            try
+            {
+                var unprotectedData = _secureDataService.UnprotectSensitiveData<string>(protectedData, purpose);
+                return Json(new { 
+                    success = true, 
+                    unprotectedData = unprotectedData 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error unprotecting data");
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetKeyVaultSecrets()
+        {
+            try
+            {
+                var secrets = await _keyVaultService.GetAllSecretsAsync();
+                
+                // Mask sensitive values for display
+                var maskedSecrets = secrets.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Key.Contains("Password") || kvp.Key.Contains("Key") 
+                        ? MaskSensitiveValue(kvp.Value) 
+                        : kvp.Value
+                );
+
+                return Json(new { success = true, secrets = maskedSecrets });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving Key Vault secrets");
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateSecret([Required] string secretName, [Required] string secretValue)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Secret name and value are required");
+            }
+
+            try
+            {
+                await _keyVaultService.SetSecretAsync(secretName, secretValue);
+                return Json(new { success = true, message = $"Secret '{secretName}' created successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating secret: {SecretName}", secretName);
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult TestConfiguration()
+        {
+            var config = new
+            {
+                DataProtectionConfigured = _secureDataService != null,
+                KeyVaultConfigured = _keyVaultService != null,
+                Environment = Environment.MachineName,
+                Framework = Environment.Version.ToString(),
+                ConfigurationSources = new[]
+                {
+                    "appsettings.json",
+                    "Azure Key Vault",
+                    "Environment Variables"
+                }
+            };
+
+            return Json(config);
+        }
+
+        private static string MaskSensitiveValue(string value)
+        {
+            if (string.IsNullOrEmpty(value) || value.Length <= 8)
+                return "***";
+            
+            return value.Substring(0, 4) + new string('*', Math.Min(value.Length - 8, 20)) + value.Substring(value.Length - 4);
+        }
+    }
+}
+Paso 2: Crear Vista Avanzada para Testing (4 minutos)
+Crear Views/SecureData/Index.cshtml:
+@{
+    ViewData["Title"] = "Gestión Segura de Datos - .NET 9 + Azure Key Vault";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-shield-alt"></i> Gestión Segura de Datos (.NET 9)
+                    </h3>
+                    <small>Data Protection API + Azure Key Vault Integration</small>
+                </div>
+                <div class="card-body">
+                    <!-- Status Panel -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h5><i class="fas fa-info-circle"></i> Estado del Sistema</h5>
+                                <div id="systemStatus">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Verificando configuración...</span>
+                                    </div>
+                                    <span class="ms-2">Verificando configuración del sistema...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Protection Testing -->
+                    <div class="row mb-4">
+                        <div class="col-lg-6">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h5><i class="fas fa-lock"></i> Data Protection API Testing</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="dataProtectionForm">
+                                        <div class="mb-3">
+                                            <label for="inputData" class="form-label">Datos a Proteger:</label>
+                                            <textarea class="form-control" id="inputData" rows="3" 
+                                                placeholder="Ingrese datos sensibles para proteger..."></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="purpose" class="form-label">Propósito de Protección:</label>
+                                            <select class="form-select" id="purpose">
+                                                <option value="UserData.Personal.v1">Información Personal</option>
+                                                <option value="UserData.Financial.v1">Datos Financieros</option>
+                                                <option value="UserData.Medical.v1">Información Médica</option>
+                                                <option value="UserData.Custom.v1">Propósito Personalizado</option>
+                                            </select>
+                                        </div>
+                                        <div class="d-grid gap-2 d-md-flex">
+                                            <button type="button" class="btn btn-success" onclick="protectData()">
+                                                <i class="fas fa-shield-alt"></i> Proteger Datos
+                                            </button>
+                                            <button type="button" class="btn btn-warning" onclick="unprotectData()">
+                                                <i class="fas fa-unlock"></i> Desproteger Datos
+                                            </button>
+                                            <button type="button" class="btn btn-secondary" onclick="clearDataProtection()">
+                                                <i class="fas fa-eraser"></i> Limpiar
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <div class="mt-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Datos Protegidos:</label>
+                                            <textarea class="form-control" id="protectedData" rows="4" readonly 
+                                                placeholder="Los datos protegidos aparecerán aquí..."></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Datos Desprotegidos:</label>
+                                            <textarea class="form-control" id="unprotectedData" rows="3" readonly 
+                                                placeholder="Los datos desprotegidos aparecerán aquí..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Key Vault Management -->
+                        <div class="col-lg-6">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5><i class="fas fa-key"></i> Azure Key Vault Management</h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Create Secret -->
+                                    <div class="mb-4">
+                                        <h6><i class="fas fa-plus-circle"></i> Crear Nuevo Secret</h6>
+                                        <form id="createSecretForm">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <input type="text" class="form-control" id="secretName" 
+                                                        placeholder="Nombre del secret">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <input type="password" class="form-control" id="secretValue" 
+                                                        placeholder="Valor del secret">
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <button type="button" class="btn btn-primary btn-sm" onclick="createSecret()">
+                                                    <i class="fas fa-save"></i> Crear Secret
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <!-- Load Secrets -->
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6><i class="fas fa-list"></i> Secrets en Key Vault</h6>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="loadKeyVaultSecrets()">
+                                                <i class="fas fa-sync-alt"></i> Actualizar
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Secrets List -->
+                                    <div id="secretsList">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-info-circle"></i> Click "Actualizar" para cargar secrets
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuration Test Results -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5><i class="fas fa-cogs"></i> Resultados de Testing y Logs</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="testResults">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle"></i> Los resultados de las operaciones aparecerán aquí...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Variables globales
+    let systemConfiguration = {};
+
+    // Inicialización al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        checkSystemConfiguration();
+    });
+
+    // Verificar configuración del sistema
+    async function checkSystemConfiguration() {
+        try {
+            const response = await fetch('@Url.Action("TestConfiguration", "SecureData")');
+            const config = await response.json();
+            systemConfiguration = config;
+            
+            const statusDiv = document.getElementById('systemStatus');
+            
+            let statusHtml = '<div class="row">';
+            statusHtml += `<div class="col-md-3">
+                <strong>Data Protection:</strong> 
+                <span class="badge ${config.dataProtectionConfigured ? 'bg-success' : 'bg-danger'}">
+                    ${config.dataProtectionConfigured ? 'Configurado' : 'No Configurado'}
+                </span>
+            </div>`;
+            statusHtml += `<div class="col-md-3">
+                <strong>Key Vault:</strong> 
+                <span class="badge ${config.keyVaultConfigured ? 'bg-success' : 'bg-danger'}">
+                    ${config.keyVaultConfigured ? 'Conectado' : 'No Conectado'}
+                </span>
+            </div>`;
+            statusHtml += `<div class="col-md-3">
+                <strong>Framework:</strong> 
+                <span class="badge bg-primary">.NET ${config.framework}</span>
+            </div>`;
+            statusHtml += `<div class="col-md-3">
+                <strong>Servidor:</strong> 
+                <span class="badge bg-secondary">${config.environment}</span>
+            </div>`;
+            statusHtml += '</div>';
+            
+            statusDiv.innerHTML = statusHtml;
+            
+            // Auto-cargar secrets si Key Vault está configurado
+            if (config.keyVaultConfigured) {
+                setTimeout(loadKeyVaultSecrets, 1000);
+            }
+            
+        } catch (error) {
+            console.error('Error checking system configuration:', error);
+            document.getElementById('systemStatus').innerHTML = 
+                '<div class="text-danger"><i class="fas fa-exclamation-triangle"></i> Error verificando configuración</div>';
+        }
+    }
+
+    // Proteger datos
+    async function protectData() {
+        const data = document.getElementById('inputData').value;
+        const purpose = document.getElementById('purpose').value;
+        
+        if (!data.trim()) {
+            showResult('error', 'Por favor ingrese datos para proteger');
+            return;
+        }
+
+        try {
+            showResult('info', 'Protegiendo datos...');
+            
+            const response = await fetch('@Url.Action("ProtectData", "SecureData")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `data=${encodeURIComponent(data)}&purpose=${encodeURIComponent(purpose)}`
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('protectedData').value = result.protectedData;
+                showResult('success', 
+                    `Datos protegidos exitosamente. Tamaño original: ${result.originalLength} bytes, ` +
+                    `Tamaño protegido: ${result.protectedLength} bytes`);
+            } else {
+                showResult('error', `Error: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Error protecting data:', error);
+            showResult('error', 'Error al proteger datos: ' + error.message);
+        }
+    }
+
+    // Desproteger datos
+    async function unprotectData() {
+        const protectedData = document.getElementById('protectedData').value;
+        const purpose = document.getElementById('purpose').value;
+        
+        if (!protectedData.trim()) {
+            showResult('error', 'No hay datos protegidos para desproteger');
+            return;
+        }
+
+        try {
+            showResult('info', 'Desprotegiendo datos...');
+            
+            const response = await fetch('@Url.Action("UnprotectData", "SecureData")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `protectedData=${encodeURIComponent(protectedData)}&purpose=${encodeURIComponent(purpose)}`
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('unprotectedData').value = result.unprotectedData;
+                showResult('success', 'Datos desprotegidos exitosamente');
+            } else {
+                showResult('error', `Error: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Error unprotecting data:', error);
+            showResult('error', 'Error al desproteger datos: ' + error.message);
+        }
+    }
+
+    // Limpiar formulario de Data Protection
+    function clearDataProtection() {
+        document.getElementById('inputData').value = '';
+        document.getElementById('protectedData').value = '';
+        document.getElementById('unprotectedData').value = '';
+        showResult('info', 'Formulario limpiado');
+    }
+
+    // Cargar secrets de Key Vault
+    async function loadKeyVaultSecrets() {
+        if (!systemConfiguration.keyVaultConfigured) {
+            showResult('error', 'Key Vault no está configurado');
+            return;
+        }
+
+        try {
+            const secretsList = document.getElementById('secretsList');
+            secretsList.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm"></div> Cargando secrets...</div>';
+            
+            const response = await fetch('@Url.Action("GetKeyVaultSecrets", "SecureData")');
+            const result = await response.json();
+            
+            if (result.success) {
+                let html = '<div class="table-responsive"><table class="table table-striped table-hover">';
+                html += '<thead class="table-dark"><tr><th>Nombre</th><th>Valor</th><th>Acciones</th></tr></thead><tbody>';
+                
+                for (const [name, value] of Object.entries(result.secrets)) {
+                    html += `<tr>
+                        <td><code>${name}</code></td>
+                        <td><span class="text-muted">${value}</span></td>
+                        <td>
+                            <button class="btn btn-outline-primary btn-sm" onclick="copyToClipboard('${value}')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                }
+                
+                html += '</tbody></table></div>';
+                secretsList.innerHTML = html;
+                
+                showResult('success', `${Object.keys(result.secrets).length} secrets cargados desde Key Vault`);
+            } else {
+                secretsList.innerHTML = '<div class="alert alert-danger">Error cargando secrets</div>';
+                showResult('error', `Error: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Error loading secrets:', error);
+            document.getElementById('secretsList').innerHTML = '<div class="alert alert-danger">Error cargando secrets</div>';
+            showResult('error', 'Error al cargar secrets: ' + error.message);
+        }
+    }
+
+    // Crear nuevo secret
+    async function createSecret() {
+        const name = document.getElementById('secretName').value;
+        const value = document.getElementById('secretValue').value;
+        
+        if (!name.trim() || !value.trim()) {
+            showResult('error', 'Por favor ingrese nombre y valor del secret');
+            return;
+        }
+
+        try {
+            showResult('info', 'Creando secret...');
+            
+            const response = await fetch('@Url.Action("CreateSecret", "SecureData")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `secretName=${encodeURIComponent(name)}&secretValue=${encodeURIComponent(value)}`
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('secretName').value = '';
+                document.getElementById('secretValue').value = '';
+                showResult('success', result.message);
+                
+                // Recargar lista de secrets
+                setTimeout(loadKeyVaultSecrets, 1000);
+            } else {
+                showResult('error', `Error: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Error creating secret:', error);
+            showResult('error', 'Error al crear secret: ' + error.message);
+        }
+    }
+
+    // Mostrar resultados
+    function showResult(type, message) {
+        const resultsDiv = document.getElementById('testResults');
+        const timestamp = new Date().toLocaleTimeString();
+        
+        let alertClass = 'alert-secondary';
+        let icon = 'fas fa-info-circle';
+        
+        switch (type) {
+            case 'success':
+                alertClass = 'alert-success';
+                icon = 'fas fa-check-circle';
+                break;
+            case 'error':
+                alertClass = 'alert-danger';
+                icon = 'fas fa-exclamation-triangle';
+                break;
+            case 'warning':
+                alertClass = 'alert-warning';
+                icon = 'fas fa-exclamation-circle';
+                break;
+            case 'info':
+                alertClass = 'alert-info';
+                icon = 'fas fa-info-circle';
+                break;
+        }
+        
+        const newAlert = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="${icon}"></i>
+                <strong>[${timestamp}]</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        resultsDiv.innerHTML = newAlert + resultsDiv.innerHTML;
+        
+        // Limitar a los últimos 5 resultados
+        const alerts = resultsDiv.querySelectorAll('.alert');
+        if (alerts.length > 5) {
+            for (let i = 5; i < alerts.length; i++) {
+                alerts[i].remove();
+            }
+        }
+    }
+
+    // Copiar al portapapeles
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            showResult('success', 'Valor copiado al portapapeles');
+        }).catch(function() {
+            showResult('error', 'Error al copiar al portapapeles');
+        });
+    }
+</script>
+}
+Paso 3: Actualizar el Layout para incluir el nuevo menú (2 minutos)
+Actualizar Views/Shared/_Layout.cshtml (añadir enlace en el menú):
+Buscar la sección del navbar y añadir después del enlace "Mi Perfil":
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <li class="nav-item">
+        <a class="nav-link text-light" asp-area="" asp-controller="Account" asp-action="Profile">👤 Mi Perfil</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-light" asp-area="" asp-controller="SecureData" asp-action="Index">🔐 Datos Seguros</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-light" asp-area="" asp-controller="Account" asp-action="TokenInfo">🔍 Info Tokens</a>
+    </li>
+}
+________________________________________
+🧪 LABORATORIO 4: TESTING COMPLETO Y VERIFICACIÓN
+⏱️ Duración: 10 minutos
+🎯 Objetivo: Realizar testing end-to-end de todas las funcionalidades implementadas
+Paso 1: Autenticación con Azure CLI para Key Vault (3 minutos)
+Para que funcione la autenticación local con Key Vault, configurar Azure CLI:
+1.	Instalar Azure CLI (si no está instalado):
+2.	# Con chocolatey
+3.	choco install azure-cli -y
+4.	Login con Azure CLI:
+5.	az login
+6.	
+7.	# Seleccionar el tenant correcto si tiene múltiples
+8.	az account set --subscription [SUBSCRIPTION-ID]
+9.	
+10.	# Verificar login
+11.	az account show
+12.	Verificar acceso a Key Vault:
+13.	az keyvault secret list --vault-name kv-devsgro-[sunombre]-[numero]
+Paso 2: Testing Completo de la Aplicación (5 minutos)
+Ejecutar la aplicación:
+cd DevSeguroApp/DevSeguroWebApp
+dotnet run
+Secuencia de Testing Completa:
+1.	🏠 Verificar Página de Inicio:
+o	Navegar a: https://localhost:7001
+o	Verificar que carga correctamente
+o	Confirmar estado de autenticación
+2.	🔑 Autenticación:
+o	Si no está autenticado, click "Iniciar Sesión"
+o	Completar flujo OAuth con Azure AD
+o	Verificar redirección exitosa
+3.	🔐 Testing de Datos Seguros:
+o	Click en "Datos Seguros" en el menú
+o	Verificar que la página carga
+o	Confirmar que "Estado del Sistema" muestra configuraciones correctas
+4.	🛡️ Testing Data Protection API:
+5.	Datos de Prueba:
+6.	- Texto: "Información personal: Juan Pérez, CC: 1234567890, Tarjeta: 4111-1111-1111-1111"
+7.	- Propósito: "Información Personal"
+8.	
+9.	Pasos:
+10.	1. Pegar texto en "Datos a Proteger"
+11.	2. Click "Proteger Datos"
+12.	3. Verificar que aparecen datos encriptados
+13.	4. Click "Desproteger Datos"
+14.	5. Verificar que recupera texto original
+15.	🔑 Testing Key Vault Integration:
+16.	Pasos:
+17.	1. Click "Actualizar" en sección Key Vault
+18.	2. Verificar que carga los 4 secrets creados
+19.	3. Crear nuevo secret:
+20.	   - Nombre: "TestSecret"
+21.	   - Valor: "Este es un valor de prueba"
+22.	4. Click "Crear Secret"
+23.	5. Verificar mensaje de éxito
+24.	6. Click "Actualizar" nuevamente
+25.	7. Confirmar que aparece el nuevo secret
+26.	📊 Verificar Logs y Resultados:
+o	Observar la sección "Resultados de Testing y Logs"
+o	Confirmar que aparecen mensajes con timestamps
+o	Verificar diferentes tipos de alertas (éxito, error, info)
+Paso 3: Testing de Diferentes Propósitos de Protección (2 minutos)
+Probar diferentes protectores:
+1.	Datos Financieros:
+2.	Datos: "Cuenta bancaria: 123-456-789, Saldo: $50,000"
+3.	Propósito: "Datos Financieros"
+4.	Información Médica:
+5.	Datos: "Paciente: María López, Diagnóstico: Diabetes Tipo 2"
+6.	Propósito: "Información Médica"
+7.	Propósito Personalizado:
+8.	Datos: "API Key: sk-live-123456789abcdef"
+9.	Propósito: "Propósito Personalizado"
+Verificar que:
+•	Cada propósito genera datos protegidos diferentes
+•	No se puede desproteger datos de un propósito con otro propósito
+•	Los mensajes de error son apropiados
+________________________________________
+📊 VERIFICACIÓN FINAL Y RESUMEN
+✅ Checklist de Completación:
+Laboratorio 1 - Data Protection API:
+•	[ ] Azure Storage Account creado y configurado
+•	[ ] Data Protection API integrada con Blob Storage
+•	[ ] Servicio SecureDataService implementado
+•	[ ] Múltiples protectores funcionando (Personal, Financial, Medical)
+Laboratorio 2 - Azure Key Vault:
+•	[ ] Key Vault creado con RBAC habilitado
+•	[ ] 4 secrets almacenados en Key Vault
+•	[ ] Configuration Provider integrado
+•	[ ] Servicio KeyVaultService implementado
+•	[ ] Azure CLI autenticado para desarrollo local
+Laboratorio 3 - Interface y Testing:
+•	[ ] Controller SecureDataController creado
+•	[ ] Vista avanzada con JavaScript interactivo
+•	[ ] Menú actualizado con enlace "Datos Seguros"
+•	[ ] Testing end-to-end completado exitosamente
+Funcionalidades Verificadas:
+•	[ ] Protección/desprotección de datos funciona
+•	[ ] Diferentes propósitos generan diferentes encriptaciones
+•	[ ] Key Vault secrets se cargan correctamente
+•	[ ] Creación de nuevos secrets funciona
+•	[ ] Logs y mensajes de estado aparecen
+•	[ ] Manejo de errores apropiado
+________________________________________
+🎯 RESULTADOS DE APRENDIZAJE ALCANZADOS
+Al completar este laboratorio, los estudiantes han logrado:
+1.	🔐 Implementación Enterprise de Data Protection:
+o	Configuración avanzada con Azure Storage
+o	Múltiples protectores para diferentes tipos de datos
+o	Rotación automática de claves
+o	Logging y auditoría integrados
+2.	🔑 Gestión Completa de Secretos:
+o	Azure Key Vault con RBAC
+o	Configuration Provider seamless
+o	Managed Identity para autenticación
+o	Operaciones CRUD de secrets
+3.	🛡️ Seguridad End-to-End:
+o	Separación de responsabilidades entre tipos de datos
+o	Protección en reposo y en tránsito
+o	Auditoría completa de operaciones
+o	Manejo seguro de errores
+4.	⚙️ Patterns de Desarrollo Seguro:
+o	Dependency injection apropiada
+o	Configuración centralizada
+o	Logging estructurado
+o	Testing automatizado
+________________________________________
+🚨 TROUBLESHOOTING COMÚN
+Error: "Could not load file or assembly 'Azure.Identity'"
+Solución:
+dotnet clean
+dotnet restore
+dotnet build
+Error: "Access denied to Key Vault"
+Solución:
+az login
+az account set --subscription [subscription-id]
+Verificar permisos RBAC en Azure Portal
+Error: "DataProtection keys not found"
+Solución:
+Verificar connection string de Storage Account
+Confirmar que container "dataprotection-keys" existe
+Revisar logs en consola para detalles específicos
+Error: "Cannot connect to Key Vault"
+Solución:
+Verificar URL de Key Vault en appsettings.json
+Confirmar que Azure CLI está autenticado
+Revisar permisos de red en Key Vault
+________________________________________
+📈 MÉTRICAS DE ÉXITO
+Indicadores de Implementación Exitosa:
+•	✅ Tiempo de respuesta: Operaciones de protección/desprotección < 100ms
+•	✅ Disponibilidad: Key Vault accesible 100% del tiempo durante testing
+•	✅ Seguridad: Datos nunca aparecen en logs sin protección
+•	✅ Usabilidad: Interface responsive y intuitiva
+•	✅ Escalabilidad: Configuración lista para múltiples entornos
+Criterios de Calidad:
+•	Código limpio y bien estructurado
+•	Manejo apropiado de excepciones
+•	Logging comprensivo pero no verbose
+•	Configuración centralizada y flexible
+•	Documentación inline clara
+________________________________________
+🎓 PREPARACIÓN PARA SESIÓN FINAL
+Para la próxima sesión (Proyecto Integrador), asegúrense de tener:
+1.	Proyecto completamente funcional con todas las características implementadas
+2.	Azure resources creados y funcionando (Key Vault, Storage Account)
+3.	Credenciales Azure configuradas para desarrollo local
+4.	Entendimiento claro de los patterns implementados
+La Sesión Final integrará:
+•	Autenticación OAuth 2.0/OpenID Connect (Sesión 4)
+•	Protección de datos y Key Vault (Sesión 5)
+•	Deployment a Azure App Service
+•	Monitoring y alertas
+•	Performance testing
+•	Security scanning
+¡Excelente trabajo completando estos laboratorios avanzados! 🚀
+
