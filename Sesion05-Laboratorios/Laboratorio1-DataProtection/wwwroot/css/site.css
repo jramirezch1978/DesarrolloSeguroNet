@@ -1,0 +1,136 @@
+/* Estilos básicos para el Laboratorio de Protección de Datos */
+
+body[object Object]background: linear-gradient(135deg, #667ea 0%, #764ba2 100%);
+    min-height: 100vh;
+    font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar[object Object]  background: rgba(00.8   backdrop-filter: blur(10px);
+    box-shadow: 0 2px 20px rgba(00, 0, 0.1);
+}
+
+.navbar-brand [object Object]
+    font-weight: 600;
+    font-size: 1.3em;
+}
+
+.card [object Object]    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(01);
+    transition: transform 0.3s ease, box-shadow 00.3se;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0);
+}
+
+.card-header {
+    border-radius: 15px 15x 00mportant;
+    font-weight: 60
+
+.list-group-item [object Object]    border: none;
+    border-radius:10px !important;
+    margin-bottom: 5px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255559
+
+.list-group-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(01);
+    background: rgba(255255, 2551
+.btn {
+    border-radius: 10x;
+    padding: 10x;
+    font-weight: 500   transition: all 0.3s ease;
+    border: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0.2);
+}
+
+.btn-primary[object Object]background: linear-gradient(45deg, #667eea, #764ba2);
+}
+
+.btn-success[object Object]background: linear-gradient(45deg, #562 #a8e6cf);
+}
+
+.btn-warning[object Object]background: linear-gradient(45eg, #f093 #f5576c);
+}
+
+.btn-secondary[object Object]background: linear-gradient(45deg, #4cfe, #00f2fe);
+}
+
+.text-gradient[object Object]background: linear-gradient(45deg, #667eea, #764;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.alert {
+    border-radius:10;
+    border: none;
+}
+
+.badge {
+    border-radius: 8px;
+    padding: 8;
+}
+
+.form-control, .form-select {
+    border-radius: 10x;
+    border:2px solid #e9ecef;
+    transition: all 00.3;
+}
+
+.form-control:focus, .form-select:focus [object Object]
+    border-color: #667eea;
+    box-shadow: 0 002rem rgba(121262340.25
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from [object Object]
+        opacity: 0;
+        transform: translateY(20);
+    }
+    to [object Object]
+        opacity: 1;
+        transform: translateY(0
+    }
+}
+
+.fade-in {
+    animation: fadeIn 05out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom:20px;
+    }
+    
+    .btn[object Object]        width: 100     margin-bottom:10    }
+}
+
+/* Footer */
+.footer[object Object]  background: rgba(00.8   backdrop-filter: blur(10px);
+    margin-top: auto;
+}
+
+/* Loading spinner */
+.spinner-border {
+    width: 1.5rem;
+    height: 1.5;
+}
+
+/* Resultados de testing */
+#testResults .alert {
+    margin-bottom: 10px;
+}
+
+#testResults .alert:last-child {
+    margin-bottom: 0;
+} 
