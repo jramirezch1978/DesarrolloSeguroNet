@@ -1,89 +1,61 @@
 <!DOCTYPE html>
-<html lang=es>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
-    <meta name=viewport" content="width=device-width, initial-scale=1.0>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - Laboratorio Protección de Datos</title>
-    <link href=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/60.4s/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135g, #667ea 0%, #764ba2 100);
-            min-height:100
-        }
-        .navbar {
-            background: rgba(0, 0, 00.8rtant;
-            backdrop-filter: blur(10px);
-        }
-        .card {
-            border: none;
-            border-radius:15x;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-        .list-group-item {
-            border: none;
-            border-radius:10rtant;
-            margin-bottom: 5px;
-            transition: all 0.3s ease;
-        }
-        .list-group-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        .btn {
-            border-radius:10           padding: 10px20;
-            font-weight: 500;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" />
 </head>
 <body>
-    <nav class=navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
         <div class="container">
-            <a class="navbar-brand" href="/>
-                <i class=fas fa-shield-alt"></i> Protección de Datos
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-shield-alt"></i> Protección de Datos
             </a>
-            <button class="navbar-toggler" type="button data-bs-toggle=collapse" data-bs-target="#navbarNav>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse id=>
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class=nav-link" href="/">Inicio</a>
+                        <a class="nav-link" href="/">Inicio</a>
                     </li>
                     <li class="nav-item">
-                        <a class=nav-link" href="/DataProtectionTest">Protección de Datos</a>
+                        <a class="nav-link" href="/DataProtectionTest">Protección de Datos</a>
                     </li>
                     <li class="nav-item">
-                        <a class=nav-linkhref="/Privacy">Privacidad</a>
+                        <a class="nav-link" href="/Privacy">Privacidad</a>
                     </li>
                     @if (User.Identity?.IsAuthenticated == true)
-    [object Object]                   <li class="nav-item">
-                            <a class=nav-link" href="/Account/Profile">Perfil</a>
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Account/Profile">Perfil</a>
                         </li>
                         <li class="nav-item">
-                            <a class=nav-link href="/Account/SignOut>Cerrar Sesión</a>
+                            <a class="nav-link" href="/Account/SignOut">Cerrar Sesión</a>
                         </li>
                     }
                     else
-    [object Object]                   <li class="nav-item">
-                            <a class=nav-link href=/Account/SignIn>Iniciar Sesión</a>
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Account/SignIn">Iniciar Sesión</a>
                         </li>
                     }
                 </ul>
             </div>
         </div>
     </nav>
-
-    <main role="main>       @RenderBody()
+    <main class="container mb-5">
+        @RenderBody()
     </main>
-
-    <footer class=footer mt-auto py-3 bg-dark text-white">
+    <footer class="footer mt-auto py-3 bg-dark text-white">
         <div class="container text-center">
             <span>Laboratorio de Protección de Datos y Azure Key Vault - .NET 9</span>
         </div>
     </footer>
-
-    <script src=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    @await RenderSectionAsync(Scripts, required: false)
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html> 
