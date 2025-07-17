@@ -152,7 +152,7 @@ namespace DevSeguroWebApp.Controllers
                     _logger.LogError("Protected data is null or empty");
                     return Json(new { success = false, error = "Error: Los datos protegidos están vacíos" });
                 }
-
+                
                 // Desproteger datos para verificar
                 var unprotectedData = _secureDataService.UnprotectSensitiveData<string>(protectedData, request.Purpose);
                 
@@ -171,7 +171,7 @@ namespace DevSeguroWebApp.Controllers
                 }
 
                 _logger.LogInformation("Data protection test successful");
-
+                
                 return Json(new
                 {
                     success = true,

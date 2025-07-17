@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.DataProtection.Repositories;
 using Azure.Storage.Blobs;
 using System.Xml.Linq;
+using System.Text;
 
 namespace DevSeguroWebApp.Services
 {
@@ -28,7 +29,7 @@ namespace DevSeguroWebApp.Services
                 }
 
                 using var stream = _blobClient.OpenRead();
-                using var reader = new StreamReader(stream);
+                using var reader = new StreamReader(stream, Encoding.UTF8);
                 var content = reader.ReadToEnd();
 
                 if (string.IsNullOrWhiteSpace(content))
@@ -64,12 +65,15 @@ namespace DevSeguroWebApp.Services
 
                 // Crear documento XML completo
                 var document = new XDocument(
+                    new XDeclaration("1.0", "utf-8", null),
                     new XElement("repository", existingElements)
                 );
 
                 // Subir a Azure Blob Storage
                 using var stream = new MemoryStream();
-                document.Save(stream);
+                using var writer = new StreamWriter(stream, Encoding.UTF8);
+                document.Save(writer);
+                writer.Flush();
                 stream.Position = 0;
 
                 _blobClient.Upload(stream, overwrite: true);

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.DataProtection;
 using Azure.Identity;
 using DevSeguroWebApp.Services;
 using Azure.Storage.Blobs;
-using Microsoft.AspNetCore.DataProtection.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,27 +54,69 @@ try
     .SetApplicationName(applicationName);
 
     // Configurar persistencia según disponibilidad de Azure Storage
+    bool azureStorageConfigured = false;
+    
     if (!string.IsNullOrEmpty(storageConnectionString))
     {
         try
         {
-            // CONFIGURACIÓN AZURE BLOB STORAGE (implementación personalizada)
-            var blobServiceClient = new BlobServiceClient(storageConnectionString);
-            var containerClient = blobServiceClient.GetBlobContainerClient("dataprotection-keys");
+            Console.WriteLine($"🔍 Intentando conectar a Azure Storage...");
             
-            // Crear container si no existe (esto se ejecuta al inicio)
-            containerClient.CreateIfNotExists();
+            BlobServiceClient blobServiceClient;
             
-            var blobClient = containerClient.GetBlobClient("keys.xml");
-            
-            // Registrar nuestro repositorio personalizado
-            builder.Services.AddSingleton<IXmlRepository>(provider =>
+            // OPCIÓN 1: Connection String (actual)
+            try 
             {
-                var logger = provider.GetRequiredService<ILogger<AzureBlobXmlRepository>>();
-                return new AzureBlobXmlRepository(blobClient, logger);
-            });
+                blobServiceClient = new BlobServiceClient(storageConnectionString);
+                Console.WriteLine($"   ✅ BlobServiceClient creado con Connection String");
+            }
+            catch (Exception csEx)
+            {
+                Console.WriteLine($"   ❌ Error con Connection String: {csEx.Message}");
                 
-            Console.WriteLine($"✅ Data Protection configurado con Azure Blob Storage");
+                // OPCIÓN 2: Azure AD Authentication (fallback)
+                Console.WriteLine($"   🔄 Intentando con Azure AD Authentication...");
+                var storageAccountName = GetStorageAccountName(storageConnectionString);
+                var blobUri = new Uri($"https://{storageAccountName}.blob.core.windows.net");
+                
+                // Usar DefaultAzureCredential (incluye Azure CLI, Visual Studio, etc.)
+                blobServiceClient = new BlobServiceClient(blobUri, new Azure.Identity.DefaultAzureCredential());
+                Console.WriteLine($"   ✅ BlobServiceClient creado con Azure AD");
+            }
+            
+            var containerClient = blobServiceClient.GetBlobContainerClient("dataprotection-keys");
+            Console.WriteLine($"   ✅ ContainerClient obtenido");
+            
+            // Crear container si no existe
+            var containerResponse = containerClient.CreateIfNotExists();
+            Console.WriteLine($"   ✅ Container verificado/creado");
+            Console.WriteLine($"   - Container status: {(containerResponse?.HasValue == true ? "Created" : "Exists")}");
+            
+            // Validar conectividad básica
+            try 
+            {
+                var blobClient = containerClient.GetBlobClient("keys.xml");
+                var exists = blobClient.Exists();
+                Console.WriteLine($"   ✅ Prueba de conectividad exitosa - Blob exists: {exists.Value}");
+                
+                // Listar blobs existentes
+                var blobs = containerClient.GetBlobs();
+                Console.WriteLine($"   ℹ️  Blobs existentes en container: {blobs.Count()}");
+            }
+            catch (Exception testEx)
+            {
+                Console.WriteLine($"   ❌ Error en prueba de conectividad: {testEx.Message}");
+                Console.WriteLine($"   - Tipo: {testEx.GetType().Name}");
+                throw;
+            }
+            
+            // ✅ USAR EL MÉTODO OFICIAL DE ASP.NET CORE - ESTA ES LA LÍNEA CLAVE
+            var dataProtectionBlobClient = containerClient.GetBlobClient("keys.xml");
+            dataProtectionBuilder.PersistKeysToAzureBlobStorage(dataProtectionBlobClient);
+            
+            azureStorageConfigured = true;
+            
+            Console.WriteLine($"✅ Data Protection configurado con Azure Blob Storage (método oficial)");
             Console.WriteLine($"   - Storage Account: {GetStorageAccountName(storageConnectionString)}");
             Console.WriteLine($"   - Container: dataprotection-keys");
             Console.WriteLine($"   - Blob: keys.xml");
@@ -83,16 +124,21 @@ try
         catch (Exception ex)
         {
             Console.WriteLine($"❌ Error configurando Azure Storage: {ex.Message}");
+            Console.WriteLine($"   - Tipo de error: {ex.GetType().Name}");
+            Console.WriteLine($"   - Stack trace: {ex.StackTrace?.Split('\n')[0]}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"   - Inner Exception: {ex.InnerException.Message}");
+                Console.WriteLine($"   - Inner Exception Type: {ex.InnerException.GetType().Name}");
+            }
             Console.WriteLine($"⚠️  Usando fallback a sistema de archivos local");
-            
-            // FALLBACK: Sistema de archivos local
-            var keysPath = Path.Combine(Directory.GetCurrentDirectory(), "DataProtection-Keys");
-            dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+            azureStorageConfigured = false;
         }
     }
-    else
+    
+    // Si Azure Storage no se configuró, usar sistema de archivos local
+    if (!azureStorageConfigured)
     {
-        // FALLBACK: Sistema de archivos local
         var keysPath = Path.Combine(Directory.GetCurrentDirectory(), "DataProtection-Keys");
         dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
         Console.WriteLine($"⚠️  Data Protection usando sistema de archivos local: {keysPath}");
@@ -187,4 +233,4 @@ static string GetStorageAccountName(string connectionString)
     {
         return "Unknown";
     }
-} 
+}
