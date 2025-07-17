@@ -26,14 +26,10 @@ builder.Services.AddDataProtection(options =>
     // Nombre único de aplicación para aislamiento
     options.ApplicationDiscriminator = builder.Configuration["DataProtection:ApplicationName"];
 })
-.SetDefaultKeyLifetime(TimeSpan.Parse(builder.Configuration["DataProtection:KeyLifetime"]))
-.PersistKeysToAzureBlobStorage(
-    builder.Configuration["DataProtection:StorageConnectionString"],
-    "dataprotection-keys",
-    "keys.xml")
+.SetDefaultKeyLifetime(TimeSpan.Parse(builder.Configuration["DataProtection:KeyLifetime"] ?? "90"))
 .SetApplicationName(builder.Configuration["DataProtection:ApplicationName"]);
 
-// Registrar servicio de protección de datos
+//Registrar servicio de protección de datos
 builder.Services.AddScoped<ISecureDataService, SecureDataService>();
 
 // Configurar autorización
