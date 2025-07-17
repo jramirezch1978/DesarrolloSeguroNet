@@ -2,6 +2,11 @@
     ViewData["Title"] = "Data Protection API Testing - .NET 9";
 }
 
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Xsrf
+@{
+    var antiforgeryToken = Xsrf.GetAndStoreTokens(Context).RequestToken;
+}
+
 <div class="container-fluid fade-in">
     <div class="row">
         <div class="col-12">
@@ -190,44 +195,81 @@
                 Purpose: purpose
             };
 
+            console.log('Enviando request:', requestData);
+
             const response = await fetch('@Url.Action("TestProtection", "DataProtectionTest")', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'RequestVerificationToken': '@antiforgeryToken'
                 },
                 body: JSON.stringify(requestData)
             });
 
-            const result = await response.json();
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const responseText = await response.text();
+            console.log('Response text:', responseText);
+
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                throw new Error(`Error parsing JSON response: ${parseError.message}`);
+            }
+
+            console.log('Parsed result:', result);
             
-            if (result.Success) {
+            if (result && result.Success === true) {
+                // Validar que tenemos todos los datos necesarios
+                if (!result.OriginalData || !result.ProtectedData || !result.UnprotectedData) {
+                    throw new Error('Respuesta incompleta del servidor');
+                }
+
                 // Mostrar resultados
-                document.getElementById('originalData').value = result.OriginalData;
-                document.getElementById('protectedData').value = result.ProtectedData;
-                document.getElementById('unprotectedData').value = result.UnprotectedData;
-                document.getElementById('originalLength').textContent = result.OriginalLength + ' bytes';
-                document.getElementById('protectedLength').textContent = result.ProtectedLength + ' bytes';
+                document.getElementById('originalData').value = result.OriginalData || '';
+                document.getElementById('protectedData').value = result.ProtectedData || '';
+                document.getElementById('unprotectedData').value = result.UnprotectedData || '';
+                document.getElementById('originalLength').textContent = (result.OriginalLength || 0) + ' bytes';
+                document.getElementById('protectedLength').textContent = (result.ProtectedLength || 0) + ' bytes';
                 
-                currentProtectedData = result.ProtectedData;
+                currentProtectedData = result.ProtectedData || '';
                 
                 showResult('success', 'Datos protegidos exitosamente');
                 
                 // Agregar resultado detallado
+                const originalLen = result.OriginalLength || 0;
+                const protectedLen = result.ProtectedLength || 0;
+                const increment = originalLen > 0 ? ((protectedLen - originalLen) / originalLen * 100).toFixed(1) : '0';
+                
                 addTestResult('success', `
                     <strong>Protección Exitosa</strong><br>
                     <small>Propósito: ${purpose}</small><br>
-                    <small>Datos originales: ${result.OriginalLength} bytes</small><br>
-                    <small>Datos protegidos: ${result.ProtectedLength} bytes</small><br>
-                    <small>Incremento: ${((result.ProtectedLength - result.OriginalLength) / result.OriginalLength * 100).toFixed(1)}%</small>
+                    <small>Datos originales: ${originalLen} bytes</small><br>
+                    <small>Datos protegidos: ${protectedLen} bytes</small><br>
+                    <small>Incremento: ${increment}%</small>
                 `);
+            } else if (result && result.Success === false) {
+                const errorMsg = result.Error || 'Error desconocido en el servidor';
+                showResult('error', 'Error: ' + errorMsg);
+                addTestResult('error', `<strong>Error en Protección</strong><br><small>${errorMsg}</small>`);
             } else {
-                showResult('error', 'Error: ' + result.Error);
-                addTestResult('error', `<strong>Error en Protección</strong><br><small>${result.Error}</small>`);
+                console.error('Unexpected result structure:', result);
+                showResult('error', 'Respuesta inesperada del servidor');
+                addTestResult('error', `<strong>Error de Protocolo</strong><br><small>Respuesta inesperada del servidor</small>`);
             }
         } catch (error) {
-            console.error('Error:', error);
-            showResult('error', 'Error de conexión: ' + error.message);
-            addTestResult('error', `<strong>Error de Conexión</strong><br><small>${error.message}</small>`);
+            console.error('Error completo:', error);
+            const errorMsg = error.message || 'Error desconocido';
+            showResult('error', 'Error de conexión: ' + errorMsg);
+            addTestResult('error', `<strong>Error de Conexión</strong><br><small>${errorMsg}</small>`);
         }
     }
 

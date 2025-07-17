@@ -1,135 +1,152 @@
 ﻿@{
-    ViewData["Title"] = "Inicio";
+    ViewData["Title"] = "Laboratorio 1 - Data Protection API (.NET 9)";
 }
 
-<div class="container mt-5 fade-in">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-gradient text-white">
-                    <h2 class="mb-0">
-                        <i class="fas fa-shield-alt"></i> Laboratorio: Protección de Datos y Azure Key Vault (.NET 9)
-                    </h2>
-                    <small>Desarrollo Seguro de Aplicaciones</small>
+<div class="text-center">
+    <h1 class="display-4">🔐 Laboratorio 1</h1>
+    <h2 class="text-primary">Data Protection API Avanzada (.NET 9)</h2>
+    <p class="lead">Implementación enterprise-grade con Azure Storage y múltiples protectores</p>
+</div>
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <!-- Usuario Autenticado -->
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h4>✅ ¡Bienvenido, @(User.Identity.Name ?? "Usuario")!</h4>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <p class="lead">
-                                Bienvenido al laboratorio práctico de protección de datos en .NET con integración a Azure Key Vault.
-                                Este laboratorio te permitirá explorar las mejores prácticas de seguridad en aplicaciones .NET.
-                            </p>
-                            
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <div class="card h-100 border-primary">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-lock fa-3x text-primary mb-3"></i>
-                                            <h5>Protección de Datos</h5>
-                                            <p class="text-muted">Data Protection API para cifrar información sensible</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card h-100 border-success">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-key fa-3x text-success mb-3"></i>
-                                            <h5>Azure Key Vault</h5>
-                                            <p class="text-muted">Gestión segura de secretos y claves</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <div class="card h-100 border-warning">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-user-shield fa-3x text-warning mb-3"></i>
-                                            <h5>Autenticación Segura</h5>
-                                            <p class="text-muted">Azure AD para autenticación y autorización</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card h-100 border-info">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-vial fa-3x text-info mb-3"></i>
-                                            <h5>Testing End-to-End</h5>
-                                            <p class="text-muted">Validación completa de funcionalidades</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-4">
-                            <div class="card border-0 bg-light">
-                                <div class="card-header bg-primary text-white">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-rocket"></i> Accesos Rápidos
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="list-group list-group-flush">
-                                        <a href="/DataProtectionTest" class="list-group-item list-group-item-action">
-                                            <i class="fas fa-shield-alt text-primary"></i>
-                                            <strong>Probar Protección de Datos</strong>
-                                            <small class="d-block text-muted">Cifrar y descifrar información sensible</small>
-                                        </a>
-                                        <a href="/Account/SignIn" class="list-group-item list-group-item-action">
-                                            <i class="fas fa-sign-in-alt text-success"></i>
-                                            <strong>Iniciar Sesión (Azure AD)</strong>
-                                            <small class="d-block text-muted">Autenticación con Microsoft Identity</small>
-                                        </a>
-                                        <a href="/Account/Profile" class="list-group-item list-group-item-action">
-                                            <i class="fas fa-user text-info"></i>
-                                            <strong>Ver Perfil de Usuario</strong>
-                                            <small class="d-block text-muted">Información del usuario autenticado</small>
-                                        </a>
-                                        <a href="/Privacy" class="list-group-item list-group-item-action">
-                                            <i class="fas fa-user-secret text-warning"></i>
-                                            <strong>Política de Privacidad</strong>
-                                            <small class="d-block text-muted">Información sobre protección de datos</small>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="card mt-3 border-0 bg-light">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted">Estado del Sistema</h6>
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <span class="protection-status success">Data Protection</span>
-                                        </div>
-                                        <div class="col-6">
-                                            <span class="protection-status success">Azure Key Vault</span>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-2">
-                                        <div class="col-6">
-                                            <span class="protection-status success">Azure AD</span>
-                                        </div>
-                                        <div class="col-6">
-                                            <span class="badge bg-primary">.NET 9</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <p class="card-text">Accede a las funcionalidades completas de Data Protection API.</p>
                     
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="@Url.Action("Index", "DataProtectionTest")" class="btn btn-primary btn-lg me-md-2">
+                            🛡️ Probar Data Protection
+                        </a>
+                        <a href="@Url.Action("Profile", "Account")" class="btn btn-outline-primary btn-lg me-md-2">
+                            👤 Ver Mi Perfil
+                        </a>
+                        <a href="@Url.Action("SignOut", "Account")" class="btn btn-outline-secondary btn-lg">
+                            🚪 Cerrar Sesión
+                        </a>
+                    </div>
+
                     <hr class="my-4">
                     
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="alert alert-info">
-                                <h6><i class="fas fa-info-circle"></i> Instrucciones</h6>
-                                <p class="mb-0">
-                                    Utiliza el menú de navegación o los accesos rápidos para explorar cada funcionalidad del laboratorio. 
-                                    Comienza probando la protección de datos y luego explora la autenticación con Azure AD.
-                                </p>
+                    <h5>🔐 Funcionalidades de Data Protection disponibles:</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">🔹 Protección de información personal</li>
+                        <li class="list-group-item">🔹 Protección de datos financieros</li>
+                        <li class="list-group-item">🔹 Protección de información médica</li>
+                        <li class="list-group-item">🔹 Protectores personalizados</li>
+                        <li class="list-group-item">🔹 Persistencia en Azure Blob Storage</li>
+                    </ul>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Usuario No Autenticado -->
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4>🔒 Acceso Restringido</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Para acceder a las funcionalidades de Data Protection API, necesitas autenticarte con Azure AD.</p>
+                    
+                    <div class="d-grid gap-2 col-6 mx-auto">
+                        <a href="@Url.Action("SignIn", "Account")" class="btn btn-success btn-lg">
+                            🔐 Iniciar Sesión con Azure AD
+                        </a>
+                    </div>
+
+                    <hr class="my-4">
+                    
+                    <h5>🎯 ¿Qué puedes hacer después de autenticarte?</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">✨ Probar Data Protection API en tiempo real</li>
+                        <li class="list-group-item">✨ Cifrar y descifrar datos sensibles</li>
+                        <li class="list-group-item">✨ Explorar diferentes propósitos de protección</li>
+                        <li class="list-group-item">✨ Verificar persistencia en Azure Storage</li>
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5>📚 Sobre este Laboratorio</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>🔧 Tecnologías implementadas:</h6>
+                        <ul>
+                            <li><strong>.NET 9</strong> - Framework principal</li>
+                            <li><strong>ASP.NET Core MVC</strong> - Arquitectura web</li>
+                            <li><strong>Data Protection API</strong> - Cifrado de datos</li>
+                            <li><strong>Azure Blob Storage</strong> - Persistencia de claves</li>
+                            <li><strong>Azure AD</strong> - Autenticación segura</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>🎯 Objetivos del laboratorio:</h6>
+                        <ul>
+                            <li>Implementar Data Protection API avanzada</li>
+                            <li>Configurar Azure Storage para claves</li>
+                            <li>Crear múltiples protectores especializados</li>
+                            <li>Manejar diferentes propósitos de cifrado</li>
+                            <li>Integrar con Azure AD para autenticación</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <hr class="my-3">
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6>🛡️ Protectores implementados:</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="card border-primary h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-user-shield fa-2x text-primary mb-2"></i>
+                                        <h6>Personal</h6>
+                                        <small class="text-muted">UserData.Personal.v1</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card border-success h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-credit-card fa-2x text-success mb-2"></i>
+                                        <h6>Financiero</h6>
+                                        <small class="text-muted">UserData.Financial.v1</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card border-warning h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-heartbeat fa-2x text-warning mb-2"></i>
+                                        <h6>Médico</h6>
+                                        <small class="text-muted">UserData.Medical.v1</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card border-secondary h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-cog fa-2x text-secondary mb-2"></i>
+                                        <h6>Personalizado</h6>
+                                        <small class="text-muted">UserData.Custom.v1</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
