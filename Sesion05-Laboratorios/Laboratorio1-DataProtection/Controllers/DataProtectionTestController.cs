@@ -21,6 +21,99 @@ namespace DevSeguroWebApp.Controllers
             return View();
         }
 
+        public IActionResult CrossProtection()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult ChangeStorageType([FromBody] StorageChangeRequest request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    return Json(new { success = false, error = "Solicitud inválida" });
+                }
+
+                // Almacenar preferencia en sesión (simulación)
+                HttpContext.Session.SetString("StorageType", request.UseAzureStorage ? "Azure" : "Local");
+                
+                var storageType = request.UseAzureStorage ? "Azure Storage" : "Local File System";
+                var description = request.UseAzureStorage 
+                    ? "Usando Azure Blob Storage para persistencia enterprise" 
+                    : "Usando sistema de archivos local para desarrollo";
+
+                _logger.LogInformation("Storage type changed to: {StorageType}", storageType);
+
+                return Json(new
+                {
+                    success = true,
+                    storageType = storageType,
+                    description = description,
+                    isAzure = request.UseAzureStorage,
+                    message = $"Configuración cambiada a {storageType}"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing storage type");
+                return Json(new { success = false, error = $"Error al cambiar configuración: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult TestCrossDecryption([FromBody] CrossDecryptRequest request)
+        {
+            try
+            {
+                // Validaciones de entrada
+                if (request == null)
+                {
+                    return Json(new { success = false, error = "Solicitud inválida" });
+                }
+
+                if (string.IsNullOrWhiteSpace(request.ProtectedData))
+                {
+                    return Json(new { success = false, error = "Los datos protegidos no pueden estar vacíos" });
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Purpose))
+                {
+                    return Json(new { success = false, error = "El propósito es requerido" });
+                }
+
+                _logger.LogInformation("Attempting cross-decryption with purpose: {Purpose}", request.Purpose);
+
+                // Intentar desproteger con el propósito especificado
+                var unprotectedData = _secureDataService.UnprotectSensitiveData<string>(request.ProtectedData, request.Purpose);
+                
+                _logger.LogInformation("Cross-decryption successful with purpose: {Purpose}", request.Purpose);
+
+                return Json(new
+                {
+                    success = true,
+                    unprotectedData = unprotectedData,
+                    purpose = request.Purpose,
+                    message = "Desencriptación exitosa"
+                });
+            }
+            catch (System.Security.Cryptography.CryptographicException ex)
+            {
+                _logger.LogWarning("Cryptographic error (expected for cross-purpose): {Error}", ex.Message);
+                return Json(new { 
+                    success = false, 
+                    error = "Error criptográfico: Los datos fueron encriptados con un propósito diferente",
+                    technicalError = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error in cross-decryption test");
+                return Json(new { success = false, error = $"Error inesperado: {ex.Message}" });
+            }
+        }
+
         [HttpPost]
         public IActionResult TestProtection([FromBody] TestDataRequest request)
         {
@@ -30,19 +123,19 @@ namespace DevSeguroWebApp.Controllers
                 if (request == null)
                 {
                     _logger.LogWarning("Request is null");
-                    return Json(new { Success = false, Error = "Datos de entrada vacíos" });
+                    return Json(new { success = false, error = "Datos de entrada vacíos" });
                 }
 
                 if (string.IsNullOrWhiteSpace(request.Data))
                 {
                     _logger.LogWarning("Data is null or empty");
-                    return Json(new { Success = false, Error = "Los datos a proteger no pueden estar vacíos" });
+                    return Json(new { success = false, error = "Los datos a proteger no pueden estar vacíos" });
                 }
 
                 if (string.IsNullOrWhiteSpace(request.Purpose))
                 {
                     _logger.LogWarning("Purpose is null or empty");
-                    return Json(new { Success = false, Error = "El propósito de protección es requerido" });
+                    return Json(new { success = false, error = "El propósito de protección es requerido" });
                 }
 
                 _logger.LogInformation("Testing protection for data length: {DataLength}, purpose: {Purpose}", 
@@ -54,7 +147,7 @@ namespace DevSeguroWebApp.Controllers
                 if (string.IsNullOrEmpty(protectedData))
                 {
                     _logger.LogError("Protected data is null or empty");
-                    return Json(new { Success = false, Error = "Error: Los datos protegidos están vacíos" });
+                    return Json(new { success = false, error = "Error: Los datos protegidos están vacíos" });
                 }
 
                 // Desproteger datos para verificar
@@ -63,7 +156,7 @@ namespace DevSeguroWebApp.Controllers
                 if (string.IsNullOrEmpty(unprotectedData))
                 {
                     _logger.LogError("Unprotected data is null or empty");
-                    return Json(new { Success = false, Error = "Error: Los datos desprotegidos están vacíos" });
+                    return Json(new { success = false, error = "Error: Los datos desprotegidos están vacíos" });
                 }
 
                 // Verificar integridad
@@ -71,37 +164,37 @@ namespace DevSeguroWebApp.Controllers
                 {
                     _logger.LogError("Data integrity check failed. Original: {Original}, Unprotected: {Unprotected}", 
                         request.Data, unprotectedData);
-                    return Json(new { Success = false, Error = "Error: Falló la verificación de integridad de datos" });
+                    return Json(new { success = false, error = "Error: Falló la verificación de integridad de datos" });
                 }
 
                 _logger.LogInformation("Data protection test successful");
 
                 return Json(new
                 {
-                    Success = true,
-                    OriginalData = request.Data,
-                    ProtectedData = protectedData,
-                    UnprotectedData = unprotectedData,
-                    ProtectedLength = protectedData.Length,
-                    OriginalLength = request.Data.Length,
-                    Purpose = request.Purpose,
-                    TestTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC")
+                    success = true,
+                    originalData = request.Data,
+                    protectedData = protectedData,
+                    unprotectedData = unprotectedData,
+                    protectedLength = protectedData.Length,
+                    originalLength = request.Data.Length,
+                    purpose = request.Purpose,
+                    testTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC")
                 });
             }
             catch (ArgumentException ex)
             {
                 _logger.LogError(ex, "Argument error in data protection test");
-                return Json(new { Success = false, Error = $"Error de parámetros: {ex.Message}" });
+                return Json(new { success = false, error = $"Error de parámetros: {ex.Message}" });
             }
             catch (InvalidOperationException ex)
             {
                 _logger.LogError(ex, "Invalid operation in data protection test");
-                return Json(new { Success = false, Error = $"Error de operación: {ex.Message}" });
+                return Json(new { success = false, error = $"Error de operación: {ex.Message}" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error in data protection test");
-                return Json(new { Success = false, Error = $"Error inesperado: {ex.Message}" });
+                return Json(new { success = false, error = $"Error inesperado: {ex.Message}" });
             }
         }
     }
@@ -109,6 +202,17 @@ namespace DevSeguroWebApp.Controllers
     public class TestDataRequest
     {
         public string Data { get; set; } = string.Empty;
+        public string Purpose { get; set; } = string.Empty;
+    }
+
+    public class StorageChangeRequest
+    {
+        public bool UseAzureStorage { get; set; }
+    }
+
+    public class CrossDecryptRequest
+    {
+        public string ProtectedData { get; set; } = string.Empty;
         public string Purpose { get; set; } = string.Empty;
     }
 } 

@@ -4,6 +4,8 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.AspNetCore.DataProtection;
 using Azure.Identity;
 using DevSeguroWebApp.Services;
+using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.DataProtection.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,23 +27,77 @@ if (builder.Environment.IsDevelopment())
 // Configurar servicios básicos
 builder.Services.AddControllersWithViews();
 
+// Configurar sesiones para almacenar preferencias
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 // Configurar Microsoft Identity Web
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
 
-// 🔐 CONFIGURACIÓN AVANZADA DE DATA PROTECTION
+// 🔐 CONFIGURACIÓN AVANZADA DE DATA PROTECTION CON AZURE STORAGE
 var applicationName = builder.Configuration["DataProtection:ApplicationName"] ?? "DevSeguroApp-Default";
+var storageConnectionString = builder.Configuration["DataProtection:StorageConnectionString"];
 
 try
 {
-    builder.Services.AddDataProtection(options =>
+    var dataProtectionBuilder = builder.Services.AddDataProtection(options =>
     {
         // Nombre único de aplicación para aislamiento
         options.ApplicationDiscriminator = applicationName;
     })
     .SetDefaultKeyLifetime(TimeSpan.Parse(builder.Configuration["DataProtection:KeyLifetime"] ?? "90.00:00:00"))
-    .SetApplicationName(applicationName)
-    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "DataProtection-Keys")));
+    .SetApplicationName(applicationName);
+
+    // Configurar persistencia según disponibilidad de Azure Storage
+    if (!string.IsNullOrEmpty(storageConnectionString))
+    {
+        try
+        {
+            // CONFIGURACIÓN AZURE BLOB STORAGE (implementación personalizada)
+            var blobServiceClient = new BlobServiceClient(storageConnectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient("dataprotection-keys");
+            
+            // Crear container si no existe (esto se ejecuta al inicio)
+            containerClient.CreateIfNotExists();
+            
+            var blobClient = containerClient.GetBlobClient("keys.xml");
+            
+            // Registrar nuestro repositorio personalizado
+            builder.Services.AddSingleton<IXmlRepository>(provider =>
+            {
+                var logger = provider.GetRequiredService<ILogger<AzureBlobXmlRepository>>();
+                return new AzureBlobXmlRepository(blobClient, logger);
+            });
+                
+            Console.WriteLine($"✅ Data Protection configurado con Azure Blob Storage");
+            Console.WriteLine($"   - Storage Account: {GetStorageAccountName(storageConnectionString)}");
+            Console.WriteLine($"   - Container: dataprotection-keys");
+            Console.WriteLine($"   - Blob: keys.xml");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error configurando Azure Storage: {ex.Message}");
+            Console.WriteLine($"⚠️  Usando fallback a sistema de archivos local");
+            
+            // FALLBACK: Sistema de archivos local
+            var keysPath = Path.Combine(Directory.GetCurrentDirectory(), "DataProtection-Keys");
+            dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+        }
+    }
+    else
+    {
+        // FALLBACK: Sistema de archivos local
+        var keysPath = Path.Combine(Directory.GetCurrentDirectory(), "DataProtection-Keys");
+        dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+        Console.WriteLine($"⚠️  Data Protection usando sistema de archivos local: {keysPath}");
+        Console.WriteLine($"   - Para producción, configure DataProtection:StorageConnectionString");
+    }
 
     Console.WriteLine($"✅ Data Protection configurado exitosamente con nombre: {applicationName}");
 }
@@ -102,6 +158,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+// Habilitar sesiones
+app.UseSession();
+
 // ORDEN CRÍTICO en .NET 9
 app.UseAuthentication();
 app.UseAuthorization();
@@ -113,4 +172,19 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 Console.WriteLine($"🚀 Aplicación iniciada en puerto 7001");
-app.Run(); 
+app.Run();
+
+// Helper function para extraer el nombre de la cuenta de storage
+static string GetStorageAccountName(string connectionString)
+{
+    try
+    {
+        var accountNameStart = connectionString.IndexOf("AccountName=") + "AccountName=".Length;
+        var accountNameEnd = connectionString.IndexOf(";", accountNameStart);
+        return connectionString.Substring(accountNameStart, accountNameEnd - accountNameStart);
+    }
+    catch
+    {
+        return "Unknown";
+    }
+} 

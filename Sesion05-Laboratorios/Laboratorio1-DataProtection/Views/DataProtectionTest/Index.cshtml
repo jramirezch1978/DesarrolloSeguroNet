@@ -33,6 +33,53 @@
                         </div>
                     </div>
 
+                    <!-- Storage Selection Panel -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h5><i class="fas fa-database"></i> Configuración de Almacenamiento</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="d-flex align-items-center">
+                                                <span class="me-3">
+                                                    <i class="fas fa-folder text-warning"></i>
+                                                    <strong>Local</strong>
+                                                </span>
+                                                
+                                                <!-- Toggle Switch -->
+                                                <div class="storage-switch-container me-3">
+                                                    <input type="checkbox" id="storageToggle" class="storage-switch" checked>
+                                                    <label for="storageToggle" class="storage-switch-label">
+                                                        <span class="storage-switch-inner"></span>
+                                                        <span class="storage-switch-switch"></span>
+                                                    </label>
+                                                </div>
+                                                
+                                                <span>
+                                                    <i class="fas fa-cloud text-primary"></i>
+                                                    <strong>Azure Storage</strong>
+                                                </span>
+                                            </div>
+                                            <div class="mt-2">
+                                                <small id="storageDescription" class="text-muted">
+                                                    Usando Azure Blob Storage para persistencia enterprise
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <div id="storageStatus" class="badge bg-success">
+                                                <i class="fas fa-check-circle"></i> Azure Storage Activo
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Data Protection Testing -->
                     <div class="row">
                         <div class="col-lg-6">
@@ -67,6 +114,12 @@
                                             <button type="button" class="btn btn-secondary" onclick="clearForm()">
                                                 <i class="fas fa-eraser"></i> Limpiar
                                             </button>
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <a href="@Url.Action("CrossProtection", "DataProtectionTest")" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-question-circle"></i> ¿Por Qué 4 Tipos? - Ver Demostración
+                                            </a>
                                         </div>
                                     </form>
                                 </div>
@@ -155,6 +208,7 @@
     // Inicialización al cargar la página
     document.addEventListener('DOMContentLoaded', function() {
         checkSystemStatus();
+        initializeStorageToggle();
     });
 
     // Verificar estado del sistema
@@ -227,26 +281,26 @@
 
             console.log('Parsed result:', result);
             
-            if (result && result.Success === true) {
+            if (result && result.success === true) {
                 // Validar que tenemos todos los datos necesarios
-                if (!result.OriginalData || !result.ProtectedData || !result.UnprotectedData) {
+                if (!result.originalData || !result.protectedData || !result.unprotectedData) {
                     throw new Error('Respuesta incompleta del servidor');
                 }
 
                 // Mostrar resultados
-                document.getElementById('originalData').value = result.OriginalData || '';
-                document.getElementById('protectedData').value = result.ProtectedData || '';
-                document.getElementById('unprotectedData').value = result.UnprotectedData || '';
-                document.getElementById('originalLength').textContent = (result.OriginalLength || 0) + ' bytes';
-                document.getElementById('protectedLength').textContent = (result.ProtectedLength || 0) + ' bytes';
+                document.getElementById('originalData').value = result.originalData || '';
+                document.getElementById('protectedData').value = result.protectedData || '';
+                document.getElementById('unprotectedData').value = result.unprotectedData || '';
+                document.getElementById('originalLength').textContent = (result.originalLength || 0) + ' bytes';
+                document.getElementById('protectedLength').textContent = (result.protectedLength || 0) + ' bytes';
                 
-                currentProtectedData = result.ProtectedData || '';
+                currentProtectedData = result.protectedData || '';
                 
                 showResult('success', 'Datos protegidos exitosamente');
                 
                 // Agregar resultado detallado
-                const originalLen = result.OriginalLength || 0;
-                const protectedLen = result.ProtectedLength || 0;
+                const originalLen = result.originalLength || 0;
+                const protectedLen = result.protectedLength || 0;
                 const increment = originalLen > 0 ? ((protectedLen - originalLen) / originalLen * 100).toFixed(1) : '0';
                 
                 addTestResult('success', `
@@ -254,10 +308,11 @@
                     <small>Propósito: ${purpose}</small><br>
                     <small>Datos originales: ${originalLen} bytes</small><br>
                     <small>Datos protegidos: ${protectedLen} bytes</small><br>
-                    <small>Incremento: ${increment}%</small>
+                    <small>Incremento: ${increment}%</small><br>
+                    <small>Tiempo: ${result.testTime || 'N/A'}</small>
                 `);
-            } else if (result && result.Success === false) {
-                const errorMsg = result.Error || 'Error desconocido en el servidor';
+            } else if (result && result.success === false) {
+                const errorMsg = result.error || 'Error desconocido en el servidor';
                 showResult('error', 'Error: ' + errorMsg);
                 addTestResult('error', `<strong>Error en Protección</strong><br><small>${errorMsg}</small>`);
             } else {
@@ -323,6 +378,78 @@
         `;
         
         resultsDiv.innerHTML = resultHtml + resultsDiv.innerHTML;
+    }
+
+    // Inicializar el toggle de almacenamiento
+    function initializeStorageToggle() {
+        const toggleSwitch = document.getElementById('storageToggle');
+        const storageStatus = document.getElementById('storageStatus');
+        const storageDescription = document.getElementById('storageDescription');
+
+        // Event listener para el cambio de toggle
+        toggleSwitch.addEventListener('change', async function() {
+            const useAzureStorage = this.checked;
+            
+            try {
+                showResult('info', 'Cambiando configuración de almacenamiento...');
+                
+                const response = await fetch('@Url.Action("ChangeStorageType", "DataProtectionTest")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'RequestVerificationToken': '@antiforgeryToken'
+                    },
+                    body: JSON.stringify({
+                        UseAzureStorage: useAzureStorage
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Actualizar UI
+                    updateStorageUI(result.isAzure, result.storageType, result.description);
+                    
+                    showResult('success', result.message);
+                    addTestResult('success', `
+                        <strong>Configuración Actualizada</strong><br>
+                        <small>Almacenamiento: ${result.storageType}</small><br>
+                        <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                    `);
+                } else {
+                    throw new Error(result.error || 'Error desconocido');
+                }
+            } catch (error) {
+                console.error('Error changing storage type:', error);
+                // Revertir el toggle
+                this.checked = !useAzureStorage;
+                showResult('error', 'Error al cambiar configuración: ' + error.message);
+            }
+        });
+
+        // Inicializar estado
+        updateStorageUI(true, 'Azure Storage', 'Usando Azure Blob Storage para persistencia enterprise');
+    }
+
+    // Actualizar la UI del storage
+    function updateStorageUI(isAzure, storageType, description) {
+        const storageStatus = document.getElementById('storageStatus');
+        const storageDescription = document.getElementById('storageDescription');
+
+        if (isAzure) {
+            storageStatus.className = 'badge bg-success';
+            storageStatus.innerHTML = '<i class="fas fa-cloud"></i> Azure Storage Activo';
+        } else {
+            storageStatus.className = 'badge bg-warning';
+            storageStatus.innerHTML = '<i class="fas fa-folder"></i> Local Storage Activo';
+        }
+
+        storageDescription.textContent = description;
     }
 </script>
 } 
