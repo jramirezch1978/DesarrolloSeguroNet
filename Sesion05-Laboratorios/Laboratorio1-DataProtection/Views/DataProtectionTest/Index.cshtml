@@ -2,11 +2,11 @@
     ViewData["Title"] = "Data Protection API Testing - .NET 9";
 }
 
-<div class="container-fluid">
+<div class="container-fluid fade-in">
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-gradient bg-success text-white">
+            <div class="card shadow-lg border-0 data-protection-card">
+                <div class="card-header bg-gradient text-white">
                     <h3 class="card-title mb-0">
                         <i class="fas fa-shield-alt"></i> Data Protection API Testing (.NET 9)
                     </h3>
@@ -31,19 +31,23 @@
                     <!-- Data Protection Testing -->
                     <div class="row">
                         <div class="col-lg-6">
-                            <div class="card border-success">
+                            <div class="card border-success h-100">
                                 <div class="card-header bg-success text-white">
                                     <h5><i class="fas fa-lock"></i> Data Protection API Testing</h5>
                                 </div>
                                 <div class="card-body">
                                     <form id="dataProtectionForm">
                                         <div class="mb-3">
-                                            <label for="inputData" class="form-label">Datos a Proteger:</label>
-                                            <textarea class="form-control" id="inputData" rows="3" 
+                                            <label for="inputData" class="form-label">
+                                                <i class="fas fa-key"></i> Datos a Proteger:
+                                            </label>
+                                            <textarea class="form-control" id="inputData" rows="4" 
                                                 placeholder="Ingrese datos sensibles para proteger..."></textarea>
                                         </div>
                                         <div class="mb-3">
-                                            <label for="purpose" class="form-label">Propósito de Protección:</label>
+                                            <label for="purpose" class="form-label">
+                                                <i class="fas fa-tag"></i> Propósito de Protección:
+                                            </label>
                                             <select class="form-select" id="purpose">
                                                 <option value="UserData.Personal.v1">Información Personal</option>
                                                 <option value="UserData.Financial.v1">Datos Financieros</option>
@@ -66,23 +70,29 @@
 
                         <!-- Results Panel -->
                         <div class="col-lg-6">
-                            <div class="card border-info">
+                            <div class="card border-info h-100">
                                 <div class="card-header bg-info text-white">
                                     <h5><i class="fas fa-chart-bar"></i> Resultados de Testing</h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-3">
-                                        <label class="form-label">Datos Originales:</label>
+                                        <label class="form-label">
+                                            <i class="fas fa-file-text"></i> Datos Originales:
+                                        </label>
                                         <textarea class="form-control" id="originalData" rows="2" readonly 
                                             placeholder="Los datos originales aparecerán aquí..."></textarea>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label">Datos Protegidos:</label>
+                                        <label class="form-label">
+                                            <i class="fas fa-lock"></i> Datos Protegidos:
+                                        </label>
                                         <textarea class="form-control" id="protectedData" rows="3" readonly 
                                             placeholder="Los datos protegidos aparecerán aquí..."></textarea>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label">Datos Desprotegidos:</label>
+                                        <label class="form-label">
+                                            <i class="fas fa-unlock"></i> Datos Desprotegidos:
+                                        </label>
                                         <textarea class="form-control" id="unprotectedData" rows="2" readonly 
                                             placeholder="Los datos desprotegidos aparecerán aquí..."></textarea>
                                     </div>
@@ -90,7 +100,7 @@
                                         <div class="col-6">
                                             <div class="card bg-light">
                                                 <div class="card-body text-center">
-                                                    <h6>Tamaño Original</h6>
+                                                    <h6><i class="fas fa-ruler"></i> Tamaño Original</h6>
                                                     <span id="originalLength" class="badge bg-primary">0 bytes</span>
                                                 </div>
                                             </div>
@@ -98,7 +108,7 @@
                                         <div class="col-6">
                                             <div class="card bg-light">
                                                 <div class="card-body text-center">
-                                                    <h6>Tamaño Protegido</h6>
+                                                    <h6><i class="fas fa-shield"></i> Tamaño Protegido</h6>
                                                     <span id="protectedLength" class="badge bg-success">0 bytes</span>
                                                 </div>
                                             </div>
@@ -148,8 +158,8 @@
             const statusDiv = document.getElementById('systemStatus');
             
             let statusHtml = '<div class="row">';
-            statusHtml += '<div class="col-md-4"><strong>Data Protection:</strong> <span class="badge bg-success">Configurado</span></div>';
-            statusHtml += '<div class="col-md-4"><strong>Azure Storage:</strong> <span class="badge bg-success">Conectado</span></div>';
+            statusHtml += '<div class="col-md-4"><strong>Data Protection:</strong> <span class="protection-status success">Configurado</span></div>';
+            statusHtml += '<div class="col-md-4"><strong>Azure Storage:</strong> <span class="protection-status success">Conectado</span></div>';
             statusHtml += '<div class="col-md-4"><strong>Framework:</strong> <span class="badge bg-primary">.NET 9</span></div>';
             statusHtml += '</div>';
             
@@ -200,15 +210,24 @@
                 
                 currentProtectedData = result.ProtectedData;
                 
-                showResult('success', 
-                    `Datos protegidos exitosamente. Tamaño original: ${result.OriginalLength} bytes, ` +
-                    `Tamaño protegido: ${result.ProtectedLength} bytes`);
+                showResult('success', 'Datos protegidos exitosamente');
+                
+                // Agregar resultado detallado
+                addTestResult('success', `
+                    <strong>Protección Exitosa</strong><br>
+                    <small>Propósito: ${purpose}</small><br>
+                    <small>Datos originales: ${result.OriginalLength} bytes</small><br>
+                    <small>Datos protegidos: ${result.ProtectedLength} bytes</small><br>
+                    <small>Incremento: ${((result.ProtectedLength - result.OriginalLength) / result.OriginalLength * 100).toFixed(1)}%</small>
+                `);
             } else {
-                showResult('error', `Error: ${result.Error}`);
+                showResult('error', 'Error: ' + result.Error);
+                addTestResult('error', `<strong>Error en Protección</strong><br><small>${result.Error}</small>`);
             }
         } catch (error) {
-            console.error('Error testing protection:', error);
-            showResult('error', 'Error al proteger datos: ' + error.message);
+            console.error('Error:', error);
+            showResult('error', 'Error de conexión: ' + error.message);
+            addTestResult('error', `<strong>Error de Conexión</strong><br><small>${error.message}</small>`);
         }
     }
 
@@ -221,53 +240,47 @@
         document.getElementById('originalLength').textContent = '0 bytes';
         document.getElementById('protectedLength').textContent = '0 bytes';
         currentProtectedData = '';
+        
         showResult('info', 'Formulario limpiado');
     }
 
-    // Mostrar resultados
+    // Mostrar resultado
     function showResult(type, message) {
         const resultsDiv = document.getElementById('testResults');
-        const timestamp = new Date().toLocaleTimeString();
+        const alertClass = type === 'success' ? 'alert-success' : 
+                          type === 'error' ? 'alert-danger' : 
+                          type === 'warning' ? 'alert-warning' : 'alert-info';
         
-        let alertClass = 'alert-secondary';
-        let icon = 'fas fa-info-circle';
-        
-        switch (type) {
-            case 'success':
-                alertClass = 'alert-success';
-                icon = 'fas fa-check-circle';
-                break;
-            case 'error':
-                alertClass = 'alert-danger';
-                icon = 'fas fa-exclamation-triangle';
-                break;
-            case 'warning':
-                alertClass = 'alert-warning';
-                icon = 'fas fa-exclamation-circle';
-                break;
-            case 'info':
-                alertClass = 'alert-info';
-                icon = 'fas fa-info-circle';
-                break;
-        }
-        
-        const newAlert = `
+        const alertHtml = `
             <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                <i class="${icon}"></i>
-                <strong>[${timestamp}]</strong> ${message}
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                   type === 'error' ? 'exclamation-triangle' : 
+                                   type === 'warning' ? 'exclamation-circle' : 'info-circle'}"></i>
+                ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
         
-        resultsDiv.innerHTML = newAlert + resultsDiv.innerHTML;
+        resultsDiv.innerHTML = alertHtml + resultsDiv.innerHTML;
+    }
+
+    // Agregar resultado de test
+    function addTestResult(type, content) {
+        const resultsDiv = document.getElementById('testResults');
+        const resultClass = type === 'success' ? 'test-result success' : 'test-result error';
         
-        // Limitar a los últimos 5 resultados
-        const alerts = resultsDiv.querySelectorAll('.alert');
-        if (alerts.length > 5) {
-            for (let i = 5; i < alerts.length; i++) {
-                alerts[i].remove();
-            }
-        }
+        const resultHtml = `
+            <div class="${resultClass}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        ${content}
+                    </div>
+                    <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+                </div>
+            </div>
+        `;
+        
+        resultsDiv.innerHTML = resultHtml + resultsDiv.innerHTML;
     }
 </script>
 } 
