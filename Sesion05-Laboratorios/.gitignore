@@ -1,0 +1,115 @@
+# .NET Core y ASP.NET Core
+bin/
+obj/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+.vs/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Archivos de configuración sensibles
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.Local.json
+*.pfx
+*.key
+*.pem
+*.crt
+*.p12
+
+# Azure Key Vault y configuración
+azure-credentials.json
+azure-settings.json
+*.connectionstring
+*.connection-string
+
+# Logs y archivos temporales
+logs/
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Archivos de datos
+*.db
+*.sqlite
+*.sqlite3
+*.mdf
+*.ldf
+
+# Archivos de publicación
+publish/
+*.zip
+*.tar.gz
+
+# Archivos de IDE
+.idea/
+*.sln.docstates
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos de Node.js (si se usan herramientas frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de PowerShell
+*.ps1.log
+
+# Archivos de configuración local
+local.settings.json
+secrets.json
+*.local.json
+
+# Archivos de certificados y claves
+*.pfx
+*.key
+*.pem
+*.crt
+*.p12
+*.jks
+
+# Archivos de Azure
+.azure/
+azure-deployment-credentials.json
+
+# Archivos de testing
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Archivos de Data Protection
+keys.xml
+dataprotection-keys/
+*.keyring
+
+# Archivos de configuración de desarrollo
+.env
+.env.local
+.env.development
+.env.production
+
+# Archivos de backup de configuración
+appsettings.*.backup
+appsettings.*.bak
+
+# Archivos de credenciales temporales
+temp-credentials.json
+temp-secrets.json 
