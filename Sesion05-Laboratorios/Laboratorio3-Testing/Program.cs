@@ -16,7 +16,6 @@ if (!string.IsNullOrEmpty(keyVaultUri))
     // Usar DefaultAzureCredential para desarrollo local
     var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
     {
-        // Para desarrollo local, usar Azure CLI credentials
         ExcludeEnvironmentCredential = false,
         ExcludeWorkloadIdentityCredential = false,
         ExcludeManagedIdentityCredential = false
