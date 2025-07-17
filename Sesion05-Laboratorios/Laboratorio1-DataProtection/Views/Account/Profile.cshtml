@@ -62,11 +62,11 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped table-hover">
                         <thead class="table-dark">
                             <tr>
-                                <th>Claim Type</th>
-                                <th>Value</th>
+                                <th class="text-white">Claim Type</th>
+                                <th class="text-white">Value</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -74,7 +74,7 @@
                             {
                                 <tr>
                                     <td><code class="text-primary">@claim.Type</code></td>
-                                    <td>@claim.Value</td>
+                                    <td><span class="text-dark fw-semibold">@claim.Value</span></td>
                                 </tr>
                             }
                         </tbody>

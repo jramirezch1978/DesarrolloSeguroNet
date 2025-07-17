@@ -70,8 +70,13 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4 text-end">
-                                            <div id="storageStatus" class="badge bg-success">
-                                                <i class="fas fa-check-circle"></i> Azure Storage Activo
+                                            <div class="d-flex align-items-center justify-content-end">
+                                                <button onclick="checkAzureStorage()" class="btn btn-sm btn-outline-info me-2" title="Verificar estado de Azure Storage">
+                                                    <i class="fas fa-search"></i> Verificar
+                                                </button>
+                                                <div id="storageStatus" class="badge bg-success">
+                                                    <i class="fas fa-check-circle"></i> Azure Storage Activo
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -110,6 +115,9 @@
                                         <div class="d-grid gap-2 d-md-flex">
                                             <button type="button" class="btn btn-success" onclick="testProtection()">
                                                 <i class="fas fa-shield-alt"></i> Probar Protección
+                                            </button>
+                                            <button type="button" class="btn btn-info" onclick="runDiagnostics()">
+                                                <i class="fas fa-stethoscope"></i> Diagnóstico
                                             </button>
                                             <button type="button" class="btn btn-secondary" onclick="clearForm()">
                                                 <i class="fas fa-eraser"></i> Limpiar
@@ -205,10 +213,29 @@
     // Variables globales
     let currentProtectedData = '';
 
-    // Inicialización al cargar la página
+    // Función de inicialización
     document.addEventListener('DOMContentLoaded', function() {
-        checkSystemStatus();
+        console.log('✅ Página cargada correctamente');
+        console.log('✅ Data Protection API Testing inicializado');
+        
+        // Verificar elementos críticos
+        const inputData = document.getElementById('inputData');
+        const purpose = document.getElementById('purpose');
+        const protectButton = document.querySelector('button[onclick="testProtection()"]');
+        
+        console.log('📋 Elementos encontrados:');
+        console.log('- Input data:', inputData ? '✅' : '❌');
+        console.log('- Purpose select:', purpose ? '✅' : '❌');  
+        console.log('- Protect button:', protectButton ? '✅' : '❌');
+        
+        // Verificar endpoints
+        console.log('🔗 Endpoints configurados:');
+        console.log('- TestProtection URL:', '@Url.Action("TestProtection", "DataProtectionTest")');
+        console.log('- CheckAzureStorage URL:', '@Url.Action("CheckAzureStorage", "DataProtectionTest")');
+        console.log('- ChangeStorageType URL:', '@Url.Action("ChangeStorageType", "DataProtectionTest")');
+        
         initializeStorageToggle();
+        checkSystemStatus();
     });
 
     // Verificar estado del sistema
@@ -255,8 +282,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'RequestVerificationToken': '@antiforgeryToken'
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify(requestData)
             });
@@ -450,6 +476,194 @@
         }
 
         storageDescription.textContent = description;
+    }
+
+    // Verificar estado de Azure Storage
+    async function checkAzureStorage() {
+        try {
+            showResult('info', 'Verificando estado de Azure Storage...');
+            
+            const response = await fetch('@Url.Action("CheckAzureStorage", "DataProtectionTest")', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Mostrar información detallada
+                let statusHtml = '<div class="azure-storage-info">';
+                statusHtml += `<h6><i class="fas fa-cloud"></i> Estado de Azure Storage</h6>`;
+                statusHtml += `<p><strong>Storage Account:</strong> ${result.storageAccount}</p>`;
+                statusHtml += `<p><strong>Container:</strong> ${result.containerName}</p>`;
+                
+                if (result.containerExists === false) {
+                    statusHtml += '<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> Container aún no existe</p>';
+                } else if (result.blobExists === false) {
+                    statusHtml += '<p class="text-info"><i class="fas fa-info-circle"></i> Container existe, pero no hay claves aún</p>';
+                } else {
+                    statusHtml += `<p><strong>Blob:</strong> ${result.blobName}</p>`;
+                    statusHtml += `<p><strong>Última modificación:</strong> ${result.lastModified}</p>`;
+                    statusHtml += `<p><strong>Tamaño:</strong> ${result.sizeBytes} bytes</p>`;
+                    statusHtml += `<p><strong>Número de claves:</strong> ${result.keyCount}</p>`;
+                    
+                    if (result.xmlPreview) {
+                        statusHtml += `<details class="mt-2">`;
+                        statusHtml += `<summary><small>Ver contenido XML (preview)</small></summary>`;
+                        statusHtml += `<pre class="text-small mt-1" style="font-size: 10px; max-height: 100px; overflow-y: auto;">${result.xmlPreview}</pre>`;
+                        statusHtml += `</details>`;
+                    }
+                }
+                
+                statusHtml += `<p class="text-success mt-2"><strong>${result.message}</strong></p>`;
+                statusHtml += '</div>';
+                
+                showResult('success', statusHtml);
+                
+                addTestResult('info', `
+                    <strong>Verificación Azure Storage</strong><br>
+                    <small>Storage: ${result.storageAccount}</small><br>
+                    <small>Container existe: ${result.containerExists ? 'Sí' : 'No'}</small><br>
+                    <small>Claves: ${result.keyCount || 0}</small><br>
+                    <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                `);
+                
+            } else {
+                // Error o configuración local
+                let errorMsg = result.error || 'Error desconocido';
+                if (result.storageType === 'Local') {
+                    errorMsg = 'Aplicación configurada para almacenamiento local';
+                }
+                
+                showResult('warning', `⚠️ ${errorMsg}`);
+                addTestResult('warning', `
+                    <strong>Azure Storage No Disponible</strong><br>
+                    <small>Motivo: ${errorMsg}</small><br>
+                    <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                `);
+            }
+            
+        } catch (error) {
+            console.error('Error checking Azure Storage:', error);
+            showResult('error', 'Error verificando Azure Storage: ' + error.message);
+            addTestResult('error', `
+                <strong>Error de Verificación</strong><br>
+                <small>Error: ${error.message}</small><br>
+                <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+            `);
+        }
+    }
+
+    // Función de diagnóstico
+    async function runDiagnostics() {
+        try {
+            showResult('info', 'Ejecutando diagnóstico del sistema...');
+            console.log('🔧 Iniciando diagnóstico completo');
+            
+            // Test 1: Verificar conectividad con el controlador
+            console.log('📋 Test 1: Conectividad del controlador');
+            const response = await fetch('@Url.Action("Diagnostics", "DataProtectionTest")', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('📊 Resultado del diagnóstico:', result);
+            
+            if (result.success) {
+                let diagnosticHtml = '<div class="diagnostic-results">';
+                diagnosticHtml += '<h6><i class="fas fa-check-circle text-success"></i> Diagnóstico del Sistema</h6>';
+                diagnosticHtml += `<p><strong>Estado:</strong> <span class="text-success">Funcionando correctamente</span></p>`;
+                diagnosticHtml += `<p><strong>Timestamp:</strong> ${result.timestamp}</p>`;
+                diagnosticHtml += `<p><strong>Aplicación:</strong> ${result.applicationName}</p>`;
+                diagnosticHtml += `<p><strong>Azure Storage:</strong> ${result.hasStorageConnection ? 'Configurado' : 'No configurado'}</p>`;
+                diagnosticHtml += '</div>';
+                
+                showResult('success', diagnosticHtml);
+                
+                // Test 2: Probar protección simple
+                console.log('📋 Test 2: Protección de datos simple');
+                await testSimpleProtection();
+                
+            } else {
+                showResult('error', `Error en diagnóstico: ${result.error}`);
+            }
+            
+        } catch (error) {
+            console.error('❌ Error en diagnóstico:', error);
+            showResult('error', `Error ejecutando diagnóstico: ${error.message}`);
+            
+            addTestResult('error', `
+                <strong>Error de Diagnóstico</strong><br>
+                <small>Error: ${error.message}</small><br>
+                <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+            `);
+        }
+    }
+    
+    // Test simple de protección
+    async function testSimpleProtection() {
+        try {
+            console.log('🔒 Probando protección de datos...');
+            
+            const testData = {
+                Data: "Test de diagnóstico - " + new Date().getTime(),
+                Purpose: "UserData.Personal.v1"
+            };
+            
+            const response = await fetch('@Url.Action("TestProtection", "DataProtectionTest")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(testData)
+            });
+            
+            console.log('📊 Response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('📊 Test protection result:', result);
+            
+            if (result.success) {
+                addTestResult('success', `
+                    <strong>✅ Test de Protección Exitoso</strong><br>
+                    <small>Datos protegidos y verificados correctamente</small><br>
+                    <small>Original: ${result.originalLength} bytes</small><br>
+                    <small>Protegido: ${result.protectedLength} bytes</small><br>
+                    <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                `);
+                
+                showResult('success', '✅ Diagnóstico completo: Todo funciona correctamente');
+            } else {
+                throw new Error(result.error || 'Error desconocido en protección');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error en test de protección:', error);
+            addTestResult('error', `
+                <strong>❌ Error en Test de Protección</strong><br>
+                <small>Error: ${error.message}</small><br>
+                <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+            `);
+            throw error;
+        }
     }
 </script>
 } 

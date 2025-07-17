@@ -435,6 +435,36 @@ small.text-muted {
     color: var(--text-muted) !important;
 }
 
+/* Estilos para Claims Table */
+.table tbody tr td {
+    color: #333 !important;
+    background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.table tbody tr:nth-child(even) td {
+    background-color: rgba(248, 249, 250, 0.9) !important;
+}
+
+.table tbody tr:hover td {
+    background-color: rgba(230, 240, 255, 0.9) !important;
+    color: #333 !important;
+}
+
+.table thead th {
+    background-color: #343a40 !important;
+    color: #ffffff !important;
+    border-color: #454d55 !important;
+}
+
+/* Asegurar contraste en claims */
+.table .text-dark {
+    color: #212529 !important;
+}
+
+.table .text-primary {
+    color: #0d6efd !important;
+}
+
 /* Toggle Switch para Storage Selection */
 .storage-switch-container {
     position: relative;

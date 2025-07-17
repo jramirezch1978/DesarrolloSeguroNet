@@ -7,13 +7,16 @@ namespace DevSeguroWebApp.Controllers
     {
         private readonly ISecureDataService _secureDataService;
         private readonly ILogger<DataProtectionTestController> _logger;
+        private readonly IConfiguration _configuration;
 
         public DataProtectionTestController(
             ISecureDataService secureDataService,
-            ILogger<DataProtectionTestController> logger)
+            ILogger<DataProtectionTestController> logger,
+            IConfiguration configuration)
         {
             _secureDataService = secureDataService;
             _logger = logger;
+            _configuration = configuration;
         }
 
         public IActionResult Index()
@@ -195,6 +198,134 @@ namespace DevSeguroWebApp.Controllers
             {
                 _logger.LogError(ex, "Unexpected error in data protection test");
                 return Json(new { success = false, error = $"Error inesperado: {ex.Message}" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CheckAzureStorage()
+        {
+            try
+            {
+                var connectionString = _configuration["DataProtection:StorageConnectionString"];
+                
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    return Json(new { 
+                        success = false, 
+                        error = "No hay connection string configurado",
+                        storageType = "Local"
+                    });
+                }
+
+                var blobServiceClient = new Azure.Storage.Blobs.BlobServiceClient(connectionString);
+                var containerClient = blobServiceClient.GetBlobContainerClient("dataprotection-keys");
+                
+                // Verificar si el container existe
+                var containerExists = await containerClient.ExistsAsync();
+                
+                if (!containerExists)
+                {
+                    return Json(new {
+                        success = true,
+                        containerExists = false,
+                        message = "El container 'dataprotection-keys' aún no existe. Se creará al proteger el primer dato.",
+                        storageAccount = GetStorageAccountName(connectionString),
+                        containerName = "dataprotection-keys"
+                    });
+                }
+
+                // Verificar si el blob de claves existe
+                var blobClient = containerClient.GetBlobClient("keys.xml");
+                var blobExists = await blobClient.ExistsAsync();
+                
+                if (!blobExists)
+                {
+                    return Json(new {
+                        success = true,
+                        containerExists = true,
+                        blobExists = false,
+                        message = "El container existe pero aún no hay claves. Protege algún dato para generar las claves.",
+                        storageAccount = GetStorageAccountName(connectionString),
+                        containerName = "dataprotection-keys",
+                        blobName = "keys.xml"
+                    });
+                }
+
+                // Obtener información del blob
+                var properties = await blobClient.GetPropertiesAsync();
+                var content = await blobClient.DownloadContentAsync();
+                var xmlContent = content.Value.Content.ToString();
+                
+                // Contar claves en el XML
+                var keyCount = 0;
+                try
+                {
+                    var doc = System.Xml.Linq.XDocument.Parse(xmlContent);
+                    keyCount = doc.Root?.Elements().Count() ?? 0;
+                }
+                catch
+                {
+                    keyCount = 0;
+                }
+
+                return Json(new {
+                    success = true,
+                    containerExists = true,
+                    blobExists = true,
+                    storageAccount = GetStorageAccountName(connectionString),
+                    containerName = "dataprotection-keys",
+                    blobName = "keys.xml",
+                    lastModified = properties.Value.LastModified.ToString("yyyy-MM-dd HH:mm:ss UTC"),
+                    sizeBytes = properties.Value.ContentLength,
+                    keyCount = keyCount,
+                    message = $"Azure Storage activo con {keyCount} clave(s) almacenada(s)",
+                    xmlPreview = xmlContent.Length > 200 ? xmlContent.Substring(0, 200) + "..." : xmlContent
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking Azure Storage status");
+                return Json(new { 
+                    success = false, 
+                    error = ex.Message,
+                    details = ex.InnerException?.Message
+                });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult Diagnostics()
+        {
+            try
+            {
+                return Json(new { 
+                    success = true,
+                    message = "Controlador funcionando correctamente",
+                    timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    applicationName = _configuration["DataProtection:ApplicationName"],
+                    hasStorageConnection = !string.IsNullOrEmpty(_configuration["DataProtection:StorageConnectionString"])
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { 
+                    success = false, 
+                    error = ex.Message 
+                });
+            }
+        }
+
+        private static string GetStorageAccountName(string connectionString)
+        {
+            try
+            {
+                var accountNameStart = connectionString.IndexOf("AccountName=") + "AccountName=".Length;
+                var accountNameEnd = connectionString.IndexOf(";", accountNameStart);
+                return connectionString.Substring(accountNameStart, accountNameEnd - accountNameStart);
+            }
+            catch
+            {
+                return "Unknown";
             }
         }
     }
