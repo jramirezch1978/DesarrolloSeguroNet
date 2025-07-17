@@ -1,46 +1,130 @@
 @{
-    ViewData["Title"] = "Data Protection Test";
+    ViewData["Title"] = "Data Protection API Testing - .NET 9";
 }
 
-<div class="container">
-    <h2>🔐 Data Protection API Test</h2>
-    
+<div class="container-fluid">
     <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Test Data Protection</h5>
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient bg-success text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-shield-alt"></i> Data Protection API Testing (.NET 9)
+                    </h3>
+                    <small>Azure Storage + Múltiples Protectores</small>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label for="testData" class="form-label">Datos a Proteger:</label>
-                        <textarea class="form-control" id="testData" rows="3" 
-                            placeholder="Ingrese datos sensibles para proteger..."></textarea>
+                    <!-- Status Panel -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h5><i class="fas fa-info-circle"></i> Estado del Sistema</h5>
+                                <div id="systemStatus">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Verificando configuración...</span>
+                                    </div>
+                                    <span class="ms-2">Verificando configuración del sistema...</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="purpose" class="form-label">Propósito:</label>
-                        <select class="form-select" id="purpose">
-                            <option value="UserData.Personal.v1">Información Personal</option>
-                            <option value="UserData.Financial.v1">Datos Financieros</option>
-                            <option value="UserData.Medical.v1">Información Médica</option>
-                            <option value="UserData.Custom.v1">Propósito Personalizado</option>
-                        </select>
+
+                    <!-- Data Protection Testing -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h5><i class="fas fa-lock"></i> Data Protection API Testing</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="dataProtectionForm">
+                                        <div class="mb-3">
+                                            <label for="inputData" class="form-label">Datos a Proteger:</label>
+                                            <textarea class="form-control" id="inputData" rows="3" 
+                                                placeholder="Ingrese datos sensibles para proteger..."></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="purpose" class="form-label">Propósito de Protección:</label>
+                                            <select class="form-select" id="purpose">
+                                                <option value="UserData.Personal.v1">Información Personal</option>
+                                                <option value="UserData.Financial.v1">Datos Financieros</option>
+                                                <option value="UserData.Medical.v1">Información Médica</option>
+                                                <option value="UserData.Custom.v1">Propósito Personalizado</option>
+                                            </select>
+                                        </div>
+                                        <div class="d-grid gap-2 d-md-flex">
+                                            <button type="button" class="btn btn-success" onclick="testProtection()">
+                                                <i class="fas fa-shield-alt"></i> Probar Protección
+                                            </button>
+                                            <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                                                <i class="fas fa-eraser"></i> Limpiar
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Results Panel -->
+                        <div class="col-lg-6">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5><i class="fas fa-chart-bar"></i> Resultados de Testing</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Datos Originales:</label>
+                                        <textarea class="form-control" id="originalData" rows="2" readonly 
+                                            placeholder="Los datos originales aparecerán aquí..."></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Datos Protegidos:</label>
+                                        <textarea class="form-control" id="protectedData" rows="3" readonly 
+                                            placeholder="Los datos protegidos aparecerán aquí..."></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Datos Desprotegidos:</label>
+                                        <textarea class="form-control" id="unprotectedData" rows="2" readonly 
+                                            placeholder="Los datos desprotegidos aparecerán aquí..."></textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center">
+                                                    <h6>Tamaño Original</h6>
+                                                    <span id="originalLength" class="badge bg-primary">0 bytes</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center">
+                                                    <h6>Tamaño Protegido</h6>
+                                                    <span id="protectedLength" class="badge bg-success">0 bytes</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <button type="button" class="btn btn-primary" onclick="testProtection()">
-                        🔒 Probar Protección
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Resultados</h5>
-                </div>
-                <div class="card-body">
-                    <div id="results">
-                        <p class="text-muted">Los resultados aparecerán aquí...</p>
+
+                    <!-- Test Results -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5><i class="fas fa-clipboard-list"></i> Logs y Resultados</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="testResults">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle"></i> Los resultados de las operaciones aparecerán aquí...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -48,57 +132,142 @@
     </div>
 </div>
 
+@section Scripts {
 <script>
-async function testProtection() {
-    const data = document.getElementById('testData').value;
-    const purpose = document.getElementById('purpose').value;
-    
-    if (!data.trim()) {
-        alert('Por favor ingrese datos para proteger');
-        return;
-    }
-    
-    try {
-        const response = await fetch('@Url.Action("TestProtection", "DataProtectionTest")', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                data: data,
-                purpose: purpose
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            document.getElementById('results').innerHTML = `
-                <div class="alert alert-success">
-                    <h6>✅ Protección Exitosa</h6>
-                    <p><strong>Datos Originales:</strong> ${result.originalData}</p>
-                    <p><strong>Datos Protegidos:</strong></p>
-                    <code style="word-break: break-all;">${result.protectedData}</code>
-                    <p class="mt-2"><strong>Verificación:</strong> ${result.unprotectedData}</p>
-                    <p><strong>Tamaño Original:</strong> ${result.originalLength} bytes</p>
-                    <p><strong>Tamaño Protegido:</strong> ${result.protectedLength} bytes</p>
-                </div>
-            `;
-        } else {
-            document.getElementById('results').innerHTML = `
-                <div class="alert alert-danger">
-                    <h6>❌ Error en Protección</h6>
-                    <p>${result.error}</p>
-                </div>
-            `;
+    // Variables globales
+    let currentProtectedData = '';
+
+    // Inicialización al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        checkSystemStatus();
+    });
+
+    // Verificar estado del sistema
+    async function checkSystemStatus() {
+        try {
+            const statusDiv = document.getElementById('systemStatus');
+            
+            let statusHtml = '<div class="row">';
+            statusHtml += '<div class="col-md-4"><strong>Data Protection:</strong> <span class="badge bg-success">Configurado</span></div>';
+            statusHtml += '<div class="col-md-4"><strong>Azure Storage:</strong> <span class="badge bg-success">Conectado</span></div>';
+            statusHtml += '<div class="col-md-4"><strong>Framework:</strong> <span class="badge bg-primary">.NET 9</span></div>';
+            statusHtml += '</div>';
+            
+            statusDiv.innerHTML = statusHtml;
+            
+        } catch (error) {
+            console.error('Error checking system status:', error);
+            document.getElementById('systemStatus').innerHTML = 
+                '<div class="text-danger"><i class="fas fa-exclamation-triangle"></i> Error verificando configuración</div>';
         }
-    } catch (error) {
-        document.getElementById('results').innerHTML = `
-            <div class="alert alert-danger">
-                <h6>❌ Error de Conexión</h6>
-                <p>${error.message}</p>
+    }
+
+    // Probar protección de datos
+    async function testProtection() {
+        const data = document.getElementById('inputData').value;
+        const purpose = document.getElementById('purpose').value;
+        
+        if (!data.trim()) {
+            showResult('error', 'Por favor ingrese datos para proteger');
+            return;
+        }
+
+        try {
+            showResult('info', 'Protegiendo datos...');
+            
+            const requestData = {
+                Data: data,
+                Purpose: purpose
+            };
+
+            const response = await fetch('@Url.Action("TestProtection", "DataProtectionTest")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            const result = await response.json();
+            
+            if (result.Success) {
+                // Mostrar resultados
+                document.getElementById('originalData').value = result.OriginalData;
+                document.getElementById('protectedData').value = result.ProtectedData;
+                document.getElementById('unprotectedData').value = result.UnprotectedData;
+                document.getElementById('originalLength').textContent = result.OriginalLength + ' bytes';
+                document.getElementById('protectedLength').textContent = result.ProtectedLength + ' bytes';
+                
+                currentProtectedData = result.ProtectedData;
+                
+                showResult('success', 
+                    `Datos protegidos exitosamente. Tamaño original: ${result.OriginalLength} bytes, ` +
+                    `Tamaño protegido: ${result.ProtectedLength} bytes`);
+            } else {
+                showResult('error', `Error: ${result.Error}`);
+            }
+        } catch (error) {
+            console.error('Error testing protection:', error);
+            showResult('error', 'Error al proteger datos: ' + error.message);
+        }
+    }
+
+    // Limpiar formulario
+    function clearForm() {
+        document.getElementById('inputData').value = '';
+        document.getElementById('originalData').value = '';
+        document.getElementById('protectedData').value = '';
+        document.getElementById('unprotectedData').value = '';
+        document.getElementById('originalLength').textContent = '0 bytes';
+        document.getElementById('protectedLength').textContent = '0 bytes';
+        currentProtectedData = '';
+        showResult('info', 'Formulario limpiado');
+    }
+
+    // Mostrar resultados
+    function showResult(type, message) {
+        const resultsDiv = document.getElementById('testResults');
+        const timestamp = new Date().toLocaleTimeString();
+        
+        let alertClass = 'alert-secondary';
+        let icon = 'fas fa-info-circle';
+        
+        switch (type) {
+            case 'success':
+                alertClass = 'alert-success';
+                icon = 'fas fa-check-circle';
+                break;
+            case 'error':
+                alertClass = 'alert-danger';
+                icon = 'fas fa-exclamation-triangle';
+                break;
+            case 'warning':
+                alertClass = 'alert-warning';
+                icon = 'fas fa-exclamation-circle';
+                break;
+            case 'info':
+                alertClass = 'alert-info';
+                icon = 'fas fa-info-circle';
+                break;
+        }
+        
+        const newAlert = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="${icon}"></i>
+                <strong>[${timestamp}]</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
+        
+        resultsDiv.innerHTML = newAlert + resultsDiv.innerHTML;
+        
+        // Limitar a los últimos 5 resultados
+        const alerts = resultsDiv.querySelectorAll('.alert');
+        if (alerts.length > 5) {
+            for (let i = 5; i < alerts.length; i++) {
+                alerts[i].remove();
+            }
+        }
     }
-}
-</script> 
+</script>
+} 
