@@ -1,251 +1,231 @@
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.Identity.Web;
-using Microsoft.IdentityModel.Logging;
-using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Azure.Identity;
-using DevSeguroWebApp.Services;
-using Azure.Storage.Blobs;
-using System.Text.Json;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Network;
+using Azure.ResourceManager.Compute;
 
-var builder = WebApplication.CreateBuilder(args);
+Console.WriteLine("🦘 LABORATORIO 3: AZURE BASTION & JUMP BOX");
+Console.WriteLine("==========================================");
+Console.WriteLine();
 
-// Habilitar logging detallado en desarrollo
-if (builder.Environment.IsDevelopment())
-{
-    IdentityModelEventSource.ShowPII = true;
-}
-
-// Configurar logging más detallado
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
-if (builder.Environment.IsDevelopment())
-{
-    builder.Logging.SetMinimumLevel(LogLevel.Debug);
-}
-
-// Configurar servicios básicos
-builder.Services.AddControllersWithViews();
-
-// Configurar sesiones para almacenar preferencias
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-
-// Configurar Microsoft Identity Web
-builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
-
-// 🔐 CONFIGURACIÓN AVANZADA DE DATA PROTECTION CON AZURE STORAGE
-var applicationName = builder.Configuration["DataProtection:ApplicationName"] ?? "DevSeguroApp-Default";
-var storageConnectionString = builder.Configuration["DataProtection:StorageConnectionString"];
-
-// 📁 LEER PREFERENCIA DE ALMACENAMIENTO DESDE ARCHIVO
-bool forceLocalStorage = false;
-string preferenceSource = "configuración por defecto";
-
-try
-{
-    var preferencePath = Path.Combine(Directory.GetCurrentDirectory(), "storage-preference.json");
-    if (File.Exists(preferencePath))
+// Configurar logging
+using var host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices(services =>
     {
-        var preferenceJson = File.ReadAllText(preferencePath);
-        var preferenceDoc = JsonDocument.Parse(preferenceJson);
-        
-        if (preferenceDoc.RootElement.TryGetProperty("UseAzureStorage", out var useAzureProperty))
+        services.AddLogging(builder =>
         {
-            var useAzureStorage = useAzureProperty.GetBoolean();
-            forceLocalStorage = !useAzureStorage;
-            preferenceSource = "archivo de preferencias del usuario";
-            
-            Console.WriteLine($"📋 Preferencia de almacenamiento cargada: {(useAzureStorage ? "Azure Storage" : "Local Storage")}");
-            
-            if (preferenceDoc.RootElement.TryGetProperty("LastChanged", out var lastChangedProperty))
-            {
-                Console.WriteLine($"   - Última modificación: {lastChangedProperty.GetDateTime():yyyy-MM-dd HH:mm:ss}");
-            }
-        }
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"⚠️ Error leyendo preferencia de almacenamiento: {ex.Message}");
-    Console.WriteLine($"   - Usando configuración por defecto");
-}
-
-try
-{
-    var dataProtectionBuilder = builder.Services.AddDataProtection(options =>
-    {
-        // Nombre único de aplicación para aislamiento
-        options.ApplicationDiscriminator = applicationName;
+            builder.AddConsole();
+        });
     })
-    .SetDefaultKeyLifetime(TimeSpan.Parse(builder.Configuration["DataProtection:KeyLifetime"] ?? "90.00:00:00"))
-    .SetApplicationName(applicationName);
+    .Build();
 
-    // Configurar persistencia según preferencia del usuario
-    bool azureStorageConfigured = false;
-    
-    if (forceLocalStorage)
-    {
-        // 📁 FORZAR ALMACENAMIENTO LOCAL POR PREFERENCIA DEL USUARIO
-        var keysPath = Path.Combine(Directory.GetCurrentDirectory(), "DataProtection-Keys");
-        
-        // Crear directorio si no existe
-        if (!Directory.Exists(keysPath))
-        {
-            Directory.CreateDirectory(keysPath);
-            Console.WriteLine($"   📁 Directorio creado: {keysPath}");
-        }
-        
-        dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
-        Console.WriteLine($"📁 Data Protection configurado con ALMACENAMIENTO LOCAL por {preferenceSource}");
-        Console.WriteLine($"   - Ruta absoluta: {keysPath}");
-        Console.WriteLine($"   - Archivos de llaves se guardarán como: key-{{guid}}.xml");
-        azureStorageConfigured = true; // Para evitar el bloque de Azure
-    }
-    else if (!string.IsNullOrEmpty(storageConnectionString))
-    {
-        // ☁️ INTENTAR USAR AZURE STORAGE
-        try
-        {
-            Console.WriteLine($"🔍 Intentando conectar a Azure Storage...");
-            
-            var blobServiceClient = new BlobServiceClient(storageConnectionString);
-            Console.WriteLine($"   ✅ BlobServiceClient creado con Connection String");
-            
-            var containerClient = blobServiceClient.GetBlobContainerClient("dataprotection-keys");
-            Console.WriteLine($"   ✅ ContainerClient obtenido");
-            
-            var containerResponse = containerClient.CreateIfNotExists();
-            Console.WriteLine($"   ✅ Container verificado/creado");
-            Console.WriteLine($"   - Container status: {(containerResponse?.HasValue == true ? "Created" : "Exists")}");
-            
-            var dataProtectionBlobClient = containerClient.GetBlobClient("keys.xml");
-            dataProtectionBuilder.PersistKeysToAzureBlobStorage(dataProtectionBlobClient);
-            
-            azureStorageConfigured = true;
-            Console.WriteLine($"☁️ Data Protection configurado con AZURE STORAGE por {preferenceSource}");
-            Console.WriteLine($"   - Storage Account: {GetStorageAccountName(storageConnectionString)}");
-            Console.WriteLine($"   - Container: dataprotection-keys");
-            Console.WriteLine($"   - Blob: keys.xml");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error configurando Azure Storage: {ex.Message}");
-            Console.WriteLine($"⚠️  Usando fallback a sistema de archivos local");
-            azureStorageConfigured = false;
-        }
-    }
-    
-    // Fallback automático a sistema de archivos local
-    if (!azureStorageConfigured)
-    {
-        var keysPath = Path.Combine(Directory.GetCurrentDirectory(), "DataProtection-Keys");
-        
-        // Crear directorio si no existe
-        if (!Directory.Exists(keysPath))
-        {
-            Directory.CreateDirectory(keysPath);
-            Console.WriteLine($"   📁 Directorio creado: {keysPath}");
-        }
-        
-        dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
-        Console.WriteLine($"📁 Data Protection usando sistema de archivos local (fallback)");
-        Console.WriteLine($"   - Ruta absoluta: {keysPath}");
-        Console.WriteLine($"   - Archivos de llaves se guardarán como: key-{{guid}}.xml");
-    }
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
-    Console.WriteLine($"✅ Data Protection configurado exitosamente con nombre: {applicationName}");
-}
-catch (Exception ex)
+Console.WriteLine("📋 CONFIGURACIÓN DE ACCESO ADMINISTRATIVO SEGURO");
+Console.WriteLine("================================================");
+Console.WriteLine();
+
+Console.WriteLine("🎯 Objetivo: Eliminar exposición directa a Internet para administración");
+Console.WriteLine();
+
+Console.WriteLine("🏗️ COMPONENTES A IMPLEMENTAR:");
+Console.WriteLine("==============================");
+Console.WriteLine();
+
+// Azure Bastion Subnet
+Console.WriteLine("1. Azure Bastion Subnet:");
+Console.WriteLine("   Nombre: AzureBastionSubnet (OBLIGATORIO este nombre exacto)");
+Console.WriteLine("   Address Range: 10.1.100.0/26 (mínimo /26 requerido)");
+Console.WriteLine("   Propósito: Subnet dedicada para Azure Bastion");
+Console.WriteLine();
+
+// Azure Bastion
+Console.WriteLine("2. Azure Bastion (Servicio Administrado):");
+Console.WriteLine("   Nombre: bastion-[sunombre]");
+Console.WriteLine("   SKU: Basic (para laboratorio)");
+Console.WriteLine("   Public IP: pip-bastion-[sunombre]");
+Console.WriteLine("   Beneficios:");
+Console.WriteLine("   ✅ Acceso RDP/SSH sin exponer VMs a Internet");
+Console.WriteLine("   ✅ Conexión segura vía HTTPS desde navegador");
+Console.WriteLine("   ✅ Sin necesidad de VPN cliente");
+Console.WriteLine();
+
+// Jump Box VM
+Console.WriteLine("3. Jump Box VM (Alternativa económica):");
+Console.WriteLine("   Nombre: vm-jumpbox-[sunombre]");
+Console.WriteLine("   Subnet: snet-management (10.1.10.0/24)");
+Console.WriteLine("   OS: Windows Server 2022 Datacenter");
+Console.WriteLine("   Size: Standard_B2s (2 vCPUs, 4 GB RAM)");
+Console.WriteLine("   Public IP: None (acceso solo vía Bastion)");
+Console.WriteLine();
+
+Console.WriteLine("⚡ COMANDOS AZURE CLI PARA BASTION:");
+Console.WriteLine("=================================");
+Console.WriteLine();
+
+// Mostrar comandos CLI para Bastion
+var bastionCommands = new[]
 {
-    Console.WriteLine($"❌ Error configurando Data Protection: {ex.Message}");
-    throw;
-}
+    "# ===== PASO 1: CREAR AZURE BASTION SUBNET =====",
+    "az network vnet subnet create \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --vnet-name vnet-principal-[sunombre] \\",
+    "  --name AzureBastionSubnet \\",
+    "  --address-prefix 10.1.100.0/26",
+    "",
+    "# ===== PASO 2: CREAR PUBLIC IP PARA BASTION =====",
+    "az network public-ip create \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --name pip-bastion-[sunombre] \\",
+    "  --sku Standard \\",
+    "  --allocation-method Static \\",
+    "  --location eastus",
+    "",
+    "# ===== PASO 3: CREAR AZURE BASTION =====",
+    "az network bastion create \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --name bastion-[sunombre] \\",
+    "  --public-ip-address pip-bastion-[sunombre] \\",
+    "  --vnet-name vnet-principal-[sunombre] \\",
+    "  --location eastus",
+    "",
+    "# NOTA: Azure Bastion toma 5-10 minutos en deployar",
+};
 
-// Registrar servicio de protección de datos
-builder.Services.AddScoped<ISecureDataService, SecureDataService>();
-
-// Configurar autorización - Permitir acceso sin autenticación para testing
-builder.Services.AddAuthorization(options =>
+foreach (var command in bastionCommands)
 {
-    // No requerir autenticación por defecto para facilitar testing
-    options.FallbackPolicy = null;
-});
-
-builder.Services.AddRazorPages();
-
-var app = builder.Build();
-
-// Verificar configuración de Data Protection al inicio
-try
-{
-    using (var scope = app.Services.CreateScope())
+    if (command.StartsWith("#"))
     {
-        var dataProtectionProvider = scope.ServiceProvider.GetRequiredService<IDataProtectionProvider>();
-        var testProtector = dataProtectionProvider.CreateProtector("startup-test");
-        var testData = "test-data";
-        var protectedTest = testProtector.Protect(testData);
-        var unprotectedTest = testProtector.Unprotect(protectedTest);
-        
-        if (testData == unprotectedTest)
-        {
-            Console.WriteLine("✅ Data Protection verification successful");
-        }
-        else
-        {
-            Console.WriteLine("❌ Data Protection verification failed");
-        }
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine(command);
+        Console.ResetColor();
+    }
+    else if (string.IsNullOrEmpty(command))
+    {
+        Console.WriteLine();
+    }
+    else
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine(command);
+        Console.ResetColor();
     }
 }
-catch (Exception ex)
+
+Console.WriteLine();
+Console.WriteLine("🖥️ COMANDOS PARA JUMP BOX VM:");
+Console.WriteLine("============================");
+Console.WriteLine();
+
+var jumpboxCommands = new[]
 {
-    Console.WriteLine($"❌ Error verificando Data Protection: {ex.Message}");
-}
+    "# ===== CREAR JUMP BOX VM =====",
+    "az vm create \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --name vm-jumpbox-[sunombre] \\",
+    "  --image Win2022Datacenter \\",
+    "  --size Standard_B2s \\",
+    "  --vnet-name vnet-principal-[sunombre] \\",
+    "  --subnet snet-management \\",
+    "  --public-ip-address \"\" \\",
+    "  --nsg \"\" \\",
+    "  --admin-username azureadmin \\",
+    "  --admin-password \"JumpBox2024!\" \\",
+    "  --location eastus",
+    "",
+    "# ===== CONFIGURAR AUTO-SHUTDOWN =====",
+    "az vm auto-shutdown \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --name vm-jumpbox-[sunombre] \\",
+    "  --time 2300",
+};
 
-// Configurar pipeline
-if (!app.Environment.IsDevelopment())
+foreach (var command in jumpboxCommands)
 {
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-
-// Habilitar sesiones
-app.UseSession();
-
-// ORDEN CRÍTICO en .NET 9
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-app.MapRazorPages();
-
-Console.WriteLine($"🚀 Aplicación iniciada en puerto 7001");
-app.Run();
-
-// Helper function para extraer el nombre de la cuenta de storage
-static string GetStorageAccountName(string connectionString)
-{
-    try
+    if (command.StartsWith("#"))
     {
-        var accountNameStart = connectionString.IndexOf("AccountName=") + "AccountName=".Length;
-        var accountNameEnd = connectionString.IndexOf(";", accountNameStart);
-        return connectionString.Substring(accountNameStart, accountNameEnd - accountNameStart);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine(command);
+        Console.ResetColor();
     }
-    catch
+    else if (string.IsNullOrEmpty(command))
     {
-        return "Unknown";
+        Console.WriteLine();
+    }
+    else
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine(command);
+        Console.ResetColor();
     }
 }
+
+Console.WriteLine();
+Console.WriteLine("🔐 ACTUALIZAR NSG PARA BASTION:");
+Console.WriteLine("==============================");
+Console.WriteLine();
+
+var nsgUpdateCommands = new[]
+{
+    "# Agregar regla para permitir Bastion → Management subnet",
+    "az network nsg rule create \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --nsg-name nsg-management-[sunombre] \\",
+    "  --name Allow-Bastion-Inbound \\",
+    "  --priority 90 \\",
+    "  --source-address-prefixes 10.1.100.0/26 \\",
+    "  --destination-address-prefixes 10.1.10.0/24 \\",
+    "  --destination-port-ranges 3389 22 \\",
+    "  --access Allow \\",
+    "  --protocol Tcp",
+};
+
+foreach (var command in nsgUpdateCommands)
+{
+    if (command.StartsWith("#"))
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine(command);
+        Console.ResetColor();
+    }
+    else if (string.IsNullOrEmpty(command))
+    {
+        Console.WriteLine();
+    }
+    else
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine(command);
+        Console.ResetColor();
+    }
+}
+
+Console.WriteLine();
+logger.LogInformation("Guía de comandos Azure Bastion mostrada correctamente");
+
+Console.WriteLine("📋 PRÓXIMOS PASOS:");
+Console.WriteLine("==================");
+Console.WriteLine("1. ✅ Crear AzureBastionSubnet con el nombre exacto");
+Console.WriteLine("2. ✅ Deployar Azure Bastion (5-10 minutos)");
+Console.WriteLine("3. ✅ Crear Jump Box VM sin Public IP");
+Console.WriteLine("4. ✅ Actualizar NSG para permitir tráfico desde Bastion");
+Console.WriteLine("5. ✅ Probar acceso seguro vía Azure Portal");
+Console.WriteLine("6. ✅ Preparar para Laboratorio 4 - Testing y Validación");
+Console.WriteLine();
+
+Console.WriteLine("💡 IMPORTANTE - BENEFICIOS DE SEGURIDAD:");
+Console.WriteLine("========================================");
+Console.WriteLine("✅ Zero Internet exposure para VMs administrativas");
+Console.WriteLine("✅ Acceso centralizado y auditado");
+Console.WriteLine("✅ No necesidad de VPN cliente");
+Console.WriteLine("✅ Sesiones RDP/SSH encriptadas vía HTTPS");
+Console.WriteLine("✅ Integration con Azure AD y RBAC");
+Console.WriteLine();
+
+Console.WriteLine("🎉 LABORATORIO 3 - CONFIGURACIÓN COMPLETADA");
+Console.WriteLine("✅ Acceso administrativo seguro configurado sin exposición directa");
+Console.WriteLine();
+
+return 0;

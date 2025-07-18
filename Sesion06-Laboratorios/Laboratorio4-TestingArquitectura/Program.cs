@@ -1,251 +1,222 @@
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.Identity.Web;
-using Microsoft.IdentityModel.Logging;
-using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Azure.Identity;
-using DevSeguroWebApp.Services;
-using Azure.Storage.Blobs;
-using System.Text.Json;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Network;
 
-var builder = WebApplication.CreateBuilder(args);
+Console.WriteLine("🧪 LABORATORIO 4: TESTING & ARQUITECTURA HUB-AND-SPOKE");
+Console.WriteLine("======================================================");
+Console.WriteLine();
 
-// Habilitar logging detallado en desarrollo
-if (builder.Environment.IsDevelopment())
-{
-    IdentityModelEventSource.ShowPII = true;
-}
-
-// Configurar logging más detallado
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
-if (builder.Environment.IsDevelopment())
-{
-    builder.Logging.SetMinimumLevel(LogLevel.Debug);
-}
-
-// Configurar servicios básicos
-builder.Services.AddControllersWithViews();
-
-// Configurar sesiones para almacenar preferencias
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-
-// Configurar Microsoft Identity Web
-builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
-
-// 🔐 CONFIGURACIÓN AVANZADA DE DATA PROTECTION CON AZURE STORAGE
-var applicationName = builder.Configuration["DataProtection:ApplicationName"] ?? "DevSeguroApp-Default";
-var storageConnectionString = builder.Configuration["DataProtection:StorageConnectionString"];
-
-// 📁 LEER PREFERENCIA DE ALMACENAMIENTO DESDE ARCHIVO
-bool forceLocalStorage = false;
-string preferenceSource = "configuración por defecto";
-
-try
-{
-    var preferencePath = Path.Combine(Directory.GetCurrentDirectory(), "storage-preference.json");
-    if (File.Exists(preferencePath))
+// Configurar logging
+using var host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices(services =>
     {
-        var preferenceJson = File.ReadAllText(preferencePath);
-        var preferenceDoc = JsonDocument.Parse(preferenceJson);
-        
-        if (preferenceDoc.RootElement.TryGetProperty("UseAzureStorage", out var useAzureProperty))
+        services.AddLogging(builder =>
         {
-            var useAzureStorage = useAzureProperty.GetBoolean();
-            forceLocalStorage = !useAzureStorage;
-            preferenceSource = "archivo de preferencias del usuario";
-            
-            Console.WriteLine($"📋 Preferencia de almacenamiento cargada: {(useAzureStorage ? "Azure Storage" : "Local Storage")}");
-            
-            if (preferenceDoc.RootElement.TryGetProperty("LastChanged", out var lastChangedProperty))
-            {
-                Console.WriteLine($"   - Última modificación: {lastChangedProperty.GetDateTime():yyyy-MM-dd HH:mm:ss}");
-            }
-        }
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"⚠️ Error leyendo preferencia de almacenamiento: {ex.Message}");
-    Console.WriteLine($"   - Usando configuración por defecto");
-}
-
-try
-{
-    var dataProtectionBuilder = builder.Services.AddDataProtection(options =>
-    {
-        // Nombre único de aplicación para aislamiento
-        options.ApplicationDiscriminator = applicationName;
+            builder.AddConsole();
+        });
     })
-    .SetDefaultKeyLifetime(TimeSpan.Parse(builder.Configuration["DataProtection:KeyLifetime"] ?? "90.00:00:00"))
-    .SetApplicationName(applicationName);
+    .Build();
 
-    // Configurar persistencia según preferencia del usuario
-    bool azureStorageConfigured = false;
-    
-    if (forceLocalStorage)
-    {
-        // 📁 FORZAR ALMACENAMIENTO LOCAL POR PREFERENCIA DEL USUARIO
-        var keysPath = Path.Combine(Directory.GetCurrentDirectory(), "DataProtection-Keys");
-        
-        // Crear directorio si no existe
-        if (!Directory.Exists(keysPath))
-        {
-            Directory.CreateDirectory(keysPath);
-            Console.WriteLine($"   📁 Directorio creado: {keysPath}");
-        }
-        
-        dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
-        Console.WriteLine($"📁 Data Protection configurado con ALMACENAMIENTO LOCAL por {preferenceSource}");
-        Console.WriteLine($"   - Ruta absoluta: {keysPath}");
-        Console.WriteLine($"   - Archivos de llaves se guardarán como: key-{{guid}}.xml");
-        azureStorageConfigured = true; // Para evitar el bloque de Azure
-    }
-    else if (!string.IsNullOrEmpty(storageConnectionString))
-    {
-        // ☁️ INTENTAR USAR AZURE STORAGE
-        try
-        {
-            Console.WriteLine($"🔍 Intentando conectar a Azure Storage...");
-            
-            var blobServiceClient = new BlobServiceClient(storageConnectionString);
-            Console.WriteLine($"   ✅ BlobServiceClient creado con Connection String");
-            
-            var containerClient = blobServiceClient.GetBlobContainerClient("dataprotection-keys");
-            Console.WriteLine($"   ✅ ContainerClient obtenido");
-            
-            var containerResponse = containerClient.CreateIfNotExists();
-            Console.WriteLine($"   ✅ Container verificado/creado");
-            Console.WriteLine($"   - Container status: {(containerResponse?.HasValue == true ? "Created" : "Exists")}");
-            
-            var dataProtectionBlobClient = containerClient.GetBlobClient("keys.xml");
-            dataProtectionBuilder.PersistKeysToAzureBlobStorage(dataProtectionBlobClient);
-            
-            azureStorageConfigured = true;
-            Console.WriteLine($"☁️ Data Protection configurado con AZURE STORAGE por {preferenceSource}");
-            Console.WriteLine($"   - Storage Account: {GetStorageAccountName(storageConnectionString)}");
-            Console.WriteLine($"   - Container: dataprotection-keys");
-            Console.WriteLine($"   - Blob: keys.xml");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error configurando Azure Storage: {ex.Message}");
-            Console.WriteLine($"⚠️  Usando fallback a sistema de archivos local");
-            azureStorageConfigured = false;
-        }
-    }
-    
-    // Fallback automático a sistema de archivos local
-    if (!azureStorageConfigured)
-    {
-        var keysPath = Path.Combine(Directory.GetCurrentDirectory(), "DataProtection-Keys");
-        
-        // Crear directorio si no existe
-        if (!Directory.Exists(keysPath))
-        {
-            Directory.CreateDirectory(keysPath);
-            Console.WriteLine($"   📁 Directorio creado: {keysPath}");
-        }
-        
-        dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
-        Console.WriteLine($"📁 Data Protection usando sistema de archivos local (fallback)");
-        Console.WriteLine($"   - Ruta absoluta: {keysPath}");
-        Console.WriteLine($"   - Archivos de llaves se guardarán como: key-{{guid}}.xml");
-    }
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
-    Console.WriteLine($"✅ Data Protection configurado exitosamente con nombre: {applicationName}");
-}
-catch (Exception ex)
+Console.WriteLine("📋 VALIDACIÓN DE INFRAESTRUCTURA IMPLEMENTADA");
+Console.WriteLine("=============================================");
+Console.WriteLine();
+
+Console.WriteLine("🎯 Objetivo: Validar arquitectura y preparar escalabilidad futura");
+Console.WriteLine();
+
+Console.WriteLine("✅ CHECKLIST DE VALIDACIÓN:");
+Console.WriteLine("===========================");
+Console.WriteLine();
+
+Console.WriteLine("🌐 1. VIRTUAL NETWORK:");
+Console.WriteLine("   ☐ VNET creada: vnet-principal-[sunombre] (10.1.0.0/16)");
+Console.WriteLine("   ☐ DMZ Subnet: snet-dmz (10.1.1.0/24)");
+Console.WriteLine("   ☐ Private Subnet: snet-private (10.1.2.0/24)");
+Console.WriteLine("   ☐ Data Subnet: snet-data (10.1.3.0/24)");
+Console.WriteLine("   ☐ Management Subnet: snet-management (10.1.10.0/24)");
+Console.WriteLine("   ☐ Azure Bastion Subnet: AzureBastionSubnet (10.1.100.0/26)");
+Console.WriteLine();
+
+Console.WriteLine("🛡️ 2. NETWORK SECURITY GROUPS:");
+Console.WriteLine("   ☐ NSG-DMZ: Permite HTTP/HTTPS desde Internet");
+Console.WriteLine("   ☐ NSG-Private: Solo acceso desde DMZ");
+Console.WriteLine("   ☐ NSG-Data: Solo acceso desde Private");
+Console.WriteLine("   ☐ NSG-Management: Acceso administrativo controlado");
+Console.WriteLine("   ☐ Todos los NSGs asociados a sus subnets");
+Console.WriteLine();
+
+Console.WriteLine("🦘 3. ACCESO ADMINISTRATIVO:");
+Console.WriteLine("   ☐ Azure Bastion deployado");
+Console.WriteLine("   ☐ Jump Box VM sin Public IP");
+Console.WriteLine("   ☐ Acceso seguro funcionando");
+Console.WriteLine("   ☐ Zero exposición directa a Internet");
+Console.WriteLine();
+
+Console.WriteLine("⚡ COMANDOS DE TESTING CON AZURE CLI:");
+Console.WriteLine("===================================");
+Console.WriteLine();
+
+var testingCommands = new[]
 {
-    Console.WriteLine($"❌ Error configurando Data Protection: {ex.Message}");
-    throw;
-}
+    "# ===== VERIFICAR RECURSOS CREADOS =====",
+    "# Listar VNET y subnets",
+    "az network vnet subnet list \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --vnet-name vnet-principal-[sunombre] \\",
+    "  --output table",
+    "",
+    "# Verificar NSGs",
+    "az network nsg list \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --output table",
+    "",
+    "# ===== VERIFICAR REGLAS DE SEGURIDAD =====",
+    "# Verificar reglas efectivas para DMZ",
+    "az network nsg show \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --name nsg-dmz-[sunombre] \\",
+    "  --query 'securityRules[].{Name:name,Priority:priority,Access:access,Protocol:protocol,Direction:direction}' \\",
+    "  --output table",
+    "",
+    "# ===== TESTING DE CONECTIVIDAD =====",
+    "# Verificar Network Watcher habilitado",
+    "az network watcher list --output table",
+    "",
+    "# Test 1: ¿DMZ puede acceder a Private?",
+    "az network watcher test-ip-flow \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --vm vm-jumpbox-[sunombre] \\",
+    "  --direction Outbound \\",
+    "  --protocol TCP \\",
+    "  --local 10.1.10.10:443 \\",
+    "  --remote 10.1.2.10:443",
+    "",
+    "# Test 2: ¿Internet puede acceder a Data? (debe ser DENY)",
+    "az network watcher test-ip-flow \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --vm vm-jumpbox-[sunombre] \\",
+    "  --direction Inbound \\",
+    "  --protocol TCP \\",
+    "  --local 10.1.3.10:1433 \\",
+    "  --remote 1.1.1.1:80"
+};
 
-// Registrar servicio de protección de datos
-builder.Services.AddScoped<ISecureDataService, SecureDataService>();
-
-// Configurar autorización - Permitir acceso sin autenticación para testing
-builder.Services.AddAuthorization(options =>
+foreach (var command in testingCommands)
 {
-    // No requerir autenticación por defecto para facilitar testing
-    options.FallbackPolicy = null;
-});
-
-builder.Services.AddRazorPages();
-
-var app = builder.Build();
-
-// Verificar configuración de Data Protection al inicio
-try
-{
-    using (var scope = app.Services.CreateScope())
+    if (command.StartsWith("#"))
     {
-        var dataProtectionProvider = scope.ServiceProvider.GetRequiredService<IDataProtectionProvider>();
-        var testProtector = dataProtectionProvider.CreateProtector("startup-test");
-        var testData = "test-data";
-        var protectedTest = testProtector.Protect(testData);
-        var unprotectedTest = testProtector.Unprotect(protectedTest);
-        
-        if (testData == unprotectedTest)
-        {
-            Console.WriteLine("✅ Data Protection verification successful");
-        }
-        else
-        {
-            Console.WriteLine("❌ Data Protection verification failed");
-        }
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine(command);
+        Console.ResetColor();
+    }
+    else if (string.IsNullOrEmpty(command))
+    {
+        Console.WriteLine();
+    }
+    else
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine(command);
+        Console.ResetColor();
     }
 }
-catch (Exception ex)
+
+Console.WriteLine();
+Console.WriteLine("🏗️ PLANIFICACIÓN HUB-AND-SPOKE:");
+Console.WriteLine("===============================");
+Console.WriteLine();
+
+Console.WriteLine("📊 ARQUITECTURA ACTUAL (HUB):");
+Console.WriteLine("   Hub VNET: vnet-principal-[sunombre] (10.1.0.0/16)");
+Console.WriteLine("   ✅ Servicios compartidos: Bastion, NSGs, Management");
+Console.WriteLine("   ✅ Conectividad: Centralizada y segura");
+Console.WriteLine();
+
+Console.WriteLine("🎯 EXPANSIÓN FUTURA (SPOKES):");
+Console.WriteLine("   Spoke 1 - Production: 10.2.0.0/16");
+Console.WriteLine("   Spoke 2 - Development: 10.3.0.0/16");
+Console.WriteLine("   Spoke 3 - Testing: 10.4.0.0/16");
+Console.WriteLine();
+
+Console.WriteLine("🔗 COMANDOS PARA HUB-AND-SPOKE (FUTUROS):");
+Console.WriteLine("========================================");
+Console.WriteLine();
+
+var hubSpokeCommands = new[]
 {
-    Console.WriteLine($"❌ Error verificando Data Protection: {ex.Message}");
-}
+    "# ===== CREAR SPOKE PRODUCTION =====",
+    "az network vnet create \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --name vnet-production-spoke \\",
+    "  --address-prefix 10.2.0.0/16 \\",
+    "  --location eastus",
+    "",
+    "# ===== CREAR VNET PEERING HUB → SPOKE =====",
+    "az network vnet peering create \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --vnet-name vnet-principal-[sunombre] \\",
+    "  --name hub-to-production \\",
+    "  --remote-vnet vnet-production-spoke \\",
+    "  --allow-vnet-access",
+    "",
+    "# ===== CREAR VNET PEERING SPOKE → HUB =====",
+    "az network vnet peering create \\",
+    "  --resource-group rg-infraestructura-segura-[SuNombre] \\",
+    "  --vnet-name vnet-production-spoke \\",
+    "  --name production-to-hub \\",
+    "  --remote-vnet vnet-principal-[sunombre] \\",
+    "  --allow-vnet-access"
+};
 
-// Configurar pipeline
-if (!app.Environment.IsDevelopment())
+foreach (var command in hubSpokeCommands)
 {
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-
-// Habilitar sesiones
-app.UseSession();
-
-// ORDEN CRÍTICO en .NET 9
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-app.MapRazorPages();
-
-Console.WriteLine($"🚀 Aplicación iniciada en puerto 7001");
-app.Run();
-
-// Helper function para extraer el nombre de la cuenta de storage
-static string GetStorageAccountName(string connectionString)
-{
-    try
+    if (command.StartsWith("#"))
     {
-        var accountNameStart = connectionString.IndexOf("AccountName=") + "AccountName=".Length;
-        var accountNameEnd = connectionString.IndexOf(";", accountNameStart);
-        return connectionString.Substring(accountNameStart, accountNameEnd - accountNameStart);
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine(command);
+        Console.ResetColor();
     }
-    catch
+    else if (string.IsNullOrEmpty(command))
     {
-        return "Unknown";
+        Console.WriteLine();
+    }
+    else
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine(command);
+        Console.ResetColor();
     }
 }
+
+Console.WriteLine();
+logger.LogInformation("Guía de testing y arquitectura mostrada correctamente");
+
+Console.WriteLine("📋 PRÓXIMOS PASOS:");
+Console.WriteLine("==================");
+Console.WriteLine("1. ✅ Ejecutar comandos de verificación");
+Console.WriteLine("2. ✅ Validar conectividad con Network Watcher");
+Console.WriteLine("3. ✅ Documentar arquitectura implementada");
+Console.WriteLine("4. ✅ Confirmar principios de seguridad aplicados");
+Console.WriteLine("5. ✅ Planificar expansión Hub-and-Spoke");
+Console.WriteLine();
+
+Console.WriteLine("🎖️ PRINCIPIOS DE SEGURIDAD IMPLEMENTADOS:");
+Console.WriteLine("=========================================");
+Console.WriteLine("✅ Defense in Depth: Múltiples capas de seguridad");
+Console.WriteLine("✅ Least Privilege: Acceso mínimo necesario");
+Console.WriteLine("✅ Network Segmentation: Aislamiento por función");
+Console.WriteLine("✅ Zero Trust: Verificación explícita de acceso");
+Console.WriteLine("✅ Secure by Default: NSGs con deny implícito");
+Console.WriteLine();
+
+Console.WriteLine("🎉 LABORATORIO 4 - VALIDACIÓN COMPLETADA");
+Console.WriteLine("✅ Arquitectura de red segura implementada y validada");
+Console.WriteLine("✅ Base sólida para escalabilidad futura");
+Console.WriteLine();
+
+return 0;

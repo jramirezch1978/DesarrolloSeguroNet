@@ -31,6 +31,16 @@ foreach ($lab in $laboratorios) {
                 continue
             }
             
+            # Usar nombres correctos de proyecto para labs simplificados
+            $projectFile = switch ($lab) {
+                "Laboratorio0-VerificacionEntorno" { "EntornoVerificacion.csproj" }
+                "Laboratorio1-VirtualNetwork" { "VNetConfiguration.csproj" }
+                "Laboratorio2-NetworkSecurityGroups" { "NSGConfiguration.csproj" }
+                "Laboratorio3-AzureBastion" { "BastionConfiguration.csproj" }
+                "Laboratorio4-TestingArquitectura" { "TestingValidation.csproj" }
+                default { $csprojFiles[0].Name }
+            }
+            
             Write-Host "   Ejecutando dotnet restore..." -ForegroundColor Gray
             $restoreResult = dotnet restore 2>&1 | Out-String
             
@@ -101,21 +111,9 @@ $configuracionesCorrectas = 0
 $configuracionesTotales = 0
 
 foreach ($lab in $exitosos) {
-    $appsettingsPath = Join-Path $lab "appsettings.json"
-    if (Test-Path $appsettingsPath) {
-        $configuracionesTotales++
-        try {
-            $content = Get-Content $appsettingsPath -Raw | ConvertFrom-Json
-            if ($content.AzureAd -and $content.AzureAd.TenantId) {
-                Write-Host "   + $lab - Azure AD configurado" -ForegroundColor Green
-                $configuracionesCorrectas++
-            } else {
-                Write-Host "   ! $lab - Azure AD no configurado completamente" -ForegroundColor Yellow
-            }
-        } catch {
-            Write-Host "   - $lab - Error leyendo appsettings.json" -ForegroundColor Red
-        }
-    }
+    # Solo verificar Azure AD para laboratorios que lo requieren (NINGUNO en esta sesión)
+    # Todos los laboratorios de Sesión 06 son configuración de Azure, no aplicaciones web
+    # Write-Host "   + $lab - No requiere Azure AD (configuración de infraestructura)" -ForegroundColor Green
 }
 
 Write-Host ""
