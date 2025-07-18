@@ -1,0 +1,249 @@
+@{
+    ViewData["Title"] = "Verificación Completa del Sistema - .NET 9";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient bg-success text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-check-circle"></i> Verificación Completa del Sistema (.NET 9)
+                    </h3>
+                    <small>Laboratorio 4: Verificación Final de Data Protection + Key Vault</small>
+                </div>
+                <div class="card-body">
+                    <!-- System Status -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h5><i class="fas fa-info-circle"></i> Estado del Sistema</h5>
+                                <div id="systemStatus">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Verificando...</span>
+                                    </div>
+                                    <span class="ms-2">Verificando estado del sistema...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Verification Panel -->
+                    <div class="row">
+                        <div class="col-lg-8 mx-auto">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white text-center">
+                                    <h5><i class="fas fa-clipboard-check"></i> Panel de Verificación</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    <p class="lead">Ejecuta una verificación completa de todos los componentes del sistema</p>
+                                    
+                                    <button type="button" class="btn btn-success btn-lg" onclick="runSystemVerification()">
+                                        <i class="fas fa-play-circle"></i> Ejecutar Verificación Completa
+                                    </button>
+                                    
+                                    <div class="mt-4">
+                                        <div id="verificationResults"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5><i class="fas fa-clipboard-list"></i> Resultados de Verificación</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="testResults">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle"></i> Los resultados de verificación aparecerán aquí...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('✅ Página de Verificación cargada');
+        checkSystemStatus();
+    });
+
+    async function checkSystemStatus() {
+        try {
+            const response = await fetch('@Url.Action("Status", "Verification")');
+            const config = await response.json();
+            
+            const statusDiv = document.getElementById('systemStatus');
+            
+            let statusHtml = '<div class="row">';
+            statusHtml += `<div class="col-md-3"><strong>Data Protection:</strong> <span class="badge ${config.dataProtectionConfigured ? 'bg-success' : 'bg-danger'}">${config.dataProtectionConfigured ? 'OK' : 'ERROR'}</span></div>`;
+            statusHtml += `<div class="col-md-3"><strong>Key Vault:</strong> <span class="badge ${config.keyVaultConfigured ? 'bg-success' : 'bg-danger'}">${config.keyVaultConfigured ? 'OK' : 'ERROR'}</span></div>`;
+            statusHtml += `<div class="col-md-3"><strong>Azure Storage:</strong> <span class="badge ${config.hasStorageConnection ? 'bg-success' : 'bg-warning'}">${config.hasStorageConnection ? 'OK' : 'LOCAL'}</span></div>`;
+            statusHtml += `<div class="col-md-3"><strong>Puerto:</strong> <span class="badge bg-primary">${config.port}</span></div>`;
+            statusHtml += '</div>';
+            
+            statusDiv.innerHTML = statusHtml;
+            
+        } catch (error) {
+            console.error('Error checking system status:', error);
+            document.getElementById('systemStatus').innerHTML = 
+                '<div class="text-danger"><i class="fas fa-exclamation-triangle"></i> Error verificando configuración</div>';
+        }
+    }
+
+    async function runSystemVerification() {
+        try {
+            showLoading();
+            
+            const response = await fetch('@Url.Action("VerifySystem", "Verification")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    TestType: "full"
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showVerificationSuccess(result);
+            } else {
+                showVerificationError(result);
+            }
+            
+        } catch (error) {
+            console.error('Error en verificación:', error);
+            showVerificationError({ error: error.message });
+        }
+    }
+
+    function showLoading() {
+        const resultsDiv = document.getElementById('verificationResults');
+        resultsDiv.innerHTML = `
+            <div class="alert alert-info">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border spinner-border-sm me-3" role="status"></div>
+                    <span>Ejecutando verificación completa del sistema...</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function showVerificationSuccess(result) {
+        const resultsDiv = document.getElementById('verificationResults');
+        
+        let html = `
+            <div class="alert alert-success">
+                <h5><i class="fas fa-check-circle"></i> ✅ Verificación Exitosa</h5>
+                <p><strong>Mensaje:</strong> ${result.message}</p>
+                <p><strong>Timestamp:</strong> ${result.testTimestamp}</p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h6><i class="fas fa-cogs"></i> Detalles de la Verificación</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Data Protection:</strong> 
+                                <span class="badge ${result.dataProtectionWorking ? 'bg-success' : 'bg-danger'}">
+                                    ${result.dataProtectionWorking ? 'FUNCIONANDO' : 'ERROR'}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Test completado:</strong> ${result.testTimestamp}</p>
+                        </div>
+                    </div>
+                    
+                    <h6>Datos de Prueba:</h6>
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <label class="form-label"><strong>Original:</strong></label>
+                            <div class="form-control bg-light">${result.originalData}</div>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <label class="form-label"><strong>Protegido:</strong></label>
+                            <div class="form-control bg-light text-truncate">${result.protectedData}</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label"><strong>Desprotegido:</strong></label>
+                            <div class="form-control bg-light">${result.unprotectedData}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        resultsDiv.innerHTML = html;
+        
+        // Add to test results
+        addTestResult('success', `
+            <strong>✅ Verificación Completa Exitosa</strong><br>
+            <small>Data Protection: ${result.dataProtectionWorking ? 'OK' : 'ERROR'}</small><br>
+            <small>Timestamp: ${result.testTimestamp}</small>
+        `);
+    }
+
+    function showVerificationError(result) {
+        const resultsDiv = document.getElementById('verificationResults');
+        
+        let html = `
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-exclamation-triangle"></i> ❌ Error en Verificación</h5>
+                <p><strong>Error:</strong> ${result.error}</p>
+                <p><strong>Data Protection:</strong> 
+                    <span class="badge bg-danger">NO FUNCIONANDO</span>
+                </p>
+            </div>
+        `;
+        
+        resultsDiv.innerHTML = html;
+        
+        addTestResult('error', `
+            <strong>❌ Error en Verificación</strong><br>
+            <small>Error: ${result.error}</small><br>
+            <small>Timestamp: ${new Date().toLocaleTimeString()}</small>
+        `);
+    }
+
+    function addTestResult(type, content) {
+        const resultsDiv = document.getElementById('testResults');
+        const resultClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        
+        const resultHtml = `
+            <div class="alert ${resultClass} alert-dismissible fade show" role="alert">
+                ${content}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        resultsDiv.innerHTML = resultHtml + resultsDiv.innerHTML;
+    }
+</script>
+}
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+</style> 

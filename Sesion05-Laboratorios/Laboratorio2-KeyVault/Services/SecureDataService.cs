@@ -24,7 +24,8 @@ namespace DevSeguroWebApp.Services
                 var jsonData = JsonSerializer.Serialize(data);
                 var protectedData = protector.Protect(jsonData);
                 
-                _logger.LogInformation("Data protected with purpose: {Purpose}", purpose);
+                _logger.LogInformation("Data protected successfully with purpose: {Purpose}, original length: {OriginalLength}, protected length: {ProtectedLength}", 
+                    purpose, jsonData.Length, protectedData.Length);
                 return protectedData;
             }
             catch (Exception ex)
@@ -42,8 +43,8 @@ namespace DevSeguroWebApp.Services
                 var jsonData = protector.Unprotect(protectedData);
                 var result = JsonSerializer.Deserialize<T>(jsonData);
                 
-                _logger.LogInformation("Data unprotected with purpose: {Purpose}", purpose);
-                return result;
+                _logger.LogInformation("Data unprotected successfully with purpose: {Purpose}", purpose);
+                return result ?? throw new InvalidOperationException("Failed to deserialize data");
             }
             catch (Exception ex)
             {

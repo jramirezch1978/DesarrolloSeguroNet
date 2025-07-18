@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.DataProtection;
+using System.Text.Json;
+
 namespace DevSeguroWebApp.Services
 {
     public interface ISecureDataService

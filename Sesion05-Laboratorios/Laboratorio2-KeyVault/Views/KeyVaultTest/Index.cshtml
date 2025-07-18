@@ -1,0 +1,497 @@
+@{
+    ViewData["Title"] = "Azure Key Vault Testing";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-key"></i> Azure Key Vault Testing
+                    </h3>
+                    <small>Gestión completa de secretos con Azure Key Vault</small>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Key Vault Status -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h5><i class="fas fa-info-circle"></i> Estado de Key Vault</h5>
+                                <div id="keyVaultStatus">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Verificando Key Vault...</span>
+                                    </div>
+                                    <span class="ms-2">Verificando conexión con Key Vault...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Create Secret -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card border-success h-100">
+                                <div class="card-header bg-success text-white">
+                                    <h5><i class="fas fa-plus-circle"></i> Crear Secreto</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="secretName" class="form-label">
+                                            <i class="fas fa-tag"></i> Nombre del Secreto:
+                                        </label>
+                                        <input type="text" class="form-control" id="secretName" 
+                                            placeholder="TestSecret-2025" value="TestSecret-2025">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="secretValue" class="form-label">
+                                            <i class="fas fa-lock"></i> Valor del Secreto:
+                                        </label>
+                                        <textarea class="form-control" id="secretValue" rows="3" 
+                                            placeholder="Ingrese el valor secreto...">Este es un valor de prueba creado el ${new Date().toISOString()}</textarea>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-success" onclick="createSecret()">
+                                            <i class="fas fa-save"></i> Crear Secreto
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" onclick="clearCreateForm()">
+                                            <i class="fas fa-eraser"></i> Limpiar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Get Secret -->
+                        <div class="col-lg-6">
+                            <div class="card border-primary h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h5><i class="fas fa-search"></i> Obtener Secreto</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="getSecretName" class="form-label">
+                                            <i class="fas fa-tag"></i> Nombre del Secreto:
+                                        </label>
+                                        <input type="text" class="form-control" id="getSecretName" 
+                                            placeholder="TestSecret-2025">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="secretResult" class="form-label">
+                                            <i class="fas fa-eye"></i> Valor Recuperado:
+                                        </label>
+                                        <textarea class="form-control" id="secretResult" rows="3" readonly 
+                                            placeholder="El valor del secreto aparecerá aquí..."></textarea>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-primary" onclick="getSecret()">
+                                            <i class="fas fa-download"></i> Obtener Secreto
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" onclick="clearGetForm()">
+                                            <i class="fas fa-eraser"></i> Limpiar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- List All Secrets -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5><i class="fas fa-list"></i> Lista de Secretos</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <button type="button" class="btn btn-info" onclick="listSecrets()">
+                                            <i class="fas fa-refresh"></i> Actualizar Lista
+                                        </button>
+                                        <span id="secretCount" class="badge bg-info">0 secretos</span>
+                                    </div>
+                                    <div id="secretsList">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle"></i> Click "Actualizar Lista" para cargar secretos...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Log -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5><i class="fas fa-clipboard-list"></i> Logs de Operaciones</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="operationResults">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle"></i> Los resultados de las operaciones aparecerán aquí...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('✅ Key Vault Testing page loaded');
+        checkKeyVaultStatus();
+        
+        // Pre-llenar valor con timestamp
+        const secretValue = document.getElementById('secretValue');
+        secretValue.value = `Este es un valor de prueba creado el ${new Date().toISOString()}`;
+    });
+
+    // Verificar estado de Key Vault
+    async function checkKeyVaultStatus() {
+        try {
+            const response = await fetch('@Url.Action("GetKeyVaultInfo", "KeyVaultTest")', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            const result = await response.json();
+            const statusDiv = document.getElementById('keyVaultStatus');
+            
+            if (result.success) {
+                statusDiv.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-4"><strong>Key Vault:</strong> <span class="text-success">Conectado</span></div>
+                        <div class="col-md-4"><strong>URI:</strong> <span class="text-info">${result.keyVaultUri}</span></div>
+                        <div class="col-md-4"><strong>Secretos:</strong> <span class="badge bg-primary">${result.secretCount}</span></div>
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="text-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Error: ${result.error}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error checking Key Vault status:', error);
+            document.getElementById('keyVaultStatus').innerHTML = 
+                '<div class="text-danger"><i class="fas fa-exclamation-triangle"></i> Error verificando Key Vault</div>';
+        }
+    }
+
+    // Crear secreto
+    async function createSecret() {
+        const name = document.getElementById('secretName').value;
+        const value = document.getElementById('secretValue').value;
+        
+        if (!name.trim() || !value.trim()) {
+            showResult('error', 'Nombre y valor del secreto son requeridos');
+            return;
+        }
+
+        try {
+            showResult('info', 'Creando secreto...');
+            
+            const response = await fetch('@Url.Action("CreateSecret", "KeyVaultTest")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    Name: name,
+                    Value: value
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showResult('success', `✅ ${result.message}`);
+                
+                // Auto-actualizar lista de secretos
+                setTimeout(() => {
+                    listSecrets();
+                }, 1000);
+                
+                addOperationResult('success', `
+                    <strong>Secreto Creado</strong><br>
+                    <small>Nombre: ${result.secretName}</small><br>
+                    <small>Tiempo: ${result.timestamp}</small>
+                `);
+            } else {
+                showResult('error', `❌ ${result.error}`);
+                addOperationResult('error', `<strong>Error Creando Secreto</strong><br><small>${result.error}</small>`);
+            }
+        } catch (error) {
+            console.error('Error creating secret:', error);
+            showResult('error', 'Error de conexión: ' + error.message);
+            addOperationResult('error', `<strong>Error de Conexión</strong><br><small>${error.message}</small>`);
+        }
+    }
+
+    // Obtener secreto
+    async function getSecret() {
+        const name = document.getElementById('getSecretName').value;
+        
+        if (!name.trim()) {
+            showResult('error', 'Nombre del secreto es requerido');
+            return;
+        }
+
+        try {
+            showResult('info', 'Obteniendo secreto...');
+            
+            const response = await fetch('@Url.Action("GetSecret", "KeyVaultTest")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    Name: name
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('secretResult').value = result.secretValue;
+                showResult('success', `✅ ${result.message}`);
+                
+                addOperationResult('success', `
+                    <strong>Secreto Recuperado</strong><br>
+                    <small>Nombre: ${result.secretName}</small><br>
+                    <small>Valor: ${result.secretValue.substring(0, 20)}...</small><br>
+                    <small>Tiempo: ${result.timestamp}</small>
+                `);
+            } else {
+                document.getElementById('secretResult').value = '';
+                showResult('error', `❌ ${result.error}`);
+                addOperationResult('error', `<strong>Error Obteniendo Secreto</strong><br><small>${result.error}</small>`);
+            }
+        } catch (error) {
+            console.error('Error getting secret:', error);
+            showResult('error', 'Error de conexión: ' + error.message);
+            addOperationResult('error', `<strong>Error de Conexión</strong><br><small>${error.message}</small>`);
+        }
+    }
+
+    // Listar todos los secretos
+    async function listSecrets() {
+        try {
+            showResult('info', 'Cargando lista de secretos...');
+            
+            const response = await fetch('@Url.Action("ListSecrets", "KeyVaultTest")', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('secretCount').textContent = `${result.count} secretos`;
+                
+                const secretsList = document.getElementById('secretsList');
+                
+                if (result.count === 0) {
+                    secretsList.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> No se encontraron secretos en Key Vault
+                        </div>
+                    `;
+                } else {
+                    let secretsHtml = '<div class="table-responsive">';
+                    secretsHtml += '<table class="table table-striped">';
+                    secretsHtml += '<thead><tr><th>Nombre</th><th>Valor (Enmascarado)</th><th>Acciones</th></tr></thead>';
+                    secretsHtml += '<tbody>';
+                    
+                    for (const [name, value] of Object.entries(result.secrets)) {
+                        secretsHtml += `
+                            <tr>
+                                <td><strong>${name}</strong></td>
+                                <td><code>${value}</code></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="loadSecretToGet('${name}')">
+                                        <i class="fas fa-arrow-right"></i> Cargar
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    
+                    secretsHtml += '</tbody></table></div>';
+                    secretsList.innerHTML = secretsHtml;
+                }
+                
+                showResult('success', `✅ ${result.message}`);
+                
+                addOperationResult('info', `
+                    <strong>Lista Actualizada</strong><br>
+                    <small>Secretos encontrados: ${result.count}</small><br>
+                    <small>Tiempo: ${result.timestamp}</small>
+                `);
+            } else {
+                showResult('error', `❌ ${result.error}`);
+                addOperationResult('error', `<strong>Error Listando Secretos</strong><br><small>${result.error}</small>`);
+            }
+        } catch (error) {
+            console.error('Error listing secrets:', error);
+            showResult('error', 'Error de conexión: ' + error.message);
+            addOperationResult('error', `<strong>Error de Conexión</strong><br><small>${error.message}</small>`);
+        }
+    }
+
+    // Cargar secreto en el formulario de obtención
+    function loadSecretToGet(secretName) {
+        document.getElementById('getSecretName').value = secretName;
+        showResult('info', `Secreto "${secretName}" cargado para obtener`);
+    }
+
+    // Limpiar formularios
+    function clearCreateForm() {
+        document.getElementById('secretName').value = 'TestSecret-2025';
+        document.getElementById('secretValue').value = `Este es un valor de prueba creado el ${new Date().toISOString()}`;
+        showResult('info', 'Formulario de creación limpiado');
+    }
+
+    function clearGetForm() {
+        document.getElementById('getSecretName').value = '';
+        document.getElementById('secretResult').value = '';
+        showResult('info', 'Formulario de obtención limpiado');
+    }
+
+    // Mostrar resultado
+    function showResult(type, message) {
+        const resultsDiv = document.getElementById('operationResults');
+        const alertClass = type === 'success' ? 'alert-success' : 
+                          type === 'error' ? 'alert-danger' : 
+                          type === 'warning' ? 'alert-warning' : 'alert-info';
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                   type === 'error' ? 'exclamation-triangle' : 
+                                   type === 'warning' ? 'exclamation-circle' : 'info-circle'}"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        resultsDiv.innerHTML = alertHtml + resultsDiv.innerHTML;
+    }
+
+    // Agregar resultado de operación
+    function addOperationResult(type, content) {
+        const resultsDiv = document.getElementById('operationResults');
+        const resultClass = type === 'success' ? 'border-success text-success' : 
+                           type === 'error' ? 'border-danger text-danger' : 'border-info text-info';
+        
+        const resultHtml = `
+            <div class="card mb-2 ${resultClass}" style="border-width: 2px;">
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            ${content}
+                        </div>
+                        <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        resultsDiv.innerHTML = resultHtml + resultsDiv.innerHTML;
+    }
+</script>
+}
+
+<style>
+/* Storage Switch Styles - Mismos estilos exitosos del Lab01 */
+.storage-switch-container {
+    position: relative;
+    display: inline-block;
+}
+
+.storage-switch {
+    display: none;
+}
+
+.storage-switch-label {
+    width: 60px;
+    height: 28px;
+    background: #ddd;
+    border-radius: 28px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: block;
+}
+
+.storage-switch-label:before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.storage-switch:checked + .storage-switch-label {
+    background: #007bff;
+}
+
+.storage-switch:checked + .storage-switch-label:before {
+    transform: translateX(32px);
+}
+
+.data-protection-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.protection-status.success {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.protection-status.error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.test-result {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    border-left: 4px solid #007bff;
+    background: #f8f9fa;
+}
+
+.test-result.success {
+    border-left-color: #28a745;
+    background: #d4edda;
+}
+
+.test-result.error {
+    border-left-color: #dc3545;
+    background: #f8d7da;
+}
+
+.fade-in {
+    animation: none; /* Removido temporalmente para evitar error */
+}
+</style> 
