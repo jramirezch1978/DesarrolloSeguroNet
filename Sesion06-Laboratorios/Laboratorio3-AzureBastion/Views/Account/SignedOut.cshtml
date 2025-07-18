@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Sesión Cerrada";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h3 class="card-title text-success">Sesión Cerrada Exitosamente</h3>
+                <p class="card-text text-muted">
+                    Su sesión ha sido cerrada de forma segura en Azure AD y en la aplicación.
+                    <br/>
+                    <small>Powered by .NET 9 🚀</small>
+                </p>
+                
+                <hr />
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-lg">
+                        🏠 Volver al Inicio
+                    </a>
+                    <a asp-controller="Account" asp-action="SignIn" class="btn btn-success btn-lg">
+                        🔑 Iniciar Sesión Nuevamente
+                    </a>
+                </div>
+                
+                <div class="mt-4">
+                    <small class="text-muted">
+                        <strong>Información de Seguridad:</strong><br/>
+                        ✅ Sesión local eliminada<br/>
+                        ✅ Tokens invalidados<br/>
+                        ✅ Redirección segura completada
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

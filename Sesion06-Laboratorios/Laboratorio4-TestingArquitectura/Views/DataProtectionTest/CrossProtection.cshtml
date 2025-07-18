@@ -1,0 +1,307 @@
+@{
+    ViewData["Title"] = "Demostración de Aislamiento de Propósitos";
+}
+
+<div class="container-fluid fade-in">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-shield-alt"></i> Demostración: ¿Por Qué 4 Tipos Diferentes?
+                    </h3>
+                    <small>Probando el aislamiento criptográfico entre propósitos</small>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Explicación -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <h5><i class="fas fa-exclamation-triangle"></i> ¿Por Qué Los Datos Se Ven Iguales?</h5>
+                                <p>Visualmente, todos los datos encriptados parecen similares porque usan <strong>AES-256</strong>. 
+                                Pero internamente, <strong>cada propósito usa claves completamente diferentes</strong>.</p>
+                                <p><strong>🎯 Objetivo:</strong> Demostrar que los datos de un propósito <strong>NO pueden</strong> ser desencriptados con otro propósito.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulario de prueba -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card border-primary h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h5><i class="fas fa-lock"></i> 1. Encriptar Datos</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="encryptForm">
+                                        <div class="mb-3">
+                                            <label for="originalData" class="form-label">
+                                                <i class="fas fa-file-text"></i> Datos Originales:
+                                            </label>
+                                            <input type="text" class="form-control" id="originalData" 
+                                                   value="Información confidencial de Juan Pérez" 
+                                                   placeholder="Ingrese datos para encriptar">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="encryptPurpose" class="form-label">
+                                                <i class="fas fa-tag"></i> Propósito de Encriptación:
+                                            </label>
+                                            <select class="form-select" id="encryptPurpose">
+                                                <option value="UserData.Personal.v1">📋 Información Personal</option>
+                                                <option value="UserData.Financial.v1">💳 Datos Financieros</option>
+                                                <option value="UserData.Medical.v1">🏥 Información Médica</option>
+                                                <option value="UserData.Custom.v1">⚙️ Propósito Personalizado</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" class="btn btn-primary" onclick="encryptData()">
+                                            <i class="fas fa-lock"></i> Encriptar Datos
+                                        </button>
+                                    </form>
+                                    
+                                    <div class="mt-3" id="encryptedResult" style="display: none;">
+                                        <h6>🔒 Datos Encriptados:</h6>
+                                        <textarea class="form-control font-monospace" id="encryptedData" rows="3" readonly></textarea>
+                                        <small class="text-muted">Propósito usado: <span id="usedPurpose"></span></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="card border-danger h-100">
+                                <div class="card-header bg-danger text-white">
+                                    <h5><i class="fas fa-unlock"></i> 2. Intentar Desencriptar</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="decryptPurpose" class="form-label">
+                                            <i class="fas fa-key"></i> Propósito para Desencriptación:
+                                        </label>
+                                        <select class="form-select" id="decryptPurpose">
+                                            <option value="UserData.Personal.v1">📋 Información Personal</option>
+                                            <option value="UserData.Financial.v1">💳 Datos Financieros</option>
+                                            <option value="UserData.Medical.v1">🏥 Información Médica</option>
+                                            <option value="UserData.Custom.v1">⚙️ Propósito Personalizado</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-success" onclick="decryptWithSamePurpose()">
+                                            <i class="fas fa-unlock"></i> ✅ Desencriptar (Mismo Propósito)
+                                        </button>
+                                        <button type="button" class="btn btn-danger" onclick="decryptWithDifferentPurpose()">
+                                            <i class="fas fa-ban"></i> ❌ Desencriptar (Propósito Diferente)
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="mt-3" id="decryptResult" style="display: none;">
+                                        <h6 id="decryptTitle">Resultado:</h6>
+                                        <div class="alert" id="decryptAlert">
+                                            <div id="decryptContent"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resultados de pruebas -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5><i class="fas fa-chart-line"></i> Historial de Pruebas</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="testHistory">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle"></i> Los resultados de las pruebas aparecerán aquí...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentEncryptedData = '';
+    let currentEncryptPurpose = '';
+
+    async function encryptData() {
+        const data = document.getElementById('originalData').value;
+        const purpose = document.getElementById('encryptPurpose').value;
+        
+        if (!data.trim()) {
+            alert('Por favor ingrese datos para encriptar');
+            return;
+        }
+
+        try {
+            const response = await fetch('@Url.Action("TestProtection", "DataProtectionTest")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    Data: data,
+                    Purpose: purpose
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                currentEncryptedData = result.protectedData;
+                currentEncryptPurpose = purpose;
+                
+                document.getElementById('encryptedData').value = result.protectedData;
+                document.getElementById('usedPurpose').textContent = purpose;
+                document.getElementById('encryptedResult').style.display = 'block';
+                
+                // Actualizar el propósito de desencriptación para mostrar coincidencia
+                document.getElementById('decryptPurpose').value = purpose;
+                
+                addTestResult('success', `Datos encriptados con propósito: ${purpose}`, result.protectedData.substring(0, 50) + '...');
+            } else {
+                alert('Error al encriptar: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error de conexión: ' + error.message);
+        }
+    }
+
+    async function decryptWithSamePurpose() {
+        if (!currentEncryptedData) {
+            alert('Primero debe encriptar algunos datos');
+            return;
+        }
+
+        // Usar el mismo propósito que se usó para encriptar
+        await attemptDecrypt(currentEncryptPurpose, true);
+    }
+
+    async function decryptWithDifferentPurpose() {
+        if (!currentEncryptedData) {
+            alert('Primero debe encriptar algunos datos');
+            return;
+        }
+
+        const selectedPurpose = document.getElementById('decryptPurpose').value;
+        
+        if (selectedPurpose === currentEncryptPurpose) {
+            alert('Por favor seleccione un propósito DIFERENTE al usado para encriptar');
+            return;
+        }
+
+        await attemptDecrypt(selectedPurpose, false);
+    }
+
+    async function attemptDecrypt(purpose, shouldWork) {
+        try {
+            const response = await fetch('@Url.Action("TestCrossDecryption", "DataProtectionTest")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ProtectedData: currentEncryptedData,
+                    Purpose: purpose
+                })
+            });
+
+            const result = await response.json();
+            
+            showDecryptResult(result, purpose, shouldWork);
+            
+        } catch (error) {
+            showDecryptResult({ success: false, error: error.message }, purpose, shouldWork);
+        }
+    }
+
+    function showDecryptResult(result, purpose, shouldWork) {
+        const resultDiv = document.getElementById('decryptResult');
+        const alertDiv = document.getElementById('decryptAlert');
+        const contentDiv = document.getElementById('decryptContent');
+        const titleDiv = document.getElementById('decryptTitle');
+
+        if (result.success && shouldWork) {
+            // Éxito esperado (mismo propósito)
+            alertDiv.className = 'alert alert-success';
+            titleDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Desencriptación Exitosa';
+            contentDiv.innerHTML = `
+                <strong>Datos recuperados:</strong> ${result.unprotectedData}<br>
+                <small>Propósito: ${purpose}</small><br>
+                <small class="text-success">🎯 Como esperábamos: mismo propósito = éxito</small>
+            `;
+            addTestResult('success', `Desencriptación exitosa con propósito correcto: ${purpose}`, result.unprotectedData);
+        } else if (!result.success && !shouldWork) {
+            // Fallo esperado (propósito diferente)
+            alertDiv.className = 'alert alert-danger';
+            titleDiv.innerHTML = '<i class="fas fa-ban"></i> ❌ Desencriptación Fallida (Como Se Esperaba)';
+            contentDiv.innerHTML = `
+                <strong>Error:</strong> ${result.error}<br>
+                <small>Propósito usado: ${purpose}</small><br>
+                <small>Propósito original: ${currentEncryptPurpose}</small><br>
+                <small class="text-danger">🛡️ Perfecto: diferentes propósitos = protección garantizada</small>
+            `;
+            addTestResult('expected-failure', `Desencriptación falló (CORRECTO) con propósito diferente: ${purpose}`, result.error);
+        } else {
+            // Resultado inesperado
+            alertDiv.className = 'alert alert-warning';
+            titleDiv.innerHTML = '<i class="fas fa-question-circle"></i> ⚠️ Resultado Inesperado';
+            contentDiv.innerHTML = `
+                <strong>Resultado inesperado:</strong><br>
+                <small>Esperábamos: ${shouldWork ? 'éxito' : 'fallo'}</small><br>
+                <small>Obtuvimos: ${result.success ? 'éxito' : 'fallo'}</small>
+            `;
+        }
+
+        resultDiv.style.display = 'block';
+    }
+
+    function addTestResult(type, description, details) {
+        const historyDiv = document.getElementById('testHistory');
+        const time = new Date().toLocaleTimeString();
+        
+        let badgeClass = 'bg-success';
+        let icon = 'fa-check-circle';
+        
+        if (type === 'expected-failure') {
+            badgeClass = 'bg-warning';
+            icon = 'fa-shield-alt';
+        } else if (type === 'error') {
+            badgeClass = 'bg-danger';
+            icon = 'fa-exclamation-triangle';
+        }
+
+        const resultHtml = `
+            <div class="alert alert-light border-start border-4 border-${type === 'success' ? 'success' : type === 'expected-failure' ? 'warning' : 'danger'}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="badge ${badgeClass}">
+                            <i class="fas ${icon}"></i> ${type === 'expected-failure' ? 'PROTECCIÓN' : type.toUpperCase()}
+                        </span>
+                        <strong class="ms-2">${description}</strong><br>
+                        <small class="text-muted">${details}</small>
+                    </div>
+                    <small class="text-muted">${time}</small>
+                </div>
+            </div>
+        `;
+        
+        if (historyDiv.innerHTML.includes('Los resultados de las pruebas aparecerán aquí')) {
+            historyDiv.innerHTML = resultHtml;
+        } else {
+            historyDiv.innerHTML = resultHtml + historyDiv.innerHTML;
+        }
+    }
+</script>
+} 
