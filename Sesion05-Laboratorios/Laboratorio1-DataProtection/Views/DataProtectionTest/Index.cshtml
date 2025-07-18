@@ -417,7 +417,7 @@
             const useAzureStorage = this.checked;
             
             try {
-                showResult('info', 'Cambiando configuración de almacenamiento...');
+                showResult('info', 'Guardando preferencia de almacenamiento...');
                 
                 const response = await fetch('@Url.Action("ChangeStorageType", "DataProtectionTest")', {
                     method: 'POST',
@@ -441,12 +441,29 @@
                     // Actualizar UI
                     updateStorageUI(result.isAzure, result.storageType, result.description);
                     
-                    showResult('success', result.message);
-                    addTestResult('success', `
-                        <strong>Configuración Actualizada</strong><br>
-                        <small>Almacenamiento: ${result.storageType}</small><br>
-                        <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
-                    `);
+                    // Mostrar mensaje con instrucciones de reinicio
+                    if (result.requiresRestart) {
+                        showResult('warning', `
+                            ${result.message}<br>
+                            <strong>${result.note}</strong><br>
+                            <small>${result.instruction}</small>
+                        `);
+                        
+                        addTestResult('info', `
+                            <strong>Configuración de Almacenamiento Cambiada</strong><br>
+                            <small>Nuevo tipo: ${result.storageType}</small><br>
+                            <small>⚠️ Requiere reinicio para aplicar cambios</small><br>
+                            <small>Ejecuta: Ctrl+C y luego 'dotnet run'</small><br>
+                            <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                        `);
+                    } else {
+                        showResult('success', result.message);
+                        addTestResult('success', `
+                            <strong>Configuración Actualizada</strong><br>
+                            <small>Almacenamiento: ${result.storageType}</small><br>
+                            <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                        `);
+                    }
                 } else {
                     throw new Error(result.error || 'Error desconocido');
                 }
@@ -455,6 +472,12 @@
                 // Revertir el toggle
                 this.checked = !useAzureStorage;
                 showResult('error', 'Error al cambiar configuración: ' + error.message);
+                
+                addTestResult('error', `
+                    <strong>Error al Cambiar Configuración</strong><br>
+                    <small>Error: ${error.message}</small><br>
+                    <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                `);
             }
         });
 

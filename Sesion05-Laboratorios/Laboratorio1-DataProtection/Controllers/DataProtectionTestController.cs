@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using DevSeguroWebApp.Services;
+using System.Text.Json; // 👈 AGREGAR ESTA LÍNEA
 
 namespace DevSeguroWebApp.Controllers
 {
@@ -29,41 +30,61 @@ namespace DevSeguroWebApp.Controllers
             return View();
         }
 
-        [HttpPost]
-        public IActionResult ChangeStorageType([FromBody] StorageChangeRequest request)
+[HttpPost]
+public IActionResult ChangeStorageType([FromBody] StorageChangeRequest request)
+{
+    try
+    {
+        if (request == null)
         {
-            try
-            {
-                if (request == null)
-                {
-                    return Json(new { success = false, error = "Solicitud inválida" });
-                }
-
-                // Almacenar preferencia en sesión (simulación)
-                HttpContext.Session.SetString("StorageType", request.UseAzureStorage ? "Azure" : "Local");
-                
-                var storageType = request.UseAzureStorage ? "Azure Storage" : "Local File System";
-                var description = request.UseAzureStorage 
-                    ? "Usando Azure Blob Storage para persistencia enterprise" 
-                    : "Usando sistema de archivos local para desarrollo";
-
-                _logger.LogInformation("Storage type changed to: {StorageType}", storageType);
-
-                return Json(new
-                {
-                    success = true,
-                    storageType = storageType,
-                    description = description,
-                    isAzure = request.UseAzureStorage,
-                    message = $"Configuración cambiada a {storageType}"
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error changing storage type");
-                return Json(new { success = false, error = $"Error al cambiar configuración: {ex.Message}" });
-            }
+            return Json(new { success = false, error = "Solicitud inválida" });
         }
+
+        // Almacenar preferencia en sesión
+        HttpContext.Session.SetString("StorageType", request.UseAzureStorage ? "Azure" : "Local");
+        
+        // 📁 GUARDAR PREFERENCIA EN ARCHIVO PERSISTENTE
+        try
+        {
+            var configPath = Path.Combine(Directory.GetCurrentDirectory(), "storage-preference.json");
+            var preference = new { 
+                UseAzureStorage = request.UseAzureStorage, 
+                LastChanged = DateTime.UtcNow,
+                ChangedBy = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown"
+            };
+            System.IO.File.WriteAllText(configPath, System.Text.Json.JsonSerializer.Serialize(preference, new JsonSerializerOptions { WriteIndented = true }));
+            _logger.LogInformation("Storage preference saved to file: {Preference}", request.UseAzureStorage ? "Azure" : "Local");
+        }
+        catch (Exception fileEx)
+        {
+            _logger.LogWarning("Could not save preference to file: {Error}", fileEx.Message);
+        }
+
+        var storageType = request.UseAzureStorage ? "Azure Storage" : "Local File System";
+        var description = request.UseAzureStorage 
+            ? "Usando Azure Blob Storage para persistencia enterprise" 
+            : "Usando sistema de archivos local para desarrollo";
+
+        _logger.LogInformation("Storage type preference changed to: {StorageType}", storageType);
+
+        return Json(new
+        {
+            success = true,
+            storageType = storageType,
+            description = description,
+            isAzure = request.UseAzureStorage,
+            message = $"Preferencia guardada: {storageType}",
+            requiresRestart = true,
+            note = "⚠️ La aplicación debe reiniciarse para aplicar este cambio en Data Protection.",
+            instruction = "Presiona Ctrl+C en la consola y ejecuta 'dotnet run' nuevamente."
+        });
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error changing storage type");
+        return Json(new { success = false, error = $"Error al cambiar configuración: {ex.Message}" });
+    }
+}
 
         [HttpPost]
         public IActionResult TestCrossDecryption([FromBody] CrossDecryptRequest request)
