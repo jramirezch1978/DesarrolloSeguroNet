@@ -1,0 +1,123 @@
+### Archivo de pruebas HTTP para la API Segura .NET 9
+### Puedes usar este archivo con la extensión REST Client de VS Code
+### o con herramientas como Postman, Insomnia, etc.
+
+@baseUrl = https://localhost:7000
+@tenantId = tu-tenant-id-aqui
+@clientId = tu-api-client-id-aqui
+@clientSecret = tu-api-client-secret-aqui
+
+### 1. Health Check (Público - No requiere autenticación)
+GET {{baseUrl}}/health
+Accept: application/json
+
+### 2. Obtener token de Azure AD (para pruebas locales)
+### Nota: Reemplaza los valores con tus credenciales reales
+# @name authToken
+POST https://login.microsoftonline.com/{{tenantId}}/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&client_id={{clientId}}
+&client_secret={{clientSecret}}
+&scope=api://{{clientId}}/.default
+
+### 3. Endpoint de datos seguros (Requiere autenticación)
+GET {{baseUrl}}/securedata
+Authorization: Bearer {{authToken.response.body.access_token}}
+Accept: application/json
+
+### 4. Información del usuario autenticado
+GET {{baseUrl}}/api/secure/user-info
+Authorization: Bearer {{authToken.response.body.access_token}}
+Accept: application/json
+
+### 5. Datos administrativos (Requiere rol de Admin)
+GET {{baseUrl}}/api/secure/admin-data
+Authorization: Bearer {{authToken.response.body.access_token}}
+Accept: application/json
+
+### 6. Prueba de Key Vault
+GET {{baseUrl}}/api/secure/keyvault-test
+Authorization: Bearer {{authToken.response.body.access_token}}
+Accept: application/json
+
+### 7. Prueba de resiliencia
+GET {{baseUrl}}/api/secure/resilience-test
+Authorization: Bearer {{authToken.response.body.access_token}}
+Accept: application/json
+
+### 8. Probar endpoint sin autenticación (debe fallar con 401)
+GET {{baseUrl}}/securedata
+Accept: application/json
+
+### 9. Probar endpoint con token inválido (debe fallar con 401)
+GET {{baseUrl}}/securedata
+Authorization: Bearer token_invalido
+Accept: application/json
+
+### 10. OpenAPI/Swagger (si está en desarrollo)
+GET {{baseUrl}}/openapi/v1.json
+Accept: application/json
+
+### ===== Pruebas de Producción =====
+### Cambia la baseUrl a tu URL de Azure App Service
+
+@prodBaseUrl = https://tu-app-api.azurewebsites.net
+
+### Health Check - Producción
+GET {{prodBaseUrl}}/health
+Accept: application/json
+
+### Verificar redirección HTTP a HTTPS
+GET http://tu-app-api.azurewebsites.net/health
+
+### ===== Pruebas de Seguridad =====
+
+### Verificar encabezados de seguridad
+GET {{baseUrl}}/health
+
+### Probar diferentes métodos HTTP en endpoints
+OPTIONS {{baseUrl}}/securedata
+
+### Probar inyección en parámetros (debe ser manejado seguramente)
+GET {{baseUrl}}/api/secure/user-info?test=<script>alert('xss')</script>
+Authorization: Bearer {{authToken.response.body.access_token}}
+
+### ===== Variables de entorno para diferentes escenarios =====
+
+### Para desarrollo local
+# @baseUrl = https://localhost:7000
+
+### Para Azure (reemplaza con tu URL real)
+# @baseUrl = https://secureapp-prod-123456-api.azurewebsites.net
+
+### ===== Notas de uso =====
+# 1. Instala la extensión "REST Client" en VS Code para usar este archivo
+# 2. Reemplaza las variables @tenantId, @clientId, @clientSecret con valores reales
+# 3. Los endpoints protegidos requieren un token válido de Azure AD
+# 4. Para pruebas de producción, actualiza @prodBaseUrl con tu URL de Azure
+# 5. Los endpoints /admin-data requieren que el usuario tenga rol de "Admin"
+
+### ===== Ejemplos de respuesta esperada =====
+
+### Health Check Response:
+# {
+#   "Status": "Healthy",
+#   "Timestamp": "2024-01-15T10:30:00.000Z"
+# }
+
+### Secure Data Response:
+# {
+#   "Message": "Datos seguros obtenidos exitosamente",
+#   "User": "user@domain.com",
+#   "Claims": [...],
+#   "Timestamp": "2024-01-15T10:30:00.000Z"
+# }
+
+### Token Response:
+# {
+#   "token_type": "Bearer",
+#   "expires_in": 3599,
+#   "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIs..."
+# } 

@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Aplicación Segura .NET 9</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/SecureWebApp.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .security-badge {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .auth-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        .auth-authenticated {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .auth-unauthenticated {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-primary border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-shield-alt"></i>
+                    Aplicación Segura
+                    <span class="security-badge">
+                        <i class="fas fa-lock"></i> .NET 9
+                    </span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="ApiTest">
+                                    <i class="fas fa-api"></i> Probar API
+                                </a>
+                            </li>
+                        }
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">
+                                <i class="fas fa-user-shield"></i> Privacidad
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/health" target="_blank">
+                                <i class="fas fa-heartbeat"></i> Health Check
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div class="user-info">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <span class="auth-status auth-authenticated">
+                                <i class="fas fa-user-check"></i>
+                                @(User.Identity.Name ?? "Usuario autenticado")
+                            </span>
+                            <a class="btn btn-outline-light btn-sm" href="/MicrosoftIdentity/Account/SignOut">
+                                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="auth-status auth-unauthenticated">
+                                <i class="fas fa-user-times"></i>
+                                No autenticado
+                            </span>
+                            <a class="btn btn-light btn-sm" href="/MicrosoftIdentity/Account/SignIn">
+                                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted bg-light">
+        <div class="container">
+            <div class="row py-3">
+                <div class="col-md-6">
+                    <p>&copy; 2024 - Aplicación Segura .NET 9</p>
+                    <p class="small">
+                        <i class="fas fa-shield-alt text-success"></i>
+                        Implementando las mejores prácticas de seguridad
+                    </p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="small">
+                        <div><strong>Características de Seguridad:</strong></div>
+                        <div>
+                            <i class="fas fa-check text-success"></i> Azure AD SSO |
+                            <i class="fas fa-check text-success"></i> OAuth2 |
+                            <i class="fas fa-check text-success"></i> Key Vault |
+                            <i class="fas fa-check text-success"></i> HTTPS
+                        </div>
+                        <div>
+                            <i class="fas fa-check text-success"></i> Resiliencia |
+                            <i class="fas fa-check text-success"></i> VNet |
+                            <i class="fas fa-check text-success"></i> NSG |
+                            <i class="fas fa-check text-success"></i> Managed Identity
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
