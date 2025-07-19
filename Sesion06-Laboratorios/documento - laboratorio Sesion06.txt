@@ -1,0 +1,750 @@
+Laboratorio Práctico - Sesión 6: Seguridad de Infraestructura Azure
+Curso: Diseño Seguro de Aplicaciones (.NET en Azure)
+Duración Total: 90 minutos (4 laboratorios)
+Modalidad: Instructor-led con práctica individual
+Herramientas: Visual Studio Code + .NET 9 + C# + Azure Portal
+________________________________________
+🛠️ LABORATORIO 0: VERIFICACIÓN Y CONFIGURACIÓN DEL ENTORNO
+⏱️ Duración: 15 minutos
+🎯 Objetivo: Preparar entorno completo para laboratorios de infraestructura Azure
+Paso 1: Instalación de Chocolatey (si no está instalado) (3 minutos)
+Para usuarios Windows 10/11:
+1.	Abrir PowerShell como Administrador:
+o	Click derecho en el botón de Windows
+o	Seleccionar "Windows PowerShell (Admin)" o "Terminal (Admin)"
+2.	Verificar si Chocolatey está instalado:
+3.	choco --version
+4.	Si NO está instalado, ejecutar:
+5.	# Cambiar política de ejecución temporalmente
+6.	Set-ExecutionPolicy Bypass -Scope Process -Force
+7.	
+8.	# Instalar Chocolatey
+9.	[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+10.	iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+11.	Verificar instalación:
+12.	choco --version
+13.	# Debe mostrar versión de Chocolatey
+Paso 2: Instalación de .NET 9 y Herramientas (5 minutos)
+Instalar .NET 9 SDK:
+# Instalar .NET 9 SDK (última versión)
+choco install dotnet-9.0-sdk -y
+
+# Instalar Azure CLI
+choco install azure-cli -y
+
+# Instalar Git (si no está instalado)
+choco install git -y
+
+# Refrescar variables de entorno
+refreshenv
+Verificar instalaciones:
+# Verificar .NET 9
+dotnet --version
+# Debe mostrar: 9.0.x
+
+# Verificar Azure CLI
+az --version
+
+# Verificar Git
+git --version
+Paso 3: Configuración de Visual Studio Code (4 minutos)
+Instalar VS Code (si no está instalado):
+choco install vscode -y
+Extensiones requeridas para VS Code:
+1.	Abrir VS Code y instalar extensiones: 
+o	Presionar Ctrl + Shift + X para abrir extensiones
+o	Buscar e instalar las siguientes extensiones:
+o	C# Dev Kit (Microsoft) - ID: ms-dotnettools.csdevkit
+o	Azure Account (Microsoft) - ID: ms-vscode.azure-account
+o	Azure Resources (Microsoft) - ID: ms-azuretools.vscode-azureresourcegroups
+o	Azure CLI Tools (Microsoft) - ID: ms-vscode.azurecli
+o	REST Client (Huachao Mao) - ID: humao.rest-client
+Comando alternativo para instalar extensiones:
+# Desde línea de comandos
+code --install-extension ms-dotnettools.csdevkit
+code --install-extension ms-vscode.azure-account
+code --install-extension ms-azuretools.vscode-azureresourcegroups
+code --install-extension ms-vscode.azurecli
+code --install-extension humao.rest-client
+Paso 4: Verificación de Acceso Azure (3 minutos)
+Autenticación con Azure:
+# Login a Azure
+az login
+
+# Verificar suscripciones disponibles
+az account list --output table
+
+# Verificar grupo de usuarios
+az ad group member list --group "gu_desarrollo_seguro_aplicacion" --output table
+Verificar permisos en Azure Portal:
+1.	Navegar a: https://portal.azure.com
+2.	Verificar acceso como usuario invitado
+3.	Confirmar permisos para crear recursos de red
+________________________________________
+🧪 LABORATORIO 1: CREACIÓN DE VIRTUAL NETWORK (VNET) SEGURA
+⏱️ Duración: 20 minutos
+🎯 Objetivo: Crear y configurar una Virtual Network con segmentación apropiada
+Paso 1: Creación del Resource Group Base (3 minutos)
+Desde Azure Portal:
+1.	Navegar a Resource Groups:
+o	Azure Portal → Resource groups → + Create
+2.	Configuración del Resource Group:
+3.	Subscription: [Su suscripción asignada]
+4.	Resource group: rg-infraestructura-segura-[SuNombre]
+5.	Region: East US
+6.	Tags (etiquetas):
+7.	Environment: Development
+8.	Project: InfraestructuraSegura
+9.	Owner: [Su nombre]
+10.	Course: DesarrolloSeguroAzure
+Comando alternativo con Azure CLI:
+# Crear resource group
+az group create \
+  --name rg-infraestructura-segura-[SuNombre] \
+  --location eastus \
+  --tags Environment=Development Project=InfraestructuraSegura
+Paso 2: Planificación del Address Space (2 minutos)
+Diseño de la arquitectura de red:
+VNET Principal: 10.1.0.0/16 (65,534 IPs disponibles)
+
+├── DMZ Subnet: 10.1.1.0/24 (254 IPs)
+│   └── Componentes: Load Balancers, WAF, Bastion
+│
+├── Private Subnet: 10.1.2.0/24 (254 IPs) 
+│   └── Componentes: App Servers, APIs internas
+│
+├── Data Subnet: 10.1.3.0/24 (254 IPs)
+│   └── Componentes: Databases, Storage
+│
+└── Management Subnet: 10.1.10.0/24 (254 IPs)
+    └── Componentes: Jump boxes, Management tools
+Paso 3: Crear Virtual Network Principal (8 minutos)
+Desde Azure Portal:
+1.	Navegar a Virtual Networks:
+o	Azure Portal → Virtual networks → + Create
+2.	Configuración Básica:
+3.	Subscription: [Su suscripción]
+4.	Resource group: rg-infraestructura-segura-[SuNombre]
+5.	Name: vnet-principal-[sunombre]
+6.	Region: East US
+7.	IP Addresses:
+8.	IPv4 address space: 10.1.0.0/16
+9.	Crear las 4 subredes:
+Subnet 1 - DMZ:
+Name: snet-dmz
+Subnet address range: 10.1.1.0/24
+Subnet 2 - Private:
+Name: snet-private  
+Subnet address range: 10.1.2.0/24
+Subnet 3 - Data:
+Name: snet-data
+Subnet address range: 10.1.3.0/24
+Subnet 4 - Management:
+Name: snet-management
+Subnet address range: 10.1.10.0/24
+10.	Security (mantener defaults por ahora):
+o	BastionHost: Disabled (lo configuraremos después)
+o	DDoS Protection Standard: Disabled (para laboratorio)
+o	Firewall: Disabled (lo configuraremos después)
+Comando alternativo con Azure CLI:
+# Crear VNET con subredes
+az network vnet create \
+  --resource-group rg-infraestructura-segura-[SuNombre] \
+  --name vnet-principal-[sunombre] \
+  --address-prefix 10.1.0.0/16 \
+  --subnet-name snet-dmz \
+  --subnet-prefix 10.1.1.0/24
+
+# Añadir subredes adicionales
+az network vnet subnet create \
+  --resource-group rg-infraestructura-segura-[SuNombre] \
+  --vnet-name vnet-principal-[sunombre] \
+  --name snet-private \
+  --address-prefix 10.1.2.0/24
+
+az network vnet subnet create \
+  --resource-group rg-infraestructura-segura-[SuNombre] \
+  --vnet-name vnet-principal-[sunombre] \
+  --name snet-data \
+  --address-prefix 10.1.3.0/24
+
+az network vnet subnet create \
+  --resource-group rg-infraestructura-segura-[SuNombre] \
+  --vnet-name vnet-principal-[sunombre] \
+  --name snet-management \
+  --address-prefix 10.1.10.0/24
+Paso 4: Verificación de la VNET (4 minutos)
+Verificar configuración:
+1.	En Azure Portal:
+o	Ir a su VNET creada
+o	Verificar: Overview → Address space
+o	Verificar: Subnets → Ver las 4 subredes creadas
+2.	Con Azure CLI:
+3.	# Listar VNETs
+4.	az network vnet list --resource-group rg-infraestructura-segura-[SuNombre] --output table
+5.	
+6.	# Ver detalles de subredes
+7.	az network vnet subnet list \
+8.	  --resource-group rg-infraestructura-segura-[SuNombre] \
+9.	  --vnet-name vnet-principal-[sunombre] \
+10.	  --output table
+Paso 5: Configurar DNS Personalizado (Opcional) (3 minutos)
+Para empresas que requieren DNS personalizado:
+1.	En su VNET → DNS servers:
+2.	DNS servers: Custom
+3.	DNS server addresses: 
+4.	- 8.8.8.8 (Google DNS - para laboratorio)
+5.	- 8.8.4.4 (Google DNS secundario)
+6.	Aplicar configuración y esperar propagación.
+✅ Resultado Esperado:
+•	VNET creada con 4 subredes segmentadas
+•	Address space apropiadamente planificado
+•	DNS configurado (opcional)
+•	Base para implementar security groups
+________________________________________
+🧪 LABORATORIO 2: IMPLEMENTACIÓN DE NETWORK SECURITY GROUPS (NSGs)
+⏱️ Duración: 25 minutos
+🎯 Objetivo: Crear y configurar NSGs con reglas de seguridad granulares para cada subnet
+Paso 1: Crear NSG para DMZ Subnet (6 minutos)
+Crear NSG-DMZ:
+1.	Azure Portal → Network security groups → + Create:
+2.	Subscription: [Su suscripción]
+3.	Resource group: rg-infraestructura-segura-[SuNombre]
+4.	Name: nsg-dmz-[sunombre]
+5.	Region: East US
+6.	Configurar reglas de seguridad para DMZ:
+Regla 1 - Permitir HTTP/HTTPS desde Internet:
+Name: Allow-HTTP-HTTPS-Inbound
+Priority: 100
+Source: Any
+Source port ranges: *
+Destination: Any  
+Destination port ranges: 80,443
+Protocol: TCP
+Action: Allow
+Regla 2 - Permitir SSH para administración:
+Name: Allow-SSH-Management
+Priority: 110
+Source: 10.1.10.0/24 (Management subnet)
+Source port ranges: *
+Destination: Any
+Destination port ranges: 22
+Protocol: TCP
+Action: Allow
+Regla 3 - Denegar todo lo demás:
+Name: Deny-All-Other-Inbound
+Priority: 4000
+Source: Any
+Source port ranges: *
+Destination: Any
+Destination port ranges: *
+Protocol: Any
+Action: Deny
+Comando Azure CLI para crear NSG-DMZ:
+# Crear NSG
+az network nsg create \
+  --resource-group rg-infraestructura-segura-[SuNombre] \
+  --name nsg-dmz-[sunombre] \
+  --location eastus
+
+# Agregar reglas
+az network nsg rule create \
+  --resource-group rg-infraestructura-segura-[SuNombre] \
+  --nsg-name nsg-dmz-[sunombre] \
+  --name Allow-HTTP-HTTPS-Inbound \
+  --priority 100 \
+  --source-address-prefixes '*' \
+  --destination-port-ranges 80 443 \
+  --access Allow \
+  --protocol Tcp
+Paso 2: Crear NSG para Private Subnet (6 minutos)
+Crear NSG-Private:
+1.	Crear el NSG:
+2.	Name: nsg-private-[sunombre]
+3.	Resource group: rg-infraestructura-segura-[SuNombre]
+4.	Reglas para Private Subnet:
+Regla 1 - Permitir tráfico desde DMZ:
+Name: Allow-DMZ-to-Private
+Priority: 100
+Source: 10.1.1.0/24 (DMZ subnet)
+Destination: 10.1.2.0/24 (Private subnet)
+Destination port ranges: 80,443,8080,8443
+Protocol: TCP
+Action: Allow
+Regla 2 - Permitir comunicación interna:
+Name: Allow-Private-Internal
+Priority: 110
+Source: 10.1.2.0/24
+Destination: 10.1.2.0/24
+Destination port ranges: *
+Protocol: Any
+Action: Allow
+Regla 3 - Permitir acceso a Data subnet:
+Name: Allow-Private-to-Data
+Priority: 120
+Source: 10.1.2.0/24
+Destination: 10.1.3.0/24
+Destination port ranges: 1433,3306,5432 # SQL Server, MySQL, PostgreSQL
+Protocol: TCP
+Action: Allow
+Regla 4 - Denegar Internet directo:
+Name: Deny-Internet-Direct
+Priority: 4000
+Source: Internet
+Destination: 10.1.2.0/24
+Destination port ranges: *
+Protocol: Any
+Action: Deny
+Paso 3: Crear NSG para Data Subnet (6 minutos)
+Crear NSG-Data (Máxima Seguridad):
+1.	Crear el NSG:
+2.	Name: nsg-data-[sunombre]
+3.	Reglas restrictivas para Data:
+Regla 1 - Solo Private subnet puede acceder:
+Name: Allow-Private-to-Data-DB
+Priority: 100
+Source: 10.1.2.0/24 (Private subnet only)
+Destination: 10.1.3.0/24
+Destination port ranges: 1433,3306,5432,6379 # Databases + Redis
+Protocol: TCP
+Action: Allow
+Regla 2 - Permitir backup desde Management:
+Name: Allow-Management-Backup
+Priority: 110
+Source: 10.1.10.0/24
+Destination: 10.1.3.0/24
+Destination port ranges: 22,3389 # SSH, RDP para backups
+Protocol: TCP
+Action: Allow
+Regla 3 - Denegar todo lo demás:
+Name: Deny-All-Other-Data
+Priority: 4000
+Source: Any
+Destination: 10.1.3.0/24
+Destination port ranges: *
+Protocol: Any
+Action: Deny
+Paso 4: Crear NSG para Management Subnet (4 minutos)
+Crear NSG-Management:
+1.	Reglas para administración segura:
+Regla 1 - SSH/RDP desde ubicaciones específicas:
+Name: Allow-Admin-Access
+Priority: 100
+Source: [Su IP pública actual] # Usar whatismyip.com
+Destination: 10.1.10.0/24
+Destination port ranges: 22,3389
+Protocol: TCP
+Action: Allow
+Regla 2 - Acceso a todas las subredes para administración:
+Name: Allow-Management-to-All
+Priority: 110
+Source: 10.1.10.0/24
+Destination: 10.1.0.0/16 # Toda la VNET
+Destination port ranges: *
+Protocol: Any
+Action: Allow
+Paso 5: Asociar NSGs con Subredes (3 minutos)
+Asociar cada NSG con su subnet correspondiente:
+1.	DMZ Subnet:
+o	VNET → Subnets → snet-dmz → Network security group → nsg-dmz-[sunombre]
+2.	Private Subnet:
+o	VNET → Subnets → snet-private → Network security group → nsg-private-[sunombre]
+3.	Data Subnet:
+o	VNET → Subnets → snet-data → Network security group → nsg-data-[sunombre]
+4.	Management Subnet:
+o	VNET → Subnets → snet-management → Network security group → nsg-management-[sunombre]
+Con Azure CLI:
+# Asociar NSGs con subredes
+az network vnet subnet update \
+  --resource-group rg-infraestructura-segura-[SuNombre] \
+  --vnet-name vnet-principal-[sunombre] \
+  --name snet-dmz \
+  --network-security-group nsg-dmz-[sunombre]
+
+# Repetir para las otras subredes...
+✅ Resultado Esperado:
+•	4 NSGs creados con reglas específicas
+•	Cada subnet protegida por su NSG correspondiente
+•	Tráfico controlado según principios de seguridad
+•	Base lista para deployment de recursos
+________________________________________
+🧪 LABORATORIO 3: IMPLEMENTACIÓN DE AZURE BASTION Y JUMP BOX
+⏱️ Duración: 20 minutos
+🎯 Objetivo: Implementar acceso administrativo seguro usando Azure Bastion y Jump Box personalizado
+Paso 1: Crear Subnet para Azure Bastion (3 minutos)
+Azure Bastion requiere subnet específica:
+1.	Agregar AzureBastionSubnet:
+2.	VNET: vnet-principal-[sunombre]
+3.	Subnet name: AzureBastionSubnet (nombre obligatorio)
+4.	Subnet address range: 10.1.100.0/26 (mínimo /26 requerido)
+5.	En Azure Portal:
+o	VNET → Subnets → + Subnet
+o	Name: AzureBastionSubnet
+o	Address range: 10.1.100.0/26
+Con Azure CLI:
+# Crear subnet para Bastion
+az network vnet subnet create \
+  --resource-group rg-infraestructura-segura-[SuNombre] \
+  --vnet-name vnet-principal-[sunombre] \
+  --name AzureBastionSubnet \
+  --address-prefix 10.1.100.0/26
+Paso 2: Implementar Azure Bastion (8 minutos)
+Crear Azure Bastion Host:
+1.	Azure Portal → Bastions → + Create:
+2.	Subscription: [Su suscripción]
+3.	Resource group: rg-infraestructura-segura-[SuNombre]
+4.	Name: bastion-[sunombre]
+5.	Region: East US
+6.	Tier: Basic (para laboratorio)
+7.	Virtual network: vnet-principal-[sunombre]
+8.	Subnet: AzureBastionSubnet (auto-seleccionado)
+9.	Public IP para Bastion:
+10.	Public IP address: Create new
+11.	Public IP name: pip-bastion-[sunombre]
+12.	SKU: Standard
+13.	Assignment: Static
+14.	Review + Create → Esperar deployment (toma 5-10 minutos)
+⚠️ Nota: Azure Bastion es un servicio premium. Para laboratorio, también implementaremos Jump Box como alternativa.
+Paso 3: Crear Jump Box VM (7 minutos)
+Crear VM de administración en Management Subnet:
+1.	Azure Portal → Virtual machines → + Create:
+Basics:
+Subscription: [Su suscripción]
+Resource group: rg-infraestructura-segura-[SuNombre]
+Virtual machine name: vm-jumpbox-[sunombre]
+Region: East US
+Image: Windows Server 2022 Datacenter
+Size: Standard_B2s (2 vcpus, 4 GB RAM)
+Administrator account:
+Authentication type: Password
+Username: azureadmin
+Password: [Contraseña segura - ej: JumpBox2024!]
+2.	Networking:
+3.	Virtual network: vnet-principal-[sunombre]
+4.	Subnet: snet-management (10.1.10.0/24)
+5.	Public IP: None (acceso solo vía Bastion)
+6.	NIC network security group: None (usaremos subnet NSG)
+7.	Disks:
+8.	OS disk type: Premium SSD (mejor para administración)
+9.	Management:
+10.	Enable auto-shutdown: Yes
+11.	Shutdown time: 23:00 (para laboratorio)
+Paso 4: Configurar Acceso Seguro (2 minutos)
+Configurar NSG para permitir Bastion:
+1.	Actualizar nsg-management-[sunombre]:
+Nueva regla para Azure Bastion:
+Name: Allow-Bastion-Inbound
+Priority: 90
+Source: 10.1.100.0/26 (AzureBastionSubnet)
+Destination: 10.1.10.0/24 (Management subnet)
+Destination port ranges: 3389,22
+Protocol: TCP
+Action: Allow
+Con Azure CLI:
+# Agregar regla para Bastion
+az network nsg rule create \
+  --resource-group rg-infraestructura-segura-[SuNombre] \
+  --nsg-name nsg-management-[sunombre] \
+  --name Allow-Bastion-Inbound \
+  --priority 90 \
+  --source-address-prefixes 10.1.100.0/26 \
+  --destination-address-prefixes 10.1.10.0/24 \
+  --destination-port-ranges 3389 22 \
+  --access Allow \
+  --protocol Tcp
+✅ Resultado Esperado:
+•	Azure Bastion deployado (si el presupuesto lo permite)
+•	Jump Box VM creada en Management subnet
+•	Acceso administrativo seguro configurado
+•	No exposición directa a Internet
+________________________________________
+🧪 LABORATORIO 4: TESTING DE CONECTIVIDAD Y ARQUITECTURA HUB-AND-SPOKE
+⏱️ Duración: 10 minutos
+🎯 Objetivo: Validar la arquitectura implementada y preparar para Hub-and-Spoke
+Paso 1: Testing de Conectividad Básica (3 minutos)
+Verificar NSG Rules:
+1.	Azure Portal → Network security groups:
+o	Verificar que los 4 NSGs están asociados
+o	Review effective security rules para cada subnet
+2.	Usar Azure Network Watcher:
+3.	Azure Portal → Network Watcher → IP flow verify
+4.	
+5.	Test 1:
+6.	Source: 10.1.1.10 (DMZ)
+7.	Destination: 10.1.2.10 (Private) 
+8.	Port: 443
+9.	Expected: Allow
+10.	
+11.	Test 2:
+12.	Source: Internet
+13.	Destination: 10.1.3.10 (Data)
+14.	Port: 1433
+15.	Expected: Deny
+Con Azure CLI:
+# Verificar effective routes
+az network nic show-effective-route-table \
+  --resource-group rg-infraestructura-segura-[SuNombre] \
+  --name [NIC-name] \
+  --output table
+Paso 2: Documentar la Arquitectura Implementada (4 minutos)
+Crear documentación de la infraestructura:
+1.	Crear archivo: arquitectura-implementada.md
+# Infraestructura Segura - [Su Nombre]
+
+## Virtual Network
+- **VNET:** vnet-principal-[sunombre] (10.1.0.0/16)
+- **Region:** East US
+- **DNS:** Azure Default
+
+## Subnets y Segmentación
+
+### DMZ Subnet (10.1.1.0/24)
+- **Propósito:** Servicios expuestos a Internet
+- **NSG:** nsg-dmz-[sunombre]
+- **Reglas:** HTTP/HTTPS permitido desde Internet
+
+### Private Subnet (10.1.2.0/24) 
+- **Propósito:** Aplicaciones internas
+- **NSG:** nsg-private-[sunombre]
+- **Reglas:** Solo acceso desde DMZ
+
+### Data Subnet (10.1.3.0/24)
+- **Propósito:** Bases de datos y almacenamiento
+- **NSG:** nsg-data-[sunombre]
+- **Reglas:** Solo acceso desde Private
+
+### Management Subnet (10.1.10.0/24)
+- **Propósito:** Administración y Jump Box
+- **NSG:** nsg-management-[sunombre]
+- **Recursos:** vm-jumpbox-[sunombre]
+
+### Azure Bastion Subnet (10.1.100.0/26)
+- **Propósito:** Acceso administrativo seguro
+- **Recurso:** bastion-[sunombre]
+
+## Principios de Seguridad Implementados
+- ✅ Defense in Depth
+- ✅ Principle of Least Privilege
+- ✅ Network Segmentation
+- ✅ Secure Administrative Access
+Paso 3: Preparación para Hub-and-Spoke (3 minutos)
+Planificar expansión Hub-and-Spoke:
+1.	La VNET actual se convertirá en Hub VNET
+2.	Planificar Spoke VNETs:
+3.	Spoke 1 - Production: 10.2.0.0/16
+4.	Spoke 2 - Development: 10.3.0.0/16
+5.	Spoke 3 - Testing: 10.4.0.0/16
+6.	Servicios compartidos en Hub:
+o	Azure Firewall (próxima sesión)
+o	DNS Servers
+o	Monitoring y Logging
+o	VPN Gateway (para on-premises)
+Crear planificación:
+# Expansión Hub-and-Spoke Planificada
+
+## Hub VNET (Actual)
+- **VNET:** vnet-principal-[sunombre] (10.1.0.0/16)
+- **Servicios compartidos:** Bastion, Firewall (futuro)
+
+## Spoke VNETs (Futuros)
+- **Prod Spoke:** 10.2.0.0/16
+- **Dev Spoke:** 10.3.0.0/16  
+- **Test Spoke:** 10.4.0.0/16
+
+## Conectividad
+- **VNet Peering:** Hub ↔ Cada Spoke
+- **Routing:** Todo tráfico vía Hub
+- **Security:** Políticas centralizadas en Hub
+✅ Resultado Final del Laboratorio:
+•	✅ VNET segura con 4 subredes segmentadas
+•	✅ NSGs configurados con reglas granulares
+•	✅ Azure Bastion y Jump Box implementados
+•	✅ Arquitectura documentada y validada
+•	✅ Plan para expansión Hub-and-Spoke
+•	✅ Base sólida para próximas sesiones
+________________________________________
+📊 VERIFICACIÓN FINAL Y RESUMEN
+✅ Checklist de Completación
+Laboratorio 1 - Virtual Network:
+•	[ ] VNET creada con address space 10.1.0.0/16
+•	[ ] 4 subredes segmentadas correctamente
+•	[ ] DNS configurado (opcional)
+•	[ ] Resource group organizado
+Laboratorio 2 - Network Security Groups:
+•	[ ] 4 NSGs creados (DMZ, Private, Data, Management)
+•	[ ] Reglas de seguridad granulares implementadas
+•	[ ] NSGs asociados con subredes correspondientes
+•	[ ] Principio de least privilege aplicado
+Laboratorio 3 - Acceso Administrativo:
+•	[ ] Azure Bastion subnet creada
+•	[ ] Azure Bastion deployado (si presupuesto permite)
+•	[ ] Jump Box VM configurada
+•	[ ] Acceso administrativo seguro sin exposición directa
+Laboratorio 4 - Testing y Documentación:
+•	[ ] Conectividad validada con Network Watcher
+•	[ ] Arquitectura documentada
+•	[ ] Plan de expansión Hub-and-Spoke creado
+•	[ ] Verificación de security rules
+🎯 Resultados de Aprendizaje Alcanzados
+Al completar este laboratorio, los estudiantes han logrado:
+1.	🏗️ Arquitectura de Red Segura:
+o	Diseño y implementación de VNET con segmentación apropiada
+o	Address space planning y subnet design
+o	DNS configuration y network topology
+2.	🔒 Network Security Groups Avanzados:
+o	Reglas granulares basadas en principios de seguridad
+o	Control de tráfico entre subredes
+o	Implementation del principio de least privilege
+3.	🦘 Acceso Administrativo Seguro: 
+o	Azure Bastion para acceso sin exposición pública
+o	Jump Box configurado en subnet de management
+o	Eliminación de RDP/SSH directo desde Internet
+4.	🎯 Defense in Depth Implementation: 
+o	Múltiples capas de seguridad implementadas
+o	Segmentación de red por función y sensibilidad
+o	Control granular de tráfico entre componentes
+5.	📋 Documentation y Planning: 
+o	Arquitectura documentada apropiadamente
+o	Planificación para escalabilidad futura
+o	Foundation para Hub-and-Spoke architecture
+🚨 Troubleshooting Común
+Error: "Cannot create subnet - address space overlaps"
+•	Solución: Verificar que los rangos IP no se solapen
+•	Comando: az network vnet subnet list --vnet-name [vnet] --resource-group [rg] --output table
+Error: "NSG rule priority conflict"
+•	Solución: Usar prioridades únicas (100, 110, 120, etc.)
+•	Verificación: Azure Portal → NSG → Security rules
+Error: "Azure Bastion deployment failed"
+•	Solución: 
+o	Verificar que AzureBastionSubnet es exactamente /26 o mayor
+o	Confirmar que el nombre de subnet es exactamente "AzureBastionSubnet"
+o	Verificar permisos en la suscripción
+Error: "Cannot connect to Jump Box via Bastion"
+•	Solución: 
+o	Verificar NSG rules permiten tráfico desde AzureBastionSubnet
+o	Confirmar que VM está en estado "Running"
+o	Revisar effective security rules
+Error: "Network Watcher IP flow verify fails"
+•	Solución: 
+o	Registrar Network Watcher provider: az provider register --namespace Microsoft.Network
+o	Verificar que Network Watcher está habilitado en la región
+📈 Métricas de Éxito
+Indicadores de Implementación Exitosa:
+•	✅ Network Segmentation: 4 subredes con funciones claramente definidas
+•	✅ Security Controls: NSGs con reglas deny-by-default implementadas
+•	✅ Administrative Access: Zero direct Internet exposure para management
+•	✅ Scalability: Arquitectura lista para Hub-and-Spoke expansion
+•	✅ Documentation: Clear architecture documentation maintained
+Criterios de Calidad:
+•	Address space planning sin overlaps
+•	NSG rules siguiendo principio de least privilege
+•	Proper subnet sizing para crecimiento futuro
+•	Security-first approach en todas las decisiones de diseño
+🔗 Actividades Previas Requeridas
+Si no completaron laboratorios anteriores:
+Para este laboratorio de infraestructura, NO se requieren los laboratorios de aplicación de sesiones anteriores. Este laboratorio es independiente y se enfoca en networking y seguridad de infraestructura.
+Sin embargo, si desean integrar aplicaciones futuras:
+1.	Configuración básica de Azure AD (de Sesión 4): 
+bash
+# Verificar acceso a Azure AD
+az ad signed-in-user show
+2.	Key Vault básico (de Sesión 5): 
+bash
+# Crear Key Vault para secretos de infraestructura
+az keyvault create \
+  --name kv-infra-[sunombre] \
+  --resource-group rg-infraestructura-segura-[SuNombre] \
+  --location eastus
+🎓 Preparación para Sesión 7
+Para la próxima sesión (Lunes 21/07), tendrán lista:
+1.	Infraestructura base: VNET con segmentación apropiada
+2.	Security baseline: NSGs configurados y validados
+3.	Administrative access: Bastion y Jump Box funcionales
+4.	Documentation: Arquitectura documentada y planificada
+La Sesión 7 expandirá:
+•	Azure Firewall implementation
+•	DDoS Protection Standard
+•	Network monitoring y alerting
+•	Hub-and-Spoke architecture completion
+•	Application deployment en la infraestructura segura
+🌟 Conceptos Avanzados Aplicados
+Este laboratorio implementa:
+1.	Zero Trust Networking: 
+o	Never trust, always verify
+o	Micro-segmentation implemented
+o	Least privilege access controls
+2.	Defense in Depth: 
+o	Multiple security layers
+o	Fail-safe defaults
+o	Comprehensive monitoring points
+3.	Secure by Design: 
+o	Security considerations first
+o	Scalable architecture patterns
+o	Compliance-ready structure
+4.	Cloud Native Security: 
+o	Azure-native security services
+o	Infrastructure as Code ready
+o	Automation-friendly design
+📚 Recursos Adicionales
+Para profundizar conocimientos:
+1.	Microsoft Documentation: 
+o	Azure Virtual Network documentation
+o	Network Security Groups
+o	Azure Bastion
+2.	Best Practices: 
+o	Azure Network Security Best Practices
+o	Hub-spoke network topology
+3.	Tools para práctica: 
+o	Azure Network Watcher
+o	Azure CLI network commands
+o	PowerShell Az.Network module
+🎉 ¡Felicitaciones!
+Han completado exitosamente la implementación de una infraestructura de red segura en Azure. Esta base sólida les permitirá:
+•	Deployar aplicaciones de manera segura
+•	Escalar horizontalmente agregando nuevos componentes
+•	Mantener compliance con frameworks de seguridad
+•	Monitorear y auditar toda la actividad de red
+•	Responder eficientemente a incidentes de seguridad
+La arquitectura que han construido es production-ready y sigue las mejores prácticas de la industria para seguridad de infraestructura en la nube.
+¡Nos vemos en la Sesión 7 para continuar construyendo sobre esta base sólida! 🚀
+________________________________________
+📝 Comandos de Referencia Rápida
+Azure CLI - Networking Commands
+bash
+# Listar VNETs
+az network vnet list --output table
+
+# Ver subredes de una VNET
+az network vnet subnet list --vnet-name [vnet] --resource-group [rg] --output table
+
+# Listar NSGs
+az network nsg list --output table
+
+# Ver reglas de un NSG
+az network nsg rule list --nsg-name [nsg] --resource-group [rg] --output table
+
+# Verificar effective security rules
+az network nic list-effective-nsg --name [nic] --resource-group [rg]
+
+# Network Watcher - IP flow verify
+az network watcher test-ip-flow \
+  --vm [vm-name] \
+  --direction Inbound \
+  --local 10.1.2.4:80 \
+  --remote 10.1.1.4:12345 \
+  --protocol TCP
+PowerShell - Networking Commands
+powershell
+# Login to Azure
+Connect-AzAccount
+
+# List VNETs
+Get-AzVirtualNetwork | Select-Object Name, ResourceGroupName, Location
+
+# Get NSG rules
+Get-AzNetworkSecurityGroup -Name "nsg-dmz-[sunombre]" -ResourceGroupName "rg-infraestructura-segura-[SuNombre]" | Get-AzNetworkSecurityRuleConfig
+
+# Test connectivity
+Test-AzNetworkWatcherConnectivity -NetworkWatcherName "NetworkWatcher_eastus" -ResourceGroupName "NetworkWatcherRG" -SourceResourceId "/subscriptions/.../vm-jumpbox" -DestinationAddress "10.1.2.4" -DestinationPort 80
+Este laboratorio establece las bases sólidas para toda la infraestructura de red segura que continuaremos desarrollando en las próximas sesiones. ¡Excelente trabajo! 💪
+

@@ -1,0 +1,236 @@
+Guión Detallado - Sesión 6: Finalización Módulo 2 + Inicio Módulo 3
+Seguridad de Infraestructura Azure
+________________________________________
+Diapositiva 1: Portada del Curso (2 minutos)
+¡Muy buenas noches a todos! Bienvenidos a nuestra sexta sesión del curso de Diseño Seguro de Aplicaciones .NET en Azure.
+Hoy viernes 18 de julio tenemos una sesión especialmente interesante porque vamos a hacer la transición entre dos mundos complementarios: cerraremos el Módulo 2 con la integración práctica de todo lo que hemos aprendido sobre desarrollo seguro, y abriremos el Módulo 3 adentrándonos en la seguridad de infraestructura.
+Es como cuando construyes una casa: primero te aseguras de que los cimientos y la estructura estén sólidos (eso es lo que haremos hoy con la infraestructura), y luego te concentras en los acabados y sistemas internos (que es lo que hemos estado haciendo con las aplicaciones).
+Tenemos por delante 3 horas y media muy productivas, donde van a ver cómo todo lo que hemos aprendido se conecta de manera natural con la seguridad de red y la infraestructura de Azure.
+________________________________________
+Diapositiva 2: Objetivos de la Sesión (3 minutos)
+Los objetivos de hoy están diseñados para que salgan con una visión integral de la seguridad en Azure. No se trata solo de proteger aplicaciones en aislamiento, sino de crear ecosistemas completos y resilientes.
+Primero, vamos a completar nuestro proyecto integrador donde Azure AD, Key Vault y nuestra aplicación .NET trabajan juntos como un equipo bien coordinado. Es como tener un sistema de seguridad doméstico donde las cámaras, alarmas y cerraduras inteligentes se comunican entre sí.
+Segundo, dominaremos las arquitecturas de red seguras. Aquí aprenderán a pensar como arquitectos de seguridad, no solo como desarrolladores. Van a entender por qué Netflix puede transmitir millones de videos simultáneamente sin comprometer la seguridad, o cómo los bancos manejan transacciones 24/7 manteniendo la información protegida.
+Tercero, implementaremos Virtual Networks con segmentación apropiada. Imaginen esto como diseñar los planos de un edificio corporativo: necesitan áreas públicas, zonas de trabajo, bóvedas de seguridad, y cada una con sus propias reglas de acceso.
+Cuarto, configuraremos subredes y controles perimetrales. Es como establecer controles de seguridad en diferentes niveles: recepción, acceso a pisos específicos, y áreas restringidas.
+Finalmente, aplicaremos los principios de "Defense in Depth" o defensa en profundidad. Esto significa que si alguien logra pasar una barrera de seguridad, hay múltiples capas adicionales esperándolo.
+Al final de esta sesión, podrán diseñar infraestructuras que no solo funcionen, sino que sean resilientes ante ataques sofisticados y fallen de manera elegante cuando sea necesario.
+________________________________________
+Diapositiva 3: Agenda de la Sesión (2 minutos)
+Hemos estructurado la sesión de manera muy práctica. Los primeros 15 minutos los dedicaremos a revisar y consolidar nuestro proyecto integrador del Módulo 2. Es importante cerrar bien este ciclo antes de avanzar.
+De 19:15 a 19:45 exploraremos la segmentación de recursos en Azure. Aquí entenderán por qué las grandes empresas no ponen todos sus huevos en una sola canasta digital.
+De 19:45 a 20:15 nos adentraremos en Virtual Networks. Este es el fundamento de todo lo que haremos después, así que prestaremos especial atención a los conceptos base.
+Tendremos un break de 15 minutos para recargar energías, porque la segunda parte será más intensa.
+De 20:30 a 21:00 diseñaremos subredes y implementaremos seguridad perimetral. Aquí es donde la teoría se vuelve práctica y emocionante.
+De 21:00 a 21:30 veremos arquitecturas de red completas con casos reales de empresas que conocen.
+Los últimos 60 minutos serán completamente prácticos. Implementaremos todo lo aprendido en laboratorios hands-on donde construirán su propia infraestructura segura.
+________________________________________
+Diapositiva 4: Proyecto Integrador - Revisión (4 minutos)
+Antes de avanzar hacia la infraestructura, celebremos lo que hemos logrado. Tenemos una aplicación .NET Core completamente funcional que implementa las mejores prácticas de seguridad.
+Piensen en lo que han construido: Azure AD maneja toda la autenticación y autorización. Esto significa que sus usuarios pueden ingresar una sola vez y acceder a múltiples recursos de manera segura. Es como tener una tarjeta maestra en un hotel de lujo que les da acceso a su habitación, al gimnasio, al spa, pero no a las habitaciones de otros huéspedes.
+Key Vault está gestionando todos los secretos. Ya no tienen contraseñas de base de datos hardcodeadas en sus aplicaciones. Es como tener una caja fuerte digital que solo se abre cuando realmente la necesitan y solo para quienes están autorizados.
+Los tokens JWT llevan claims personalizados que permiten autorización granular. Esto es como tener diferentes tipos de identificaciones: una de empleado, otra de visitante, otra de contratista, cada una con permisos específicos.
+La Data Protection API está protegiendo la información sensible. Esto significa que incluso si alguien accede a sus datos, no puede leerlos sin las claves apropiadas.
+La arquitectura actual es elegante: el frontend se comunica de manera segura con Azure AD, obtiene los tokens necesarios, accede a Key Vault para recuperar secretos, y todo esto alimenta las APIs del backend. Es como una sinfonía donde cada instrumento tiene su papel específico pero todos tocan la misma melodía.
+Nuestro próximo paso es envolver toda esta belleza en una infraestructura de red que sea igualmente robusta y segura.
+________________________________________
+Diapositiva 5: Segmentación de Recursos en Azure (5 minutos)
+La segmentación es uno de los conceptos más poderosos en seguridad de nube, y quiero que entiendan por qué es tan crítica.
+¿Por qué segmentar? Imaginen que tienen un centro comercial. No pondrían la joyería al lado del patio de comidas sin ningún tipo de separación, ¿verdad? Cada tipo de negocio tiene diferentes niveles de seguridad, diferentes tipos de clientes, y diferentes riesgos.
+El aislamiento nos permite separar cargas críticas. Si su sistema de facturación tiene un problema, no queremos que afecte al sistema de recursos humanos. Es como tener departamentos independientes en una empresa: si hay un problema en ventas, la contabilidad sigue funcionando.
+Minimizar el "blast radius" es crucial. Cuando algo sale mal (y eventualmente algo saldrá mal), queremos contener el impacto. Es como los compartimentos estancos en un barco: si uno se inunda, los otros mantienen el barco a flote.
+El compliance a menudo requiere segmentación. GDPR, por ejemplo, exige que los datos personales estén separados de otros tipos de información. Es como tener archivos médicos en un consultorio: no pueden estar mezclados con los archivos administrativos.
+El performance también se beneficia. Al segmentar correctamente, evitamos que aplicaciones hambrientas de recursos afecten a las críticas.
+Los niveles de segmentación funcionan como círculos concéntricos. A nivel de suscripción, separamos ambientes completos: producción, desarrollo, testing. A nivel de grupo de recursos, organizamos por proyectos o aplicaciones. A nivel de red, usamos VNETs y subredes. A nivel de aplicación, implementamos microservicios con sus propias fronteras de seguridad.
+La clave está en encontrar el equilibrio: demasiada segmentación puede crear complejidad innecesaria, muy poca puede crear riesgos de seguridad.
+________________________________________
+Diapositiva 6: Defense in Depth Strategy (4 minutos)
+Defense in Depth o defensa en profundidad es como diseñar un castillo medieval en el siglo XXI. No se confían en una sola muralla, sino en múltiples capas de protección.
+Empezamos en el edge con CDN. Esta es nuestra primera línea de defensa, como tener centinelas en las torres. Los CDN no solo mejoran el rendimiento, sino que pueden detectar y mitigar ataques antes de que lleguen a nuestros servidores.
+El WAF y DDoS Protection son como un filtro inteligente en la entrada principal. Analizan cada petición y bloquean las maliciosas. Es como tener un detector de metales y un equipo de seguridad que sabe reconocer amenazas.
+Los Load Balancers distribuyen el tráfico legítimo de manera eficiente, pero también pueden detectar patrones anómalos. Es como tener múltiples entradas a un edificio con personal capacitado en cada una.
+Los Network Security Groups son las reglas de tráfico a nivel de red. Deciden qué puede comunicarse con qué, desde dónde y hacia dónde. Es como tener diferentes zonas en un edificio con tarjetas de acceso específicas.
+La Virtual Network proporciona aislamiento fundamental. Es el perímetro seguro donde nuestros recursos operan de manera controlada.
+La seguridad a nivel de host protege cada máquina individual. Antivirus, firewalls locales, configuraciones endurecidas.
+La seguridad de aplicación incluye autenticación, autorización, validación de datos, todo lo que hemos estado aprendiendo.
+Finalmente, la encriptación de datos es nuestra última línea de defensa. Incluso si alguien llega hasta aquí, no puede usar la información.
+Cada capa agrega protección adicional, pero también puede introducir latencia o complejidad. El arte está en calibrar cada capa apropiadamente.
+________________________________________
+Diapositiva 7: Azure Virtual Networks - Fundamentos (5 minutos)
+Las Virtual Networks o VNETs son la fundación de toda arquitectura segura en Azure. Piensen en ellas como el terreno donde van a construir su ciudad digital.
+El Address Space es fundamental y requiere planificación cuidadosa. Usamos rangos IP privados según RFC 1918: 10.0.0.0/8, 172.16.0.0/12, o 192.168.0.0/16. Es como planificar las calles de una ciudad: una vez que están construidas, cambiarlas es muy costoso.
+Las subredes proporcionan segmentación lógica dentro de la VNET. Es como dividir una ciudad en barrios: residencial, comercial, industrial, cada uno con sus propias características y reglas.
+El routing controla cómo fluye el tráfico. Azure maneja mucho de esto automáticamente, pero podemos personalizar rutas para casos específicos. Es como tener semáforos y señalizaciones inteligentes que dirigen el tráfico eficientemente.
+DNS resuelve nombres a direcciones IP. Azure proporciona DNS automático, pero para casos empresariales a menudo queremos control granular.
+Veamos el ejemplo de planificación: Una VNET con 10.0.0.0/16 nos da 65,534 direcciones IP disponibles. Dentro de esto, creamos subredes especializadas:
+•	Subnet Web (10.0.1.0/24): 254 IPs para servidores web y load balancers
+•	Subnet App (10.0.2.0/24): 254 IPs para servidores de aplicación
+•	Subnet DB (10.0.3.0/24): 254 IPs para bases de datos y almacenamiento
+La planificación es crítica porque Azure reserva las primeras 5 IPs de cada subred, y cambiar el address space después es complicado. Es como planificar el sistema de agua potable de una ciudad: mejor hacerlo bien desde el principio.
+Un error común es subdimensionar. Siempre planifiquen para crecimiento futuro. Otro error es no considerar la conectividad híbrida: si van a conectar con redes on-premises, los rangos IP no pueden solaparse.
+________________________________________
+Diapositiva 8: VNET Connectivity Models (4 minutos)
+Los modelos de conectividad determinan cómo las diferentes partes de su infraestructura se comunican, y cada modelo tiene sus propias implicaciones de seguridad.
+El modelo Hub-and-Spoke es el favorito para arquitecturas empresariales, y por buena razón. Imaginen un aeropuerto internacional: hay un hub central donde se concentran los servicios críticos (torre de control, servicios de inmigración, conexiones internacionales), y spokes o rayos que conectan a destinos específicos.
+En Azure, el Hub VNET contiene servicios compartidos: Azure Firewall, VPN Gateway, DNS servers, servicios de monitoring. Los Spoke VNETs contienen cargas de trabajo específicas: una para producción, otra para desarrollo, otra para testing.
+Las ventajas son claras: centralización de políticas de seguridad, control granular del tráfico, escalabilidad (agregar un nuevo spoke es simple), y optimización de costos (servicios compartidos en el hub).
+El modelo Mesh conecta todas las VNETs entre sí. Es como tener carreteras directas entre todas las ciudades de un país. Puede ser eficiente para tráfico, pero se vuelve complejo rápidamente. Con 4 VNETs necesitan 6 conexiones, con 10 VNETs necesitan 45 conexiones. No escala bien.
+Consideraciones importantes: Los costos crecen con cada conexión. La complejidad de gestión aumenta exponencialmente en mesh. La escalabilidad del hub-and-spoke es superior para la mayoría de casos empresariales.
+Recomendación práctica: Empiecen con hub-and-spoke. Es más fácil de gestionar, más seguro por diseño, y escala mejor conforme crecen.
+________________________________________
+Diapositiva 9: VNet Peering vs VPN Gateway (4 minutos)
+Esta es una decisión arquitectónica fundamental que afecta rendimiento, seguridad y costos.
+VNet Peering es como construir un puente directo entre dos ciudades. La latencia es muy baja porque el tráfico viaja por la red backbone de Microsoft, no por Internet. No hay límites de ancho de banda más allá de los límites de las VMs individuales. El costo es predecible: pagan por GB transferido, no por tiempo de conexión.
+Sin embargo, no hay encriptación nativa porque Microsoft considera que su backbone es suficientemente seguro. La configuración es simple: básicamente "conectar A con B" y listo.
+VPN Gateway es como crear un túnel seguro. La latencia es media porque hay overhead de encriptación. El ancho de banda está limitado por el SKU del gateway (hasta 10 Gbps en los más altos). El costo es por hora más GB, lo que puede ser costoso para conexiones permanentes.
+La encriptación IPSec es nativa, lo que es crítico para ciertos tipos de datos. La configuración es más compleja: necesitan configurar políticas IPSec, pre-shared keys o certificados.
+¿Cuándo usar cada uno?
+VNet Peering para Azure-to-Azure: Cuando ambas VNETs están en Azure y no requieren encriptación adicional. Es más rápido, más barato para alto volumen, más simple.
+VPN Gateway para hybrid o compliance: Cuando conectan con on-premises, cuando necesitan encriptación obligatoria por compliance, o cuando necesitan routing complejo.
+Un consejo práctico: Muchas empresas usan VNet Peering para conexiones principales y VPN Gateway como backup o para conexiones especiales que requieren encriptación.
+________________________________________
+Diapositiva 10: Hybrid Connectivity Security (4 minutos)
+La conectividad híbrida es una realidad para la mayoría de empresas. Raramente migran todo a la nube de una vez; es más común tener un pie en on-premises y otro en la nube.
+Site-to-Site VPN es la opción más común para empezar. Los túneles IPSec proporcionan encriptación robusta para datos en tránsito. Es internet-based, lo que significa que usan su conexión regular de Internet pero con encriptación fuerte. Funciona como backup para ExpressRoute en arquitecturas más sofisticadas.
+La configuración implica crear un VPN Gateway en Azure, configurar su dispositivo VPN on-premises (puede ser un router Cisco, Fortinet, etc.), y establecer el túnel con pre-shared keys o certificados.
+ExpressRoute es la opción premium. Es una conexión privada dedicada que no pasa por Internet público. Pueden obtenerla a través de proveedores como Level 3, AT&T, o directamente en facilidades de colocación. El bandwidth es predecible porque no compiten con tráfico de Internet. La latencia es consistente porque tienen un path dedicado.
+ExpressRoute es ideal para aplicaciones críticas, transferencias grandes de datos, o cuando el compliance prohíbe que ciertos datos viajen por Internet público.
+Las consideraciones de seguridad son críticas:
+Forced tunneling significa que todo el tráfico de Internet desde Azure debe pasar por on-premises primero. Es como decir "toda la correspondencia debe pasar por la oficina central antes de ser entregada". Algunos compliance frameworks lo requieren.
+Custom routes les permiten control granular sobre qué tráfico va por dónde. Pueden enviar tráfico a bases de datos por ExpressRoute, pero tráfico web por Internet.
+NSG rules proporcionan filtrado adicional. Incluso con conectividad híbrida, pueden controlar qué puede comunicarse con qué.
+________________________________________
+Diapositiva 11: Private Endpoints & Service Endpoints (5 minutos)
+Aquí entramos en territorio fascinante: cómo conectar de manera segura con servicios PaaS de Azure.
+Tradicionalmente, servicios como Azure Storage o Azure SQL Database tenían endpoints públicos. Esto significa que técnicamente cualquiera en Internet podía intentar conectarse (aunque por supuesto necesitaban credenciales válidas). Para muchas empresas, esto es inaceptable desde una perspectiva de compliance.
+Service Endpoints fueron la primera solución. Imaginen esto como crear una ruta express desde su VNET hasta el servicio Azure. El tráfico viaja por el backbone de Azure, no por Internet público. Es más rápido y más seguro. Sin embargo, el servicio todavía tiene un endpoint público; simplemente están usando una ruta optimizada para llegar ahí.
+La configuración es simple: habilitan el service endpoint en la subred, y configuran el servicio Azure para permitir acceso solo desde esas subredes específicas.
+Private Endpoints son la evolución natural. En lugar de conectar a un endpoint público por una ruta privada, crean un endpoint completamente privado dentro de su VNET. Es como tener una sucursal del banco dentro de su oficina, en lugar de tener que salir a la calle para ir al banco.
+Cada private endpoint obtiene una IP privada dentro de su VNET. Azure Storage, por ejemplo, ya no es "mystorage.blob.core.windows.net" desde su perspectiva; es "10.0.3.4" dentro de su red.
+Private Link es la tecnología subyacente que permite múltiples servicios a través de private endpoints. Microsoft está agregando soporte constantemente: Azure SQL, CosmosDB, Key Vault, App Service, y muchos más.
+La comparación clave: Service Endpoints optimizan el routing pero mantienen endpoints públicos. Private Endpoints eliminan completamente la exposición pública. Para datos altamente sensibles o compliance estricto, private endpoints son la única opción aceptable.
+Consideración práctica: Private endpoints tienen costo adicional (aproximadamente $8-10 USD por mes por endpoint), pero para muchas empresas es una inversión que vale la pena para la tranquilidad de seguridad.
+________________________________________
+Diapositiva 12: BREAK (15 minutos)
+¡Perfecto! Vamos a tomar un break de 15 minutos bien merecido.
+Hemos cubierto mucho terreno conceptual importante. Completamos la integración de nuestro proyecto del Módulo 2 - ahora tienen una aplicación funcional y segura. Entendimos los fundamentos de segmentación de red - por qué es crítica y cómo implementarla. Dominamos VNETs y sus modelos de conectividad - la base sobre la cual construiremos todo lo demás.
+En el próximo bloque, las cosas se ponen más emocionantes y prácticas. Vamos a diseñar subredes con patrones de seguridad, implementar DMZ para protección perimetral, y verán arquitecturas completas de empresas reales.
+Un tip mientras descansan: Piensen en su infraestructura actual, ya sea en su trabajo o en proyectos personales. ¿Cómo aplicarían estos conceptos? ¿Qué mejorarían? ¿Qué riesgos identifican que podrían mitigar con lo que estamos aprendiendo?
+Mantengan Azure Portal abierto si pueden, porque en los laboratorios implementaremos estas arquitecturas paso a paso.
+¡Nos vemos a las 20:30! No se alejen mucho.
+________________________________________
+Diapositiva 13: Subnet Design Patterns (5 minutos)
+Ahora vamos a entrar en la parte realmente práctica del diseño de redes. Los patrones de diseño de subredes son como los planos arquitectónicos de un edificio: determinan cómo todo se conecta y se protege.
+El enfoque "Security-First" significa que diseñamos pensando primero en seguridad, y luego optimizamos para performance y costo. Es como diseñar un banco: primero definen dónde va la bóveda, luego organizan todo lo demás alrededor.
+Veamos la estructura práctica:
+DMZ Subnet (10.0.1.0/24) es nuestra zona desmilitarizada. Aquí ponemos todo lo que necesita ser accesible desde Internet pero queremos controlar estrictamente. Los Load Balancers reciben tráfico externo y lo distribuyen. WAF y Application Gateway inspeccionan y filtran peticiones. Jump Boxes proporcionan acceso administrativo seguro.
+Private Subnet (10.0.2.0/24) aloja la lógica de negocio. Application Servers ejecutan nuestras aplicaciones .NET. Microservices se comunican entre sí de manera segura. Internal APIs manejan operaciones que no deben ser expuestas externamente.
+Data Subnet (10.0.3.0/24) es donde viven los datos. Databases con información crítica. Cache layers como Redis para performance. Storage Accounts para archivos y backups.
+El principio fundamental es que el tráfico fluye desde menos confiable a más confiable, nunca al revés. Internet puede llegar a DMZ. DMZ puede comunicarse con Private bajo reglas estrictas. Private puede acceder a Data con autenticación fuerte. Pero Data nunca inicia comunicación hacia afuera.
+Es como un edificio gubernamental: los visitantes llegan a recepción, el personal escoltado puede acceder a oficinas, solo personal autorizado puede llegar a archivos clasificados, y los archivos nunca "salen caminando" solos.
+Cada subred tiene sus propias reglas de seguridad, sus propios NSGs, y potencialmente sus propios route tables. Esto nos da control granular pero requiere planificación cuidadosa.
+________________________________________
+Diapositiva 14: DMZ Implementation (4 minutos)
+La DMZ o Zona Desmilitarizada es uno de los conceptos más importantes en seguridad de red, y en la nube toma nuevas dimensiones.
+Históricamente, la DMZ era esa zona entre dos firewalls físicos. En Azure, es una subred especializada que actúa como buffer entre Internet y nuestra red interna.
+¿Cuál es el propósito? Imaginen un embajada en país extranjero. No pueden ser completamente cerrados (necesitan recibir visitantes), pero tampoco pueden ser completamente abiertos (tienen información sensible). La DMZ es como el área de recepción: controlada, monitoreada, pero accesible.
+Los componentes típicos están diseñados para esta función específica:
+Azure Application Gateway con WAF no solo balancea carga, sino que inspecciona cada petición HTTP/HTTPS buscando patrones maliciosos. Puede detectar inyecciones SQL, ataques XSS, y otros vectores de ataque a nivel de aplicación.
+Load Balancers externos distribuyen tráfico pero también pueden detectar anomalías. Si de repente reciben 10,000 peticiones por segundo desde una sola IP, pueden activar protecciones automáticas.
+Bastion Hosts para management proporcionan acceso administrativo sin exponer RDP o SSH directamente a Internet. Es como tener un punto de control donde los administradores pueden "registrarse" antes de acceder a sistemas internos.
+Reverse Proxies pueden enmascarar la arquitectura interna, agregar capas adicionales de autenticación, y cache para performance.
+El flujo de tráfico es estrictamente controlado: Internet puede llegar a DMZ a través de puertos específicos y protocolos autorizados. DMZ puede comunicarse con redes internas solo bajo reglas muy específicas. Las redes internas pueden responder a DMZ, pero raramente inician comunicación hacia la DMZ.
+Esta arquitectura significa que incluso si alguien compromete un servidor en la DMZ, no tiene acceso automático a sistemas internos.
+________________________________________
+Diapositiva 15: Bastion Hosts & Jump Boxes (4 minutos)
+El acceso administrativo seguro es uno de los desafíos más complejos en seguridad de nube. ¿Cómo permiten que los administradores accedan a sistemas internos sin crear vulnerabilidades?
+Azure Bastion es la solución elegante que Microsoft proporciona. Piensen en esto como un "portal de teletransportación" seguro. Las VMs no necesitan IPs públicas - esto solo elimina una superficie de ataque enorme. El acceso es completamente a través del portal de Azure usando autenticación robusta. RDP y SSH viajan over HTTPS, no por protocolos expuestos.
+Lo brillante de Azure Bastion es que integra con todas las características de seguridad de Azure AD: Conditional Access, MFA, PIM (Privileged Identity Management). Es como tener un checkpoint de seguridad que valida identidad, ubicación, dispositivo, y riesgo antes de permitir acceso.
+Los Custom Jump Boxes son para casos donde necesitan más control. Estos son VMs especializadas en una subnet dedicada, configuradas como "stepping stones" hacia sistemas internos.
+El OS está endurecido: servicios innecesarios deshabilitados, parches siempre actualizados, logging exhaustivo habilitado. MFA es obligatorio - nunca acceso solo con usuario y contraseña. Session recording captura todo lo que sucede durante sesiones administrativas, crucial para auditorías y forensics.
+Las mejores prácticas incluyen:
+Just-in-time access: Los permisos se activan solo cuando se necesitan y por tiempo limitado. Es como tener llaves que solo funcionan durante ciertas horas.
+Conditional access policies: Evalúan contexto completo (ubicación, dispositivo, comportamiento) antes de permitir acceso.
+Privileged access workstations: Dispositivos dedicados y endurecidos solo para tareas administrativas. No navegación web, no email personal, solo administración.
+La regla de oro es: nunca acceso directo desde Internet a sistemas internos. Siempre a través de estos componentes intermedios que pueden auditar, controlar, y proteger.
+________________________________________
+Diapositiva 16: Network Virtual Appliances (NVAs) (4 minutos)
+Los Network Virtual Appliances son como traer el mundo de la seguridad de red empresarial a la nube, pero con la flexibilidad y escalabilidad que Azure proporciona.
+¿Qué son exactamente? Son VMs especializadas que ejecutan software de seguridad de red. Piensen en ellos como "cajas negras" de seguridad que pueden inspeccionar, filtrar, y modificar tráfico de red.
+Azure Firewall es la opción nativa de Microsoft. Es fully managed - Microsoft maneja las actualizaciones, la disponibilidad, la escalabilidad. Tiene threat intelligence integrada que se actualiza automáticamente con feeds globales de Microsoft. Soporta application rules (por FQDN), network rules (por IP/puerto), y NAT rules para publicar servicios internos.
+Palo Alto Networks representa la categoría de next-generation firewalls. No solo filtran por puerto y protocolo, sino que entienden aplicaciones. Pueden decir "permitir Facebook pero bloquear Facebook chat", o "permitir HTTPS pero bloquear Dropbox sobre HTTPS". También incluyen Advanced Threat Prevention con sandboxing en la nube.
+Fortinet ofrece Unified Threat Management. Una sola appliance proporciona firewall, antivirus, anti-spam, VPN, web filtering, y más. Es popular en empresas medianas que quieren "una caja que haga todo".
+Los patrones de deployment son críticos. El más común es Internet → NVA → Internal VNETs. Todo el tráfico de entrada y salida pasa por el NVA, que puede inspeccionarlo y aplicar políticas.
+Consideraciones importantes:
+Single point of failure: Si el NVA falla, la conectividad se pierde. Por eso siempre se despliegan en pares con alta disponibilidad.
+Performance bottleneck: Toda inspección profunda consume CPU. Necesitan dimensionar apropiadamente o crear múltiples rutas.
+Cost: Licencias pueden ser costosas, especialmente con features avanzados. Más el costo de compute de las VMs subyacentes.
+El secreto está en balancear funcionalidad, performance, y costo según las necesidades específicas de cada organización.
+________________________________________
+Diapositiva 17: Network Security Architecture (5 minutos)
+Esta es la arquitectura que ven en empresas Fortune 500, y ahora entenderán por qué es tan efectiva.
+La arquitectura de referencia Hub-and-Spoke con Azure Firewall centraliza la seguridad de manera elegante y escalable.
+Internet llega primero al Azure Firewall en el Hub VNET. Esto significa que todo el tráfico externo pasa por un punto de control centralizado. Es como tener una sola entrada principal a un complejo empresarial donde pueden aplicar políticas consistentes.
+El Hub VNET contiene servicios compartidos: el firewall, VPN gateways para conectividad híbrida, DNS servers, servicios de logging y monitoring. Es el "centro de comando" de toda la operación.
+Los Spoke VNETs están conectados al hub pero aislados entre sí. Producción está separada de desarrollo, desarrollo está separado de testing. Esto significa que un problema en un ambiente no puede contaminar otros.
+Los principios de diseño son fundamentales:
+Centralized security significa que las políticas se definen una vez en el hub y se aplican consistentemente. Si necesitan bloquear acceso a redes sociales, lo configuran una vez y se aplica a todos los spokes.
+Microsegmentation asegura que cada spoke es una isla de seguridad. Los desarrolladores pueden experimentar en su spoke sin riesgo para producción.
+Inspection de todo el tráfico permite detección de amenazas, compliance logging, y debugging de conectividad. Pueden ver exactamente qué se está comunicando con qué.
+Scalability es inherente: agregar un nuevo proyecto significa crear un nuevo spoke y conectarlo al hub. Las políticas de seguridad se aplican automáticamente.
+Un ejemplo real: Una empresa de fintech tiene su spoke de producción con aplicaciones críticas, un spoke de desarrollo donde prueban nuevas features, un spoke de analytics con big data, y un spoke de DMZ para servicios públicos. Todos conectados al hub, todos protegidos por las mismas políticas base, pero cada uno aislado de los otros.
+Esta arquitectura es resiliente (la falla de un spoke no afecta otros), auditable (todo el tráfico pasa por puntos conocidos), y escalable (nuevos requerimientos se manejan agregando spokes).
+________________________________________
+Diapositiva 18: Casos Prácticos de Arquitectura (4 minutos)
+Ahora veamos cómo estos conceptos se aplican en el mundo real. Estos no son ejemplos teóricos: son patrones que usan empresas que probablemente conocen.
+Enterprise Multi-Tier es el patrón clásico modernizado para la nube:
+Web tier en DMZ maneja la presentación. Aquí están los load balancers, CDN endpoints, y web servers que sirven contenido estático. Pueden escalar dinámicamente según demanda y están expuestos a Internet de manera controlada.
+App tier en Private subnet ejecuta la lógica de negocio. Sus aplicaciones .NET Core, APIs, microservices, todo lo que contiene la inteligencia de su sistema. Esta capa nunca está directamente expuesta a Internet.
+Data tier aislada contiene bases de datos, data warehouses, sistemas de backup. El acceso es estrictamente controlado y auditado.
+Microservices Architecture es el patrón moderno para aplicaciones cloud-native:
+API Gateway en DMZ actúa como punto de entrada único. Maneja autenticación, autorización, rate limiting, y routing a microservices internos. Es como un conserje inteligente que sabe exactamente dónde dirigir cada petición.
+Service mesh en private subnet permite comunicación segura entre microservices. Herramientas como Istio o Linkerd proporcionan encriptación automática, circuit breakers, y observabilidad.
+Data stores aislados donde cada microservicio puede tener su propia base de datos. Esto elimina dependencies y permite escalabilidad independiente.
+Hybrid Environment es la realidad para la mayoría de empresas:
+Cloud workloads manejan cargas variables, nuevas aplicaciones, y servicios que se benefician de escalabilidad automática.
+On-premises integration mantiene sistemas legacy, datos que no pueden moverse por compliance, o aplicaciones con latencia crítica.
+Disaster recovery sites en múltiples regiones aseguran continuidad de negocio.
+Las consideraciones de compliance son críticas. GDPR requiere que datos de ciudadanos europeos sean procesados según reglas específicas. HIPAA para datos médicos en Estados Unidos. PCI-DSS para cualquier cosa que toque tarjetas de crédito.
+Cada patrón tiene trade-offs: complejidad vs seguridad, costo vs performance, flexibilidad vs control. El arte está en encontrar el balance correcto para cada organización.
+________________________________________
+Diapositiva 19: Próximos Pasos (3 minutos)
+Excelente progreso hasta aquí. Han construido una base sólida de conocimiento que los posiciona para ser verdaderos arquitectos de seguridad en Azure.
+La próxima sesión del lunes 21 de julio continuaremos profundizando en el Módulo 3. Específicamente, nos enfocaremos en Network Security Groups avanzados - donde aprenderán a crear reglas granulares que balancean seguridad con usabilidad.
+Azure DDoS Protection Standard será otro foco importante. Verán cómo proteger sus aplicaciones contra ataques de denegación de servicio que pueden tumbar sitios web en minutos.
+Reglas de firewall granulares les enseñarán a pensar como expertos en seguridad: no solo "permitir" o "denegar", sino "permitir bajo estas condiciones específicas".
+Monitoreo y alertas de red cerrarán el círculo - de nada sirve tener security perfecto si no saben cuándo está siendo atacado.
+Para prepararse, recomiendo que revisen la documentación de Azure Firewall. No necesitan memorizarla, pero familiarícense con los conceptos. Exploren Azure Network Watcher - es una herramienta increíblemente poderosa para debugging y monitoreo que usaremos extensivamente.
+Practiquen cálculos de subredes si no están cómodos con ellos. Necesitan entender cómo /24, /16, /8 afectan el número de IPs disponibles.
+Los laboratorios de hoy serán intensos y prácticos. Implementarán todo lo que hemos discutido: crearán VNETs, configurarán subredes, implementarán arquitecturas hub-and-spoke, y verán cómo todo se conecta.
+Esta es la parte emocionante donde la teoría se convierte en infraestructura real funcionando.
+________________________________________
+Diapositiva 20: Cierre y Q&A (3 minutos)
+¡Hemos cubierto un territorio impresionante en estas 90 minutos! Desde integrar completamente Azure AD y Key Vault hasta diseñar arquitecturas de red empresariales.
+Las preguntas frecuentes que anticipamos son exactamente las que deberían estar haciéndose ahora:
+"¿Cuándo usar Azure Firewall vs NSGs?" Azure Firewall para control centralizado y features avanzados como application-level filtering. NSGs para control granular a nivel de subred y VM. A menudo se usan juntos en capas.
+"¿Hub-and-Spoke vs otras topologías?" Hub-and-spoke para la mayoría de casos empresariales por la centralización de seguridad y escalabilidad. Mesh solo para casos muy específicos con requerimientos de latencia extremos.
+"¿Costos de connectivity options?" VNet Peering es más económico para tráfico alto y conexiones permanentes. VPN Gateway tiene costos fijos pero puede ser mejor para conexiones ocasionales o que requieren encriptación.
+"¿Performance impact de NVAs?" Siempre hay algún impacto porque están procesando tráfico. La clave está en dimensionar apropiadamente y usar arquitecturas de alta disponibilidad.
+Manténganse conectados a través del email del instructor y el repositorio de GitHub donde están todos los labs y materiales adicionales.
+El recordatorio importante es practicar con Azure Network Watcher antes de la próxima sesión. Es una herramienta que los convertirá en diagnosticadores de red expertos.
+¡Excelente progreso! Han pasado de desarrolladores .NET a arquitectos de seguridad de infraestructura. Nos vemos el lunes 21 de julio a las 19:00 para continuar construyendo esta expertise.
+________________________________________
+Resumen Final del Instructor
+Esta sesión marca un hito importante en el curso. Los estudiantes han transitado exitosamente desde el desarrollo seguro de aplicaciones hacia la arquitectura de infraestructura.
+Los conceptos clave que deben retener:
+•	La segmentación como principio fundamental de seguridad
+•	Defense in Depth como estrategia integral
+•	VNETs como fundación de toda arquitectura segura
+•	Hub-and-Spoke como patrón escalable y seguro
+•	La importancia de planificación en address spaces
+Para los laboratorios, asegúrense de que cada estudiante tenga:
+•	Acceso completo a una suscripción de Azure
+•	Permisos para crear VNETs y recursos de red
+•	Familiaridad básica con el portal de Azure
+El progreso hacia la sesión 7 debería incluir práctica adicional con Network Watcher y familiarización con conceptos de NSGs que profundizaremos.
+

@@ -108,7 +108,9 @@ namespace DevSeguroWebApp.Services
                         try
                         {
                             var secret = await _secretClient.GetSecretAsync(secretProperty.Name);
-                            secrets[secretProperty.Name] = secret.Value.Value;
+                            // Mask sensitive values for display
+                            var maskedValue = MaskSensitiveValue(secret.Value.Value);
+                            secrets[secretProperty.Name] = maskedValue;
                         }
                         catch (Exception ex)
                         {
@@ -139,6 +141,53 @@ namespace DevSeguroWebApp.Services
             {
                 return false;
             }
+        }
+
+        public async Task<bool> IsConnectedAsync()
+        {
+            try
+            {
+                // Intentar listar secretos como test de conectividad
+                await foreach (var secret in _secretClient.GetPropertiesOfSecretsAsync())
+                {
+                    // Solo necesitamos verificar que podemos conectar
+                    break;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Key Vault connectivity test failed");
+                return false;
+            }
+        }
+
+        public async Task<string> GetKeyVaultInfoAsync()
+        {
+            try
+            {
+                var secretCount = 0;
+                await foreach (var secret in _secretClient.GetPropertiesOfSecretsAsync())
+                {
+                    secretCount++;
+                }
+
+                var vaultUri = _secretClient.VaultUri.ToString();
+                return $"Key Vault: {vaultUri}, Secrets: {secretCount}";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting Key Vault info");
+                return "Error getting Key Vault info";
+            }
+        }
+
+        private static string MaskSensitiveValue(string value)
+        {
+            if (string.IsNullOrEmpty(value) || value.Length <= 8)
+                return "***";
+            
+            return value.Substring(0, 4) + new string('*', Math.Min(value.Length - 8, 20)) + value.Substring(value.Length - 4);
         }
     }
 } 

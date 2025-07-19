@@ -1,16 +1,21 @@
 @{
-    ViewData["Title"] = "Gestión Segura de Datos - .NET 9 + Azure Key Vault";
+    ViewData["Title"] = "Testing Completo - Data Protection + Key Vault - .NET 9";
 }
 
-<div class="container-fluid">
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Xsrf
+@{
+    var antiforgeryToken = Xsrf.GetAndStoreTokens(Context).RequestToken;
+}
+
+<div class="container-fluid fade-in">
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-gradient bg-primary text-white">
+            <div class="card shadow-lg border-0 data-protection-card">
+                <div class="card-header bg-gradient text-white">
                     <h3 class="card-title mb-0">
-                        <i class="fas fa-shield-alt"></i> Gestión Segura de Datos (.NET 9)
+                        <i class="fas fa-clipboard-check"></i> Testing Completo - Data Protection + Key Vault (.NET 9)
                     </h3>
-                    <small>Data Protection API + Azure Key Vault Integration</small>
+                    <small>Laboratorio 3: Testing End-to-End y Verificación Completa</small>
                 </div>
                 <div class="card-body">
                     <!-- Status Panel -->
@@ -28,52 +33,160 @@
                         </div>
                     </div>
 
-                    <!-- Data Protection Testing -->
+                    <!-- Storage Selection Panel -->
                     <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h5><i class="fas fa-database"></i> Configuración de Almacenamiento</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="d-flex align-items-center">
+                                                <span class="me-3">
+                                                    <i class="fas fa-folder text-warning"></i>
+                                                    <strong>Local</strong>
+                                                </span>
+                                                
+                                                <!-- Toggle Switch -->
+                                                <div class="storage-switch-container me-3">
+                                                    <input type="checkbox" id="storageToggle" class="storage-switch" checked>
+                                                    <label for="storageToggle" class="storage-switch-label">
+                                                        <span class="storage-switch-inner"></span>
+                                                        <span class="storage-switch-switch"></span>
+                                                    </label>
+                                                </div>
+                                                
+                                                <span>
+                                                    <i class="fas fa-cloud text-primary"></i>
+                                                    <strong>Azure Storage + Key Vault</strong>
+                                                </span>
+                                            </div>
+                                            <div class="mt-2">
+                                                <small id="storageDescription" class="text-muted">
+                                                    Usando Azure Blob Storage + Key Vault para testing completo
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <div class="d-flex align-items-center justify-content-end">
+                                                <button onclick="checkKeyVaultStatus()" class="btn btn-sm btn-outline-info me-2" title="Verificar estado completo">
+                                                    <i class="fas fa-search"></i> Verificar Todo
+                                                </button>
+                                                <div id="storageStatus" class="badge bg-success">
+                                                    <i class="fas fa-check-circle"></i> Sistema Completo Activo
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content Row -->
+                    <div class="row">
+                        <!-- Data Protection Testing -->
                         <div class="col-lg-6">
-                            <div class="card border-success">
+                            <div class="card border-success h-100">
                                 <div class="card-header bg-success text-white">
                                     <h5><i class="fas fa-lock"></i> Data Protection API Testing</h5>
                                 </div>
                                 <div class="card-body">
                                     <form id="dataProtectionForm">
                                         <div class="mb-3">
-                                            <label for="inputData" class="form-label">Datos a Proteger:</label>
-                                            <textarea class="form-control" id="inputData" rows="3" 
-                                                placeholder="Ingrese datos sensibles para proteger..."></textarea>
+                                            <label for="inputData" class="form-label">
+                                                <i class="fas fa-key"></i> Datos a Proteger:
+                                            </label>
+                                            <textarea class="form-control" id="inputData" rows="4" 
+                                                placeholder="Ingrese datos sensibles para testing completo..."></textarea>
                                         </div>
                                         <div class="mb-3">
-                                            <label for="purpose" class="form-label">Propósito de Protección:</label>
+                                            <label for="purpose" class="form-label">
+                                                <i class="fas fa-tag"></i> Propósito de Protección:
+                                            </label>
                                             <select class="form-select" id="purpose">
                                                 <option value="UserData.Personal.v1">Información Personal</option>
                                                 <option value="UserData.Financial.v1">Datos Financieros</option>
                                                 <option value="UserData.Medical.v1">Información Médica</option>
-                                                <option value="UserData.Custom.v1">Propósito Personalizado</option>
+                                                <option value="UserData.Testing.v1">Testing Completo</option>
                                             </select>
                                         </div>
                                         <div class="d-grid gap-2 d-md-flex">
-                                            <button type="button" class="btn btn-success" onclick="protectData()">
-                                                <i class="fas fa-shield-alt"></i> Proteger Datos
+                                            <button type="button" class="btn btn-success" onclick="testProtection()">
+                                                <i class="fas fa-shield-alt"></i> Probar Protección
                                             </button>
-                                            <button type="button" class="btn btn-warning" onclick="unprotectData()">
-                                                <i class="fas fa-unlock"></i> Desproteger Datos
+                                            <button type="button" class="btn btn-info" onclick="runDiagnostics()">
+                                                <i class="fas fa-stethoscope"></i> Diagnóstico
                                             </button>
-                                            <button type="button" class="btn btn-secondary" onclick="clearDataProtection()">
+                                            <button type="button" class="btn btn-secondary" onclick="clearForm()">
                                                 <i class="fas fa-eraser"></i> Limpiar
                                             </button>
                                         </div>
                                     </form>
 
+                                    <!-- Cross-Purpose Testing -->
+                                    <div class="mt-4">
+                                        <h6><i class="fas fa-exchange-alt"></i> Testing Cross-Purpose</h6>
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <select class="form-select form-select-sm" id="crossPurpose">
+                                                    <option value="UserData.Personal.v1">Personal</option>
+                                                    <option value="UserData.Financial.v1">Financial</option>
+                                                    <option value="UserData.Medical.v1">Medical</option>
+                                                    <option value="UserData.Testing.v1">Testing</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button type="button" class="btn btn-warning btn-sm" onclick="testCrossDecryption()">
+                                                    <i class="fas fa-question-circle"></i> Test Cross
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Prueba que los datos protegidos con un propósito no se pueden desproteger con otro</small>
+                                    </div>
+
+                                    <!-- Results -->
                                     <div class="mt-4">
                                         <div class="mb-3">
-                                            <label class="form-label">Datos Protegidos:</label>
-                                            <textarea class="form-control" id="protectedData" rows="4" readonly 
+                                            <label class="form-label">
+                                                <i class="fas fa-file-text"></i> Datos Originales:
+                                            </label>
+                                            <textarea class="form-control" id="originalData" rows="2" readonly 
+                                                placeholder="Los datos originales aparecerán aquí..."></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                <i class="fas fa-lock"></i> Datos Protegidos:
+                                            </label>
+                                            <textarea class="form-control" id="protectedData" rows="3" readonly 
                                                 placeholder="Los datos protegidos aparecerán aquí..."></textarea>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Datos Desprotegidos:</label>
-                                            <textarea class="form-control" id="unprotectedData" rows="3" readonly 
+                                            <label class="form-label">
+                                                <i class="fas fa-unlock"></i> Datos Desprotegidos:
+                                            </label>
+                                            <textarea class="form-control" id="unprotectedData" rows="2" readonly 
                                                 placeholder="Los datos desprotegidos aparecerán aquí..."></textarea>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="card bg-light">
+                                                    <div class="card-body text-center">
+                                                        <h6><i class="fas fa-ruler"></i> Tamaño Original</h6>
+                                                        <span id="originalLength" class="badge bg-primary">0 bytes</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="card bg-light">
+                                                    <div class="card-body text-center">
+                                                        <h6><i class="fas fa-shield"></i> Tamaño Protegido</h6>
+                                                        <span id="protectedLength" class="badge bg-success">0 bytes</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -82,9 +195,9 @@
 
                         <!-- Key Vault Management -->
                         <div class="col-lg-6">
-                            <div class="card border-warning">
+                            <div class="card border-warning h-100">
                                 <div class="card-header bg-warning text-dark">
-                                    <h5><i class="fas fa-key"></i> Azure Key Vault Management</h5>
+                                    <h5><i class="fas fa-key"></i> Azure Key Vault Testing</h5>
                                 </div>
                                 <div class="card-body">
                                     <!-- Create Secret -->
@@ -130,17 +243,17 @@
                         </div>
                     </div>
 
-                    <!-- Configuration Test Results -->
-                    <div class="row">
+                    <!-- Test Results -->
+                    <div class="row mt-4">
                         <div class="col-12">
                             <div class="card border-info">
                                 <div class="card-header bg-info text-white">
-                                    <h5><i class="fas fa-cogs"></i> Resultados de Testing y Logs</h5>
+                                    <h5><i class="fas fa-clipboard-list"></i> Logs y Resultados de Testing</h5>
                                 </div>
                                 <div class="card-body">
                                     <div id="testResults">
                                         <div class="alert alert-secondary">
-                                            <i class="fas fa-info-circle"></i> Los resultados de las operaciones aparecerán aquí...
+                                            <i class="fas fa-info-circle"></i> Los resultados de testing end-to-end aparecerán aquí...
                                         </div>
                                     </div>
                                 </div>
@@ -156,15 +269,20 @@
 @section Scripts {
 <script>
     // Variables globales
+    let currentProtectedData = '';
     let systemConfiguration = {};
 
-    // Inicialización al cargar la página
+    // Función de inicialización
     document.addEventListener('DOMContentLoaded', function() {
-        checkSystemConfiguration();
+        console.log('✅ Página Testing Completo cargada correctamente');
+        console.log('✅ Laboratorio 3: Testing End-to-End inicializado');
+        
+        initializeStorageToggle();
+        checkSystemStatus();
     });
 
-    // Verificar configuración del sistema
-    async function checkSystemConfiguration() {
+    // Verificar estado del sistema
+    async function checkSystemStatus() {
         try {
             const response = await fetch('@Url.Action("TestConfiguration", "SecureData")');
             const config = await response.json();
@@ -173,26 +291,10 @@
             const statusDiv = document.getElementById('systemStatus');
             
             let statusHtml = '<div class="row">';
-            statusHtml += `<div class="col-md-3">
-                <strong>Data Protection:</strong> 
-                <span class="badge ${config.dataProtectionConfigured ? 'bg-success' : 'bg-danger'}">
-                    ${config.dataProtectionConfigured ? 'Configurado' : 'No Configurado'}
-                </span>
-            </div>`;
-            statusHtml += `<div class="col-md-3">
-                <strong>Key Vault:</strong> 
-                <span class="badge ${config.keyVaultConfigured ? 'bg-success' : 'bg-danger'}">
-                    ${config.keyVaultConfigured ? 'Conectado' : 'No Conectado'}
-                </span>
-            </div>`;
-            statusHtml += `<div class="col-md-3">
-                <strong>Framework:</strong> 
-                <span class="badge bg-primary">.NET ${config.framework}</span>
-            </div>`;
-            statusHtml += `<div class="col-md-3">
-                <strong>Servidor:</strong> 
-                <span class="badge bg-secondary">${config.environment}</span>
-            </div>`;
+            statusHtml += `<div class="col-md-3"><strong>Data Protection:</strong> <span class="protection-status ${config.dataProtectionConfigured ? 'success' : 'error'}">${config.dataProtectionConfigured ? 'Configurado' : 'No Configurado'}</span></div>`;
+            statusHtml += `<div class="col-md-3"><strong>Key Vault:</strong> <span class="protection-status ${config.keyVaultConfigured ? 'success' : 'error'}">${config.keyVaultConfigured ? 'Configurado' : 'No Configurado'}</span></div>`;
+            statusHtml += `<div class="col-md-3"><strong>Azure Storage:</strong> <span class="protection-status ${config.hasStorageConnection ? 'success' : 'error'}">${config.hasStorageConnection ? 'Conectado' : 'No Conectado'}</span></div>`;
+            statusHtml += `<div class="col-md-3"><strong>Laboratorio:</strong> <span class="badge bg-primary">${config.laboratory || 'Testing'}</span></div>`;
             statusHtml += '</div>';
             
             statusDiv.innerHTML = statusHtml;
@@ -203,14 +305,107 @@
             }
             
         } catch (error) {
-            console.error('Error checking system configuration:', error);
+            console.error('Error checking system status:', error);
             document.getElementById('systemStatus').innerHTML = 
                 '<div class="text-danger"><i class="fas fa-exclamation-triangle"></i> Error verificando configuración</div>';
         }
     }
 
-    // Proteger datos
-    async function protectData() {
+    // Inicializar el toggle de almacenamiento
+    function initializeStorageToggle() {
+        const toggleSwitch = document.getElementById('storageToggle');
+
+        // Event listener para el cambio de toggle
+        toggleSwitch.addEventListener('change', async function() {
+            const useAzureStorage = this.checked;
+            
+            try {
+                showResult('info', 'Cambiando configuración de almacenamiento...');
+                
+                const response = await fetch('@Url.Action("ChangeStorageType", "SecureData")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'RequestVerificationToken': '@antiforgeryToken'
+                    },
+                    body: JSON.stringify({
+                        UseAzureStorage: useAzureStorage
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Actualizar UI
+                    updateStorageUI(result.isAzure, result.storageType, result.description);
+                    
+                    // Mostrar mensaje con instrucciones de reinicio
+                    if (result.requiresRestart) {
+                        showResult('warning', `
+                            ${result.message}<br>
+                            <strong>${result.note}</strong><br>
+                            <small>${result.instruction}</small>
+                        `);
+                        
+                        addTestResult('info', `
+                            <strong>Configuración de Almacenamiento Cambiada</strong><br>
+                            <small>Nuevo tipo: ${result.storageType}</small><br>
+                            <small>⚠️ Requiere reinicio para aplicar cambios</small><br>
+                            <small>Ejecuta: Ctrl+C y luego 'dotnet run'</small><br>
+                            <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                        `);
+                    } else {
+                        showResult('success', result.message);
+                        addTestResult('success', `
+                            <strong>Configuración Actualizada</strong><br>
+                            <small>Almacenamiento: ${result.storageType}</small><br>
+                            <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                        `);
+                    }
+                } else {
+                    throw new Error(result.error || 'Error desconocido');
+                }
+            } catch (error) {
+                console.error('Error changing storage type:', error);
+                // Revertir el toggle
+                this.checked = !useAzureStorage;
+                showResult('error', 'Error al cambiar configuración: ' + error.message);
+                
+                addTestResult('error', `
+                    <strong>Error al Cambiar Configuración</strong><br>
+                    <small>Error: ${error.message}</small><br>
+                    <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                `);
+            }
+        });
+
+        // Inicializar estado
+        updateStorageUI(true, 'Azure Storage + Key Vault', 'Usando Azure Blob Storage + Key Vault para testing completo');
+    }
+
+    // Actualizar la UI del storage
+    function updateStorageUI(isAzure, storageType, description) {
+        const storageStatus = document.getElementById('storageStatus');
+        const storageDescription = document.getElementById('storageDescription');
+
+        if (isAzure) {
+            storageStatus.className = 'badge bg-success';
+            storageStatus.innerHTML = '<i class="fas fa-cloud"></i> Sistema Completo Activo';
+        } else {
+            storageStatus.className = 'badge bg-warning';
+            storageStatus.innerHTML = '<i class="fas fa-folder"></i> Local Storage Activo';
+        }
+
+        storageDescription.textContent = description;
+    }
+
+    // Probar protección de datos
+    async function testProtection() {
         const data = document.getElementById('inputData').value;
         const purpose = document.getElementById('purpose').value;
         
@@ -220,73 +415,108 @@
         }
 
         try {
-            showResult('info', 'Protegiendo datos...');
+            showResult('info', 'Ejecutando test de protección completo...');
             
-            const response = await fetch('@Url.Action("ProtectData", "SecureData")', {
+            const requestData = {
+                Data: data,
+                Purpose: purpose
+            };
+
+            const response = await fetch('@Url.Action("TestProtection", "SecureData")', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
-                body: `data=${encodeURIComponent(data)}&purpose=${encodeURIComponent(purpose)}`
+                body: JSON.stringify(requestData)
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
 
             const result = await response.json();
             
-            if (result.success) {
-                document.getElementById('protectedData').value = result.protectedData;
-                showResult('success', 
-                    `Datos protegidos exitosamente. Tamaño original: ${result.originalLength} bytes, ` +
-                    `Tamaño protegido: ${result.protectedLength} bytes`);
+            if (result && result.success === true) {
+                // Mostrar resultados
+                document.getElementById('originalData').value = result.originalData || '';
+                document.getElementById('protectedData').value = result.protectedData || '';
+                document.getElementById('unprotectedData').value = result.unprotectedData || '';
+                document.getElementById('originalLength').textContent = (result.originalLength || 0) + ' bytes';
+                document.getElementById('protectedLength').textContent = (result.protectedLength || 0) + ' bytes';
+                
+                currentProtectedData = result.protectedData || '';
+                
+                showResult('success', 'Test de protección completado exitosamente');
+                
+                addTestResult('success', `
+                    <strong>✅ Test de Protección Exitoso</strong><br>
+                    <small>Propósito: ${purpose}</small><br>
+                    <small>Datos originales: ${result.originalLength || 0} bytes</small><br>
+                    <small>Datos protegidos: ${result.protectedLength || 0} bytes</small><br>
+                    <small>Tiempo: ${result.testTime || 'N/A'}</small>
+                `);
             } else {
-                showResult('error', `Error: ${result.error}`);
+                const errorMsg = result?.error || 'Error desconocido en el servidor';
+                showResult('error', 'Error: ' + errorMsg);
+                addTestResult('error', `<strong>❌ Error en Test de Protección</strong><br><small>${errorMsg}</small>`);
             }
         } catch (error) {
-            console.error('Error protecting data:', error);
-            showResult('error', 'Error al proteger datos: ' + error.message);
+            console.error('Error completo:', error);
+            const errorMsg = error.message || 'Error desconocido';
+            showResult('error', 'Error de conexión: ' + errorMsg);
+            addTestResult('error', `<strong>❌ Error de Conexión</strong><br><small>${errorMsg}</small>`);
         }
     }
 
-    // Desproteger datos
-    async function unprotectData() {
-        const protectedData = document.getElementById('protectedData').value;
-        const purpose = document.getElementById('purpose').value;
-        
-        if (!protectedData.trim()) {
-            showResult('error', 'No hay datos protegidos para desproteger');
+    // Test cross-purpose decryption
+    async function testCrossDecryption() {
+        if (!currentProtectedData) {
+            showResult('error', 'Primero debes proteger algunos datos');
             return;
         }
 
+        const crossPurpose = document.getElementById('crossPurpose').value;
+        
         try {
-            showResult('info', 'Desprotegiendo datos...');
+            showResult('info', 'Testing cross-purpose decryption...');
             
-            const response = await fetch('@Url.Action("UnprotectData", "SecureData")', {
+            const response = await fetch('@Url.Action("TestCrossDecryption", "SecureData")', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
-                body: `protectedData=${encodeURIComponent(protectedData)}&purpose=${encodeURIComponent(purpose)}`
+                body: JSON.stringify({
+                    ProtectedData: currentProtectedData,
+                    Purpose: crossPurpose
+                })
             });
 
             const result = await response.json();
             
             if (result.success) {
-                document.getElementById('unprotectedData').value = result.unprotectedData;
-                showResult('success', 'Datos desprotegidos exitosamente');
+                showResult('warning', `⚠️ ADVERTENCIA: Los datos se pudieron desproteger con propósito diferente. Esto es inesperado.`);
+                addTestResult('warning', `
+                    <strong>⚠️ Cross-Purpose Test</strong><br>
+                    <small>ADVERTENCIA: Desprotección exitosa con propósito diferente</small><br>
+                    <small>Propósito: ${crossPurpose}</small><br>
+                    <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                `);
             } else {
-                showResult('error', `Error: ${result.error}`);
+                showResult('success', `✅ CORRECTO: Los datos están protegidos contra cross-purpose access`);
+                addTestResult('success', `
+                    <strong>✅ Cross-Purpose Protection Verified</strong><br>
+                    <small>Los datos NO se pueden desproteger con propósito diferente</small><br>
+                    <small>Propósito probado: ${crossPurpose}</small><br>
+                    <small>Error esperado: ${result.error}</small><br>
+                    <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                `);
             }
         } catch (error) {
-            console.error('Error unprotecting data:', error);
-            showResult('error', 'Error al desproteger datos: ' + error.message);
+            console.error('Error in cross-purpose test:', error);
+            showResult('error', 'Error en test cross-purpose: ' + error.message);
         }
-    }
-
-    // Limpiar formulario de Data Protection
-    function clearDataProtection() {
-        document.getElementById('inputData').value = '';
-        document.getElementById('protectedData').value = '';
-        document.getElementById('unprotectedData').value = '';
-        showResult('info', 'Formulario limpiado');
     }
 
     // Cargar secrets de Key Vault
@@ -350,9 +580,13 @@
             const response = await fetch('@Url.Action("CreateSecret", "SecureData")', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
-                body: `secretName=${encodeURIComponent(name)}&secretValue=${encodeURIComponent(value)}`
+                body: JSON.stringify({
+                    SecretName: name,
+                    SecretValue: value
+                })
             });
 
             const result = await response.json();
@@ -373,50 +607,171 @@
         }
     }
 
-    // Mostrar resultados
+    // Verificar estado de Key Vault
+    async function checkKeyVaultStatus() {
+        try {
+            showResult('info', 'Verificando estado completo del sistema...');
+            
+            const response = await fetch('@Url.Action("CheckKeyVaultStatus", "SecureData")');
+            const result = await response.json();
+            
+            if (result.success) {
+                showResult('success', result.message);
+                addTestResult('info', `
+                    <strong>✅ Verificación Sistema Completo</strong><br>
+                    <small>Info: ${result.info}</small><br>
+                    <small>Secrets: ${result.secretCount}</small><br>
+                    <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                `);
+            } else {
+                showResult('error', `Error: ${result.error}`);
+                addTestResult('error', `
+                    <strong>❌ Sistema No Completamente Disponible</strong><br>
+                    <small>Error: ${result.error}</small><br>
+                    <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                `);
+            }
+        } catch (error) {
+            console.error('Error checking system:', error);
+            showResult('error', 'Error verificando sistema: ' + error.message);
+        }
+    }
+
+    // Limpiar formulario
+    function clearForm() {
+        document.getElementById('inputData').value = '';
+        document.getElementById('originalData').value = '';
+        document.getElementById('protectedData').value = '';
+        document.getElementById('unprotectedData').value = '';
+        document.getElementById('originalLength').textContent = '0 bytes';
+        document.getElementById('protectedLength').textContent = '0 bytes';
+        currentProtectedData = '';
+        
+        showResult('info', 'Formulario limpiado');
+    }
+
+    // Función de diagnóstico completo
+    async function runDiagnostics() {
+        try {
+            showResult('info', 'Ejecutando diagnóstico completo del sistema...');
+            
+            const response = await fetch('@Url.Action("Diagnostics", "SecureData")');
+            const result = await response.json();
+            
+            if (result.success) {
+                let diagnosticHtml = '<div class="diagnostic-results">';
+                diagnosticHtml += '<h6><i class="fas fa-check-circle text-success"></i> Diagnóstico Completo del Sistema</h6>';
+                diagnosticHtml += `<p><strong>Estado:</strong> <span class="text-success">Funcionando correctamente</span></p>`;
+                diagnosticHtml += `<p><strong>Aplicación:</strong> ${result.applicationName}</p>`;
+                diagnosticHtml += `<p><strong>Laboratorio:</strong> ${result.laboratory}</p>`;
+                diagnosticHtml += `<p><strong>Azure Storage:</strong> ${result.hasStorageConnection ? 'Configurado' : 'No configurado'}</p>`;
+                diagnosticHtml += `<p><strong>Key Vault:</strong> ${result.hasKeyVault ? 'Configurado' : 'No configurado'}</p>`;
+                diagnosticHtml += `<p><strong>Data Protection:</strong> ${result.dataProtectionConfigured ? 'Activo' : 'Inactivo'}</p>`;
+                diagnosticHtml += `<p><strong>Puerto:</strong> ${result.port}</p>`;
+                diagnosticHtml += '</div>';
+                
+                showResult('success', diagnosticHtml);
+                
+                // Test de protección simple
+                await testSimpleProtection();
+                
+            } else {
+                showResult('error', `Error en diagnóstico: ${result.error}`);
+            }
+            
+        } catch (error) {
+            console.error('Error en diagnóstico:', error);
+            showResult('error', `Error ejecutando diagnóstico: ${error.message}`);
+        }
+    }
+    
+    // Test simple de protección
+    async function testSimpleProtection() {
+        try {
+            const testData = {
+                Data: "Test de diagnóstico completo - " + new Date().getTime(),
+                Purpose: "UserData.Testing.v1"
+            };
+            
+            const response = await fetch('@Url.Action("TestProtection", "SecureData")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(testData)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                addTestResult('success', `
+                    <strong>✅ Test de Protección Automático Exitoso</strong><br>
+                    <small>Datos protegidos y verificados correctamente</small><br>
+                    <small>Original: ${result.originalLength} bytes</small><br>
+                    <small>Protegido: ${result.protectedLength} bytes</small><br>
+                    <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+                `);
+                
+                showResult('success', '✅ Diagnóstico completo: Sistema funcionando perfectamente');
+            } else {
+                throw new Error(result.error || 'Error desconocido en protección');
+            }
+            
+        } catch (error) {
+            console.error('Error en test de protección automático:', error);
+            addTestResult('error', `
+                <strong>❌ Error en Test de Protección Automático</strong><br>
+                <small>Error: ${error.message}</small><br>
+                <small>Tiempo: ${new Date().toLocaleTimeString()}</small>
+            `);
+            throw error;
+        }
+    }
+
+    // Mostrar resultado
     function showResult(type, message) {
         const resultsDiv = document.getElementById('testResults');
-        const timestamp = new Date().toLocaleTimeString();
+        const alertClass = type === 'success' ? 'alert-success' : 
+                          type === 'error' ? 'alert-danger' : 
+                          type === 'warning' ? 'alert-warning' : 'alert-info';
         
-        let alertClass = 'alert-secondary';
-        let icon = 'fas fa-info-circle';
-        
-        switch (type) {
-            case 'success':
-                alertClass = 'alert-success';
-                icon = 'fas fa-check-circle';
-                break;
-            case 'error':
-                alertClass = 'alert-danger';
-                icon = 'fas fa-exclamation-triangle';
-                break;
-            case 'warning':
-                alertClass = 'alert-warning';
-                icon = 'fas fa-exclamation-circle';
-                break;
-            case 'info':
-                alertClass = 'alert-info';
-                icon = 'fas fa-info-circle';
-                break;
-        }
-        
-        const newAlert = `
+        const alertHtml = `
             <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                <i class="${icon}"></i>
-                <strong>[${timestamp}]</strong> ${message}
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                   type === 'error' ? 'exclamation-triangle' : 
+                                   type === 'warning' ? 'exclamation-circle' : 'info-circle'}"></i>
+                ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
         
-        resultsDiv.innerHTML = newAlert + resultsDiv.innerHTML;
+        resultsDiv.innerHTML = alertHtml + resultsDiv.innerHTML;
+    }
+
+    // Agregar resultado de test
+    function addTestResult(type, content) {
+        const resultsDiv = document.getElementById('testResults');
+        const resultClass = type === 'success' ? 'test-result success' : 
+                           type === 'warning' ? 'test-result warning' :
+                           type === 'info' ? 'test-result info' : 'test-result error';
         
-        // Limitar a los últimos 5 resultados
-        const alerts = resultsDiv.querySelectorAll('.alert');
-        if (alerts.length > 5) {
-            for (let i = 5; i < alerts.length; i++) {
-                alerts[i].remove();
-            }
-        }
+        const resultHtml = `
+            <div class="${resultClass}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        ${content}
+                    </div>
+                    <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+                </div>
+            </div>
+        `;
+        
+        resultsDiv.innerHTML = resultHtml + resultsDiv.innerHTML;
     }
 
     // Copiar al portapapeles
@@ -428,4 +783,94 @@
         });
     }
 </script>
-} 
+}
+
+<style>
+/* Storage Switch Styles - Mismos estilos exitosos del Lab01 */
+.storage-switch-container {
+    position: relative;
+    display: inline-block;
+}
+
+.storage-switch {
+    display: none;
+}
+
+.storage-switch-label {
+    width: 60px;
+    height: 28px;
+    background: #ddd;
+    border-radius: 28px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: block;
+}
+
+.storage-switch-label:before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.storage-switch:checked + .storage-switch-label {
+    background: #007bff;
+}
+
+.storage-switch:checked + .storage-switch-label:before {
+    transform: translateX(32px);
+}
+
+.data-protection-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.protection-status.success {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.protection-status.error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.test-result {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    border-left: 4px solid #007bff;
+    background: #f8f9fa;
+}
+
+.test-result.success {
+    border-left-color: #28a745;
+    background: #d4edda;
+}
+
+.test-result.error {
+    border-left-color: #dc3545;
+    background: #f8d7da;
+}
+
+.test-result.warning {
+    border-left-color: #ffc107;
+    background: #fff3cd;
+}
+
+.test-result.info {
+    border-left-color: #17a2b8;
+    background: #d1ecf1;
+}
+
+.fade-in {
+    animation: none; /* Removido temporalmente para evitar error */
+}
+</style> 

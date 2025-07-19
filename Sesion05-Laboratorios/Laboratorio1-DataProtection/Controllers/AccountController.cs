@@ -22,7 +22,7 @@ namespace DevSeguroWebApp.Controllers
 
         [HttpGet]
         [Authorize]
-        public IActionResult SignOut()
+        public new IActionResult SignOut()
         {
             return SignOut(
                 new AuthenticationProperties 
