@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "WNTGbzQwVAU=",
+  "success": true,
+  "projectFilePath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\Proyecto\\SecureApp\\SecureApp.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Jhonny R\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.5\\microsoft.aspnetcore.openapi.9.0.5.nupkg.sha512",
+    "C:\\Users\\Jhonny R\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}

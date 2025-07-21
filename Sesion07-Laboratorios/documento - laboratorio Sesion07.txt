@@ -1,0 +1,1046 @@
+Laboratorio Práctico - Sesión 7: Network Security Groups y DDoS Protection
+Curso: Diseño Seguro de Aplicaciones (.NET en Azure)
+Duración Total: 90 minutos (4 laboratorios)
+Modalidad: Instructor-led con práctica individual
+Herramientas: Visual Studio Code + .NET Core 9 + C# + Azure Portal
+________________________________________
+🛠️ LABORATORIO 0: VERIFICACIÓN Y CONFIGURACIÓN DEL ENTORNO
+⏱️ Duración: 15 minutos
+🎯 Objetivo: Preparar entorno completo para laboratorios de Network Security Groups y DDoS Protection
+Paso 1: Instalación de Chocolatey (si no está instalado) (3 minutos)
+Para usuarios Windows 10/11:
+1.	Abrir PowerShell como Administrador:
+o	Click derecho en el botón de Windows
+o	Seleccionar "Windows PowerShell (Admin)" o "Terminal (Admin)"
+2.	Verificar si Chocolatey está instalado:
+3.	choco --version
+4.	Si NO está instalado, ejecutar:
+5.	# Cambiar política de ejecución temporalmente
+6.	Set-ExecutionPolicy Bypass -Scope Process -Force
+7.	
+8.	# Instalar Chocolatey
+9.	[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+10.	iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+11.	Verificar instalación:
+12.	choco --version
+13.	# Debe mostrar versión de Chocolatey
+Paso 2: Instalación de .NET Core 9 y Herramientas (5 minutos)
+Instalar .NET Core 9 SDK:
+# Instalar .NET Core 9 SDK (última versión)
+choco install dotnet-9.0-sdk -y
+
+# Instalar Azure CLI
+choco install azure-cli -y
+
+# Instalar Git (si no está instalado)
+choco install git -y
+
+# Refrescar variables de entorno
+refreshenv
+Verificar instalaciones:
+# Verificar .NET Core 9
+dotnet --version
+# Debe mostrar: 9.0.x
+
+# Verificar Azure CLI
+az --version
+
+# Verificar Git
+git --version
+Paso 3: Configuración de Visual Studio Code (4 minutos)
+Instalar VS Code (si no está instalado):
+choco install vscode -y
+Extensiones requeridas para VS Code:
+1.	Abrir VS Code y instalar extensiones: 
+o	Presionar Ctrl + Shift + X para abrir extensiones
+o	Buscar e instalar las siguientes extensiones:
+o	C# Dev Kit (Microsoft) - ID: ms-dotnettools.csdevkit
+o	Azure Account (Microsoft) - ID: ms-vscode.azure-account
+o	Azure Resources (Microsoft) - ID: ms-azuretools.vscode-azureresourcegroups
+o	Azure CLI Tools (Microsoft) - ID: ms-vscode.azurecli
+o	REST Client (Huachao Mao) - ID: humao.rest-client
+Comando alternativo para instalar extensiones:
+# Desde línea de comandos
+code --install-extension ms-dotnettools.csdevkit
+code --install-extension ms-vscode.azure-account
+code --install-extension ms-azuretools.vscode-azureresourcegroups
+code --install-extension ms-vscode.azurecli
+code --install-extension humao.rest-client
+Paso 4: Verificación de Acceso Azure (3 minutos)
+Autenticación con Azure:
+# Login a Azure
+az login
+
+# Verificar suscripciones disponibles
+az account list --output table
+
+# Verificar grupo de usuarios
+az ad group member list --group "gu_desarrollo_seguro_aplicacion" --output table
+Verificar permisos en Azure Portal:
+1.	Navegar a: https://portal.azure.com
+2.	Verificar acceso como usuario invitado
+3.	Confirmar permisos para crear recursos de red
+________________________________________
+🧪 LABORATORIO 1: IMPLEMENTACIÓN DE NETWORK SECURITY GROUPS AVANZADOS
+⏱️ Duración: 25 minutos
+🎯 Objetivo: Crear y configurar NSGs con reglas granulares para diferentes tipos de aplicaciones
+Prerequisitos: Verificar Infraestructura Base
+Si NO completaron los laboratorios de infraestructura de sesiones anteriores, ejecutar:
+# Crear resource group base
+az group create \
+  --name rg-nsg-lab-[SuNombre] \
+  --location eastus \
+  --tags Environment=Development Project=NSGLab
+
+# Crear VNET básica para el laboratorio
+az network vnet create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name vnet-nsg-lab \
+  --address-prefix 10.2.0.0/16 \
+  --subnet-name snet-web \
+  --subnet-prefix 10.2.1.0/24
+
+# Agregar subredes adicionales
+az network vnet subnet create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --vnet-name vnet-nsg-lab \
+  --name snet-app \
+  --address-prefix 10.2.2.0/24
+
+az network vnet subnet create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --vnet-name vnet-nsg-lab \
+  --name snet-data \
+  --address-prefix 10.2.3.0/24
+Paso 1: Crear NSG para Web Tier (8 minutos)
+Crear NSG-Web con reglas avanzadas:
+1.	Azure Portal → Network security groups → + Create:
+o	Subscription: [Su suscripción]
+o	Resource group: rg-nsg-lab-[SuNombre]
+o	Name: nsg-web-advanced-[sunombre]
+o	Region: East US
+2.	Configurar reglas de seguridad avanzadas:
+Regla 1 - Permitir HTTPS desde ubicaciones específicas:
+Name: Allow-HTTPS-Geographic
+Priority: 100
+Source: Service Tag - Internet
+Source port ranges: *
+Destination: Any
+Destination port ranges: 443
+Protocol: TCP
+Action: Allow
+Regla 2 - Permitir HTTP con rate limiting (simulado):
+Name: Allow-HTTP-Limited
+Priority: 110
+Source: Service Tag - Internet
+Source port ranges: *
+Destination: Any
+Destination port ranges: 80
+Protocol: TCP
+Action: Allow
+Regla 3 - Bloquear países específicos (simulación):
+Name: Deny-Suspicious-Regions
+Priority: 200
+Source: [IP ranges específicos - ejemplo: 1.2.3.0/24]
+Source port ranges: *
+Destination: Any
+Destination port ranges: *
+Protocol: Any
+Action: Deny
+Regla 4 - Permitir health checks:
+Name: Allow-HealthChecks
+Priority: 300
+Source: AzureLoadBalancer
+Source port ranges: *
+Destination: Any
+Destination port ranges: 80,443
+Protocol: TCP
+Action: Allow
+Con Azure CLI:
+# Crear NSG
+az network nsg create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name nsg-web-advanced-[sunombre] \
+  --location eastus
+
+# Agregar reglas
+az network nsg rule create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --nsg-name nsg-web-advanced-[sunombre] \
+  --name Allow-HTTPS-Geographic \
+  --priority 100 \
+  --source-address-prefixes Internet \
+  --destination-port-ranges 443 \
+  --access Allow \
+  --protocol Tcp
+
+az network nsg rule create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --nsg-name nsg-web-advanced-[sunombre] \
+  --name Allow-HTTP-Limited \
+  --priority 110 \
+  --source-address-prefixes Internet \
+  --destination-port-ranges 80 \
+  --access Allow \
+  --protocol Tcp
+
+az network nsg rule create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --nsg-name nsg-web-advanced-[sunombre] \
+  --name Allow-HealthChecks \
+  --priority 300 \
+  --source-address-prefixes AzureLoadBalancer \
+  --destination-port-ranges 80 443 \
+  --access Allow \
+  --protocol Tcp
+Paso 2: Implementar Application Security Groups (ASGs) (10 minutos)
+Crear ASGs para organización lógica:
+1.	Crear ASG para Web Servers:
+az network asg create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name asg-webservers \
+  --location eastus
+2.	Crear ASG para App Servers:
+az network asg create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name asg-appservers \
+  --location eastus
+3.	Crear ASG para Database Servers:
+az network asg create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name asg-dbservers \
+  --location eastus
+4.	Crear NSG con reglas basadas en ASGs:
+# Crear NSG para aplicaciones
+az network nsg create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name nsg-app-asg \
+  --location eastus
+
+# Regla: Web servers pueden acceder a App servers
+az network nsg rule create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --nsg-name nsg-app-asg \
+  --name Allow-Web-to-App \
+  --priority 100 \
+  --source-asgs asg-webservers \
+  --destination-asgs asg-appservers \
+  --destination-port-ranges 80 443 8080 \
+  --access Allow \
+  --protocol Tcp
+
+# Regla: App servers pueden acceder a DB servers
+az network nsg rule create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --nsg-name nsg-app-asg \
+  --name Allow-App-to-DB \
+  --priority 110 \
+  --source-asgs asg-appservers \
+  --destination-asgs asg-dbservers \
+  --destination-port-ranges 1433 3306 5432 \
+  --access Allow \
+  --protocol Tcp
+
+# Regla: Denegar acceso directo Web a DB
+az network nsg rule create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --nsg-name nsg-app-asg \
+  --name Deny-Web-to-DB \
+  --priority 200 \
+  --source-asgs asg-webservers \
+  --destination-asgs asg-dbservers \
+  --destination-port-ranges '*' \
+  --access Deny \
+  --protocol '*'
+Paso 3: Configurar NSG Flow Logs (7 minutos)
+Habilitar Flow Logs para visibilidad:
+1.	Crear Storage Account para logs:
+az storage account create \
+  --name stflowlogs[sunombre] \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --location eastus \
+  --sku Standard_LRS \
+  --kind StorageV2
+2.	Registrar Network Watcher (si no está registrado):
+az provider register --namespace Microsoft.Network
+3.	Configurar Flow Logs:
+# Obtener el ID del NSG
+NSG_ID=$(az network nsg show \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name nsg-web-advanced-[sunombre] \
+  --query id --output tsv)
+
+# Obtener el ID del Storage Account
+STORAGE_ID=$(az storage account show \
+  --name stflowlogs[sunombre] \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --query id --output tsv)
+
+# Configurar Flow Logs
+az network watcher flow-log create \
+  --resource-group NetworkWatcherRG \
+  --name flowlog-nsg-web \
+  --nsg $NSG_ID \
+  --storage-account $STORAGE_ID \
+  --enabled \
+  --retention 7 \
+  --format JSON \
+  --log-version 2
+En Azure Portal (alternativo):
+1.	Network Watcher → NSG flow logs → + Create
+2.	Target resource: nsg-web-advanced-[sunombre]
+3.	Storage account: stflowlogs[sunombre]
+4.	Retention: 7 days
+5.	Flow logs version: Version 2
+________________________________________
+🧪 LABORATORIO 2: IMPLEMENTACIÓN DE AZURE DDOS PROTECTION
+⏱️ Duración: 20 minutos
+🎯 Objetivo: Configurar Azure DDoS Protection Standard y entender las métricas de protección
+Paso 1: Crear Recursos de Testing (5 minutos)
+Crear recursos que serán protegidos:
+1.	Crear Public IP para testing:
+az network public-ip create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name pip-ddos-test \
+  --allocation-method Static \
+  --sku Standard \
+  --location eastus
+2.	Crear Application Gateway básico:
+# Crear subnet para Application Gateway
+az network vnet subnet create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --vnet-name vnet-nsg-lab \
+  --name snet-appgw \
+  --address-prefix 10.2.4.0/24
+
+# Crear Application Gateway
+az network application-gateway create \
+  --name appgw-ddos-test \
+  --location eastus \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --vnet-name vnet-nsg-lab \
+  --subnet snet-appgw \
+  --capacity 2 \
+  --sku Standard_v2 \
+  --http-settings-cookie-based-affinity Disabled \
+  --frontend-port 80 \
+  --http-settings-port 80 \
+  --http-settings-protocol Http \
+  --public-ip-address pip-ddos-test
+Paso 2: Configurar DDoS Protection Standard (8 minutos)
+⚠️ Nota Importante: DDoS Protection Standard tiene costo (~$2,944/mes). Para el laboratorio, configuraremos la protección pero pueden deshabilitarla al final.
+1.	Crear DDoS Protection Plan:
+az network ddos-protection create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name ddos-plan-lab \
+  --location eastus
+2.	Asociar DDoS Protection con VNET:
+# Obtener el ID del DDoS Protection Plan
+DDOS_PLAN_ID=$(az network ddos-protection show \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name ddos-plan-lab \
+  --query id --output tsv)
+
+# Habilitar DDoS Protection en la VNET
+az network vnet update \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name vnet-nsg-lab \
+  --ddos-protection true \
+  --ddos-protection-plan $DDOS_PLAN_ID
+En Azure Portal (alternativo):
+1.	Virtual networks → vnet-nsg-lab → DDoS protection
+2.	Enable DDoS Protection Standard
+3.	DDoS protection plan → Create new → ddos-plan-lab
+4.	Save
+Paso 3: Configurar Monitoreo de DDoS (7 minutos)
+Configurar métricas y alertas:
+1.	Crear Action Group para alertas:
+az monitor action-group create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name ag-ddos-alerts \
+  --short-name ddosalert \
+  --email-receiver name=admin email=[su-email@ejemplo.com]
+2.	Crear alerta para DDoS Attack:
+# Obtener el ID del Public IP
+PIP_ID=$(az network public-ip show \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name pip-ddos-test \
+  --query id --output tsv)
+
+# Crear alerta de DDoS
+az monitor metrics alert create \
+  --name alert-ddos-attack \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --scopes $PIP_ID \
+  --condition "max 'UnderDDoSAttack' > 0" \
+  --description "Alert when under DDoS attack" \
+  --evaluation-frequency PT1M \
+  --window-size PT5M \
+  --severity 1 \
+  --action ag-ddos-alerts
+3.	Crear dashboard de monitoreo:
+En Azure Portal:
+1.	Dashboard → + New dashboard → Blank dashboard
+2.	Name: "DDoS Protection Monitoring"
+3.	Add tile → Metrics
+4.	Resource: pip-ddos-test
+5.	Metrics: 
+o	Under DDoS attack
+o	Inbound packets dropped DDoS
+o	Inbound bytes dropped DDoS
+o	Max attack vector
+________________________________________
+🧪 LABORATORIO 3: TESTING Y SIMULACIÓN DE CONECTIVIDAD
+⏱️ Duración: 20 minutos
+🎯 Objetivo: Usar Azure Network Watcher para testing de conectividad y análisis de tráfico
+Paso 1: Configurar Network Watcher (5 minutos)
+Verificar y configurar Network Watcher:
+1.	Verificar que Network Watcher esté habilitado:
+# Listar Network Watchers disponibles
+az network watcher list --output table
+
+# Si no existe, crear uno
+az network watcher configure \
+  --resource-group NetworkWatcherRG \
+  --location eastus \
+  --enabled true
+2.	Crear VMs de testing (opcional para testing completo):
+# VM en subnet web
+az vm create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name vm-web-test \
+  --image Ubuntu2204 \
+  --vnet-name vnet-nsg-lab \
+  --subnet snet-web \
+  --public-ip-address "" \
+  --size Standard_B1s \
+  --admin-username azureuser \
+  --generate-ssh-keys \
+  --nsg ""
+
+# VM en subnet app
+az vm create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name vm-app-test \
+  --image Ubuntu2204 \
+  --vnet-name vnet-nsg-lab \
+  --subnet snet-app \
+  --public-ip-address "" \
+  --size Standard_B1s \
+  --admin-username azureuser \
+  --generate-ssh-keys \
+  --nsg ""
+Paso 2: Testing de IP Flow Verify (7 minutos)
+Verificar reglas NSG con Network Watcher:
+1.	Test 1 - Tráfico HTTPS permitido:
+az network watcher test-ip-flow \
+  --vm vm-web-test \
+  --direction Inbound \
+  --local 10.2.1.4:443 \
+  --remote 203.0.113.1:12345 \
+  --protocol TCP \
+  --resource-group rg-nsg-lab-[SuNombre]
+2.	Test 2 - Tráfico SSH bloqueado:
+az network watcher test-ip-flow \
+  --vm vm-web-test \
+  --direction Inbound \
+  --local 10.2.1.4:22 \
+  --remote 203.0.113.1:54321 \
+  --protocol TCP \
+  --resource-group rg-nsg-lab-[SuNombre]
+3.	Test 3 - Conectividad entre subredes:
+az network watcher test-connectivity \
+  --source-resource vm-web-test \
+  --dest-address 10.2.2.4 \
+  --dest-port 8080 \
+  --resource-group rg-nsg-lab-[SuNombre]
+En Azure Portal:
+1.	Network Watcher → IP flow verify
+2.	Virtual machine: vm-web-test
+3.	Network interface: [auto-populated]
+4.	Direction: Inbound
+5.	Protocol: TCP
+6.	Local IP address: 10.2.1.4
+7.	Local port: 443
+8.	Remote IP address: 8.8.8.8
+9.	Remote port: 12345
+10.	Click "Check"
+Paso 3: Análisis de Effective Security Rules (8 minutos)
+Analizar reglas NSG efectivas:
+1.	Ver reglas efectivas de una VM:
+# Obtener la NIC de la VM
+NIC_ID=$(az vm show \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name vm-web-test \
+  --query 'networkProfile.networkInterfaces[0].id' \
+  --output tsv)
+
+# Ver reglas de seguridad efectivas
+az network nic list-effective-nsg \
+  --ids $NIC_ID \
+  --output table
+2.	Generar topología de red:
+az network watcher show-topology \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --output json > network-topology.json
+3.	Crear proyecto .NET Core para análisis de logs:
+# Crear directorio de proyecto
+mkdir nsg-analyzer
+cd nsg-analyzer
+
+# Crear proyecto .NET Core
+dotnet new console
+dotnet add package Azure.Storage.Blobs
+dotnet add package Newtonsoft.Json
+4.	Código C# para analizar Flow Logs:
+// Program.cs
+using Azure.Storage.Blobs;
+using Newtonsoft.Json;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+
+namespace NSGAnalyzer
+{
+    class Program
+    {
+        static async Task Main(string[] args)
+        {
+            Console.WriteLine("NSG Flow Log Analyzer iniciado...");
+            
+            // Configuración de Storage Account
+            string connectionString = "DefaultEndpointsProtocol=https;AccountName=stflowlogs[sunombre];AccountKey=[your-key];EndpointSuffix=core.windows.net";
+            string containerName = "insights-logs-networksecuritygroupflowevent";
+            
+            var blobServiceClient = new BlobServiceClient(connectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+            
+            Console.WriteLine("Analizando logs de Flow...");
+            
+            await foreach (var blobItem in containerClient.GetBlobsAsync())
+            {
+                Console.WriteLine($"Archivo encontrado: {blobItem.Name}");
+                
+                var blobClient = containerClient.GetBlobClient(blobItem.Name);
+                var downloadResult = await blobClient.DownloadContentAsync();
+                string content = downloadResult.Value.Content.ToString();
+                
+                // Procesar JSON del Flow Log
+                ProcessFlowLog(content);
+            }
+        }
+        
+        static void ProcessFlowLog(string jsonContent)
+        {
+            try
+            {
+                dynamic flowLog = JsonConvert.DeserializeObject(jsonContent);
+                
+                foreach (var record in flowLog.records)
+                {
+                    Console.WriteLine($"Tiempo: {record.time}");
+                    Console.WriteLine($"Categoría: {record.category}");
+                    
+                    foreach (var flow in record.properties.flows)
+                    {
+                        Console.WriteLine($"Regla: {flow.rule}");
+                        
+                        foreach (var flowGroup in flow.flows)
+                        {
+                            foreach (var tuple in flowGroup.flowTuples)
+                            {
+                                string[] parts = tuple.ToString().Split(',');
+                                if (parts.Length >= 7)
+                                {
+                                    Console.WriteLine($"Conexión: {parts[1]}:{parts[3]} -> {parts[2]}:{parts[4]} | Protocolo: {parts[5]} | Decisión: {parts[6]}");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error procesando log: {ex.Message}");
+            }
+        }
+    }
+}
+# Compilar y ejecutar
+dotnet build
+dotnet run
+________________________________________
+🧪 LABORATORIO 4: AUTOMATIZACIÓN Y ALERTAS AVANZADAS
+⏱️ Duración: 25 minutos
+🎯 Objetivo: Implementar automatización de respuesta a incidentes usando Logic Apps y Azure Functions
+Paso 1: Crear Logic App para Respuesta Automática (10 minutos)
+Crear Logic App que responda a alertas NSG:
+1.	Crear Logic App:
+bash
+az logic workflow create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name logic-nsg-response \
+  --location eastus
+2.	En Azure Portal - Configurar Logic App: 
+1.	Logic apps → logic-nsg-response → Logic app designer
+2.	Start with blank logic app
+3.	Trigger: When an HTTP request is received
+4.	Generate schema from sample payload:
+json
+{
+  "alertType": "NSG_Suspicious_Activity",
+  "sourceIP": "192.168.1.100",
+  "destinationIP": "10.2.1.4",
+  "port": "1433",
+  "action": "Denied",
+  "timestamp": "2025-07-21T19:30:00Z"
+}
+3.	Agregar acciones: 
+o	Condition: Check if alertType = "NSG_Suspicious_Activity"
+o	If true: 
+	Send an email (V2): Notificar al equipo de seguridad
+	HTTP: Webhook a sistema de tickets
+Paso 2: Crear Azure Function para Análisis (10 minutos)
+Crear Function que analice patrones de tráfico:
+1.	Crear Function App:
+bash
+az functionapp create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --consumption-plan-location eastus \
+  --runtime dotnet-isolated \
+  --runtime-version 8 \
+  --functions-version 4 \
+  --name func-nsg-analyzer-[sunombre] \
+  --storage-account stflowlogs[sunombre]
+2.	Crear proyecto de Function localmente:
+bash
+# Crear directorio
+mkdir nsg-function
+cd nsg-function
+
+# Crear proyecto
+func init --dotnet-isolated
+func new --name AnalyzeTrafficPatterns --template "Timer trigger"
+3.	Código de la Function (C#):
+csharp
+// AnalyzeTrafficPatterns.cs
+using System;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace NSGFunction
+{
+    public class AnalyzeTrafficPatterns
+    {
+        private readonly ILogger _logger;
+
+        public AnalyzeTrafficPatterns(ILoggerFactory loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<AnalyzeTrafficPatterns>();
+        }
+
+        [Function("AnalyzeTrafficPatterns")]
+        public async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo myTimer)
+        {
+            _logger.LogInformation($"Análisis de patrones de tráfico ejecutado en: {DateTime.Now}");
+
+            try
+            {
+                // Simular análisis de patrones sospechosos
+                var suspiciousPatterns = await AnalyzeSuspiciousActivity();
+                
+                foreach (var pattern in suspiciousPatterns)
+                {
+                    _logger.LogWarning($"Patrón sospechoso detectado: {pattern.Description}");
+                    
+                    // Llamar a Logic App si se detecta actividad sospechosa
+                    if (pattern.Severity > 7)
+                    {
+                        await TriggerSecurityAlert(pattern);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error en análisis de patrones de tráfico");
+            }
+        }
+
+        private async Task<List<SuspiciousPattern>> AnalyzeSuspiciousActivity()
+        {
+            var patterns = new List<SuspiciousPattern>();
+            
+            // Simulación de análisis
+            var random = new Random();
+            
+            if (random.Next(1, 100) > 80) // 20% probabilidad de actividad sospechosa
+            {
+                patterns.Add(new SuspiciousPattern
+                {
+                    Description = "Múltiples intentos de conexión a puertos de base de datos desde Internet",
+                    Severity = random.Next(5, 10),
+                    SourceIP = "203.0.113.25",
+                    TargetPort = "1433",
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+            
+            if (random.Next(1, 100) > 90) // 10% probabilidad de ataque más severo
+            {
+                patterns.Add(new SuspiciousPattern
+                {
+                    Description = "Patrón de DDoS detectado - Múltiples IPs atacando simultaneamente",
+                    Severity = 9,
+                    SourceIP = "Multiple",
+                    TargetPort = "80,443",
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+            
+            return patterns;
+        }
+
+        private async Task TriggerSecurityAlert(SuspiciousPattern pattern)
+        {
+            // URL del Logic App HTTP trigger
+            string logicAppUrl = "https://prod-XX.eastus.logic.azure.com:443/workflows/XXXXX/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXXXX";
+            
+            var alertPayload = new
+            {
+                alertType = "NSG_Suspicious_Activity",
+                sourceIP = pattern.SourceIP,
+                targetPort = pattern.TargetPort,
+                severity = pattern.Severity,
+                description = pattern.Description,
+                timestamp = pattern.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+            };
+
+            // Enviar alerta al Logic App
+            using var httpClient = new HttpClient();
+            var json = System.Text.Json.JsonSerializer.Serialize(alertPayload);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            
+            try
+            {
+                var response = await httpClient.PostAsync(logicAppUrl, content);
+                _logger.LogInformation($"Alerta enviada al Logic App: {response.StatusCode}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error enviando alerta al Logic App");
+            }
+        }
+    }
+
+    public class SuspiciousPattern
+    {
+        public string Description { get; set; }
+        public int Severity { get; set; }
+        public string SourceIP { get; set; }
+        public string TargetPort { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+}
+4.	Deploy de la Function:
+bash
+# Publicar Function a Azure
+func azure functionapp publish func-nsg-analyzer-[sunombre]
+Paso 3: Configurar Traffic Analytics (5 minutos)
+Habilitar Traffic Analytics para insights avanzados:
+1.	Crear Log Analytics Workspace:
+bash
+az monitor log-analytics workspace create \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --workspace-name law-traffic-analytics \
+  --location eastus \
+  --sku PerGB2018
+2.	Habilitar Traffic Analytics:
+bash
+# Obtener el workspace ID
+WORKSPACE_ID=$(az monitor log-analytics workspace show \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --workspace-name law-traffic-analytics \
+  --query customerId --output tsv)
+
+# Actualizar Flow Logs para incluir Traffic Analytics
+az network watcher flow-log update \
+  --resource-group NetworkWatcherRG \
+  --name flowlog-nsg-web \
+  --workspace $WORKSPACE_ID \
+  --interval 10
+En Azure Portal:
+1.	Network Watcher → Traffic Analytics
+2.	Select flow log: flowlog-nsg-web
+3.	Traffic Analytics status: Enabled
+4.	Log Analytics workspace: law-traffic-analytics
+5.	Traffic Analytics processing interval: Every 10 mins
+________________________________________
+📊 VERIFICACIÓN FINAL Y TESTING COMPLETO
+⏱️ Duración: 10 minutos
+Paso 1: Verificar Configuración NSG (3 minutos)
+Ejecutar tests de verificación:
+bash
+# Verificar NSGs creados
+az network nsg list \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --output table
+
+# Verificar reglas de un NSG específico
+az network nsg rule list \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --nsg-name nsg-web-advanced-[sunombre] \
+  --output table
+
+# Verificar ASGs
+az network asg list \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --output table
+
+# Verificar Flow Logs
+az network watcher flow-log list \
+  --resource-group NetworkWatcherRG \
+  --output table
+Paso 2: Testing de Conectividad Final (4 minutos)
+Ejecutar suite completa de tests:
+bash
+# Test 1: Conectividad HTTPS
+echo "Testing HTTPS connectivity..."
+az network watcher test-connectivity \
+  --source-resource vm-web-test \
+  --dest-address www.microsoft.com \
+  --dest-port 443 \
+  --resource-group rg-nsg-lab-[SuNombre]
+
+# Test 2: Verificar bloqueo de puertos no autorizados
+echo "Testing unauthorized port blocking..."
+az network watcher test-ip-flow \
+  --vm vm-web-test \
+  --direction Inbound \
+  --local 10.2.1.4:3389 \
+  --remote 203.0.113.1:54321 \
+  --protocol TCP \
+  --resource-group rg-nsg-lab-[SuNombre]
+
+# Test 3: Verificar comunicación entre ASGs
+echo "Testing ASG communication..."
+# Este test requiere VMs asignadas a ASGs
+Paso 3: Validar Automatización (3 minutos)
+Verificar que la automatización funciona:
+1.	Trigger manual del Logic App:
+bash
+# Obtener la URL del Logic App
+LOGIC_APP_URL=$(az logic workflow show \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name logic-nsg-response \
+  --query accessEndpoint --output tsv)
+
+# Enviar test payload
+curl -X POST $LOGIC_APP_URL \
+  -H "Content-Type: application/json" \
+  -d '{
+    "alertType": "NSG_Suspicious_Activity",
+    "sourceIP": "192.168.1.100",
+    "destinationIP": "10.2.1.4",
+    "port": "1433",
+    "action": "Denied",
+    "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+  }'
+2.	Verificar logs de Function:
+bash
+# Ver logs de la Function
+az functionapp logs tail \
+  --name func-nsg-analyzer-[sunombre] \
+  --resource-group rg-nsg-lab-[SuNombre]
+3.	Verificar alertas de DDoS: 
+o	Azure Portal → Monitor → Alerts
+o	Verificar que las alertas están configuradas
+o	Simular actividad (opcional) para verificar alertas
+________________________________________
+🎯 RESULTADOS DE APRENDIZAJE ALCANZADOS
+Al completar este laboratorio, los estudiantes han logrado:
+🔒 Network Security Groups Avanzados:
+•	✅ Implementación de reglas granulares con prioridades optimizadas
+•	✅ Uso de Service Tags para simplificación y automatización
+•	✅ Application Security Groups para organización lógica
+•	✅ Flow Logs habilitados para visibilidad completa
+🛡️ Azure DDoS Protection:
+•	✅ DDoS Protection Standard configurado y monitoreado
+•	✅ Métricas y alertas de DDoS en tiempo real
+•	✅ Dashboard de monitoreo para visibilidad ejecutiva
+•	✅ Entendimiento de costos vs beneficios de protección
+🔍 Network Monitoring y Diagnostics:
+•	✅ Azure Network Watcher para troubleshooting
+•	✅ IP Flow Verify para validación de reglas
+•	✅ Traffic Analytics para insights avanzados
+•	✅ Effective Security Rules analysis
+🤖 Automatización y Respuesta:
+•	✅ Logic Apps para orquestación de respuesta
+•	✅ Azure Functions para análisis de patrones
+•	✅ Integración con sistemas externos (ITSM)
+•	✅ Alerting multi-canal y escalamiento
+________________________________________
+🧹 LIMPIEZA DE RECURSOS (OPCIONAL)
+⚠️ Importante: Ejecutar solo si desean eliminar todos los recursos del laboratorio.
+bash
+# Deshabilitar DDoS Protection primero (para evitar costos)
+az network vnet update \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name vnet-nsg-lab \
+  --ddos-protection false
+
+# Eliminar DDoS Protection Plan
+az network ddos-protection delete \
+  --resource-group rg-nsg-lab-[SuNombre] \
+  --name ddos-plan-lab
+
+# Eliminar todo el resource group (cuidado!)
+az group delete \
+  --name rg-nsg-lab-[SuNombre] \
+  --yes --no-wait
+________________________________________
+🚨 TROUBLESHOOTING COMÚN
+Error: "Cannot enable DDoS Protection - insufficient permissions"
+Solución:
+bash
+# Verificar roles asignados
+az role assignment list --assignee [su-email] --output table
+
+# El usuario necesita rol "Network Contributor" o "Contributor"
+Error: "Flow logs not appearing in storage"
+Solución:
+bash
+# Verificar que Network Watcher está registrado
+az provider show --namespace Microsoft.Network --query registrationState
+
+# Re-registrar si es necesario
+az provider register --namespace Microsoft.Network
+Error: "Logic App trigger URL not working"
+Solución:
+1.	Azure Portal → Logic Apps → logic-nsg-response
+2.	Logic app designer → When an HTTP request is received
+3.	Copy HTTP POST URL (se genera después de guardar)
+Error: "Function deployment failed"
+Solución:
+bash
+# Verificar que la Function App existe
+az functionapp show --name func-nsg-analyzer-[sunombre] --resource-group rg-nsg-lab-[SuNombre]
+
+# Re-crear si es necesario
+az functionapp delete --name func-nsg-analyzer-[sunombre] --resource-group rg-nsg-lab-[SuNombre]
+________________________________________
+📈 MÉTRICAS DE ÉXITO
+Indicadores de Implementación Exitosa:
+✅ Network Security:
+•	4+ NSGs creados con reglas específicas por función
+•	Application Security Groups implementados y asociados
+•	Flow Logs generando datos en Storage Account
+•	Reglas deny-by-default funcionando correctamente
+✅ DDoS Protection:
+•	DDoS Protection Standard habilitado en VNET
+•	Métricas de DDoS visibles en Azure Monitor
+•	Alertas configuradas y funcionando
+•	Dashboard de monitoreo accesible
+✅ Automation:
+•	Logic App respondiendo a triggers HTTP
+•	Azure Function ejecutándose según schedule
+•	Integración entre componentes funcionando
+•	Logs y telemetría disponibles
+✅ Monitoring:
+•	Network Watcher operacional
+•	Traffic Analytics habilitado
+•	Effective Security Rules consultables
+•	IP Flow Verify funcionando
+________________________________________
+🔗 PREPARACIÓN PARA PRÓXIMA SESIÓN
+Para la Sesión 8 (Miércoles 23/07) - Pruebas y Auditorías de Seguridad:
+📚 Preparación Recomendada:
+1.	Explorar Azure Security Center en su suscripción
+2.	Revisar OWASP Top 10 (https://owasp.org/Top10/)
+3.	Familiarizarse con NIST Cybersecurity Framework básico
+4.	Instalar herramientas adicionales:
+bash
+# Instalar herramientas de penetration testing
+choco install nmap -y
+choco install wireshark -y
+choco install postman -y
+🎯 Infraestructura Lista:
+•	✅ Network Security Groups configurados para testing
+•	✅ Flow Logs capturando actividad para análisis
+•	✅ DDoS Protection monitoreando amenazas
+•	✅ Automatización respondiendo a incidentes
+•	✅ Base sólida para vulnerability assessment
+________________________________________
+🌟 CONCEPTOS AVANZADOS APLICADOS
+Este laboratorio implementa:
+🎯 Zero Trust Networking:
+•	Never trust, always verify implementado via NSGs
+•	Micro-segmentation con ASGs
+•	Continuous monitoring via Flow Logs
+•	Least privilege access controls
+🛡️ Defense in Depth:
+•	Multiple security layers (NSG + DDoS + Monitoring)
+•	Fail-safe defaults con deny-by-default rules
+•	Comprehensive monitoring y alerting
+•	Automated response capabilities
+🤖 Security Automation:
+•	Event-driven security responses
+•	Machine learning integration (DDoS detection)
+•	SOAR capabilities via Logic Apps
+•	Continuous compliance monitoring
+📊 Security Operations:
+•	Real-time threat detection
+•	Incident response automation
+•	Security metrics y KPIs
+•	Compliance reporting ready
+________________________________________
+🎉 ¡FELICITACIONES!
+Han completado exitosamente la implementación de Network Security Groups avanzados y Azure DDoS Protection Standard. Esta infraestructura de seguridad de red es:
+•	✅ Production-ready para aplicaciones críticas
+•	✅ Scalable para crecimiento empresarial
+•	✅ Compliant con frameworks de seguridad
+•	✅ Automated para respuesta rápida a incidentes
+•	✅ Monitored para visibilidad completa
+La arquitectura que han construido puede proteger aplicaciones que manejan:
+•	Millones de usuarios simultáneos
+•	Transacciones financieras críticas
+•	Datos sensibles regulados (PCI, HIPAA, GDPR)
+•	Operaciones 24/7 con alta disponibilidad
+¡Nos vemos en la Sesión 8 para continuar con Vulnerability Assessment y Penetration Testing! 🚀
+________________________________________
+📝 COMANDOS DE REFERENCIA RÁPIDA
+Azure CLI - NSG Commands
+bash
+# Listar NSGs
+az network nsg list --output table
+
+# Ver reglas de un NSG
+az network nsg rule list --nsg-name [nsg-name] --resource-group [rg] --output table
+
+# Crear regla NSG
+az network nsg rule create --resource-group [rg] --nsg-name [nsg] --name [rule-name] --priority [number] --source-address-prefixes [source] --destination-port-ranges [ports] --access [Allow/Deny] --protocol [TCP/UDP/*]
+
+# Verificar reglas efectivas
+az network nic list-effective-nsg --ids [nic-id]
+Azure CLI - Network Watcher Commands
+bash
+# Test connectivity
+az network watcher test-connectivity --source-resource [vm] --dest-address [ip] --dest-port [port] --resource-group [rg]
+
+# IP flow verify
+az network watcher test-ip-flow --vm [vm] --direction [Inbound/Outbound] --local [ip:port] --remote [ip:port] --protocol [TCP/UDP] --resource-group [rg]
+
+# Show topology
+az network watcher show-topology --resource-group [rg]
+PowerShell - NSG Commands
+powershell
+# Get NSG rules
+Get-AzNetworkSecurityGroup -Name "nsg-name" -ResourceGroupName "rg-name" | Get-AzNetworkSecurityRuleConfig
+
+# Test connectivity
+Test-AzNetworkWatcherConnectivity -NetworkWatcherName "NetworkWatcher_eastus" -ResourceGroupName "NetworkWatcherRG" -SourceResourceId "/subscriptions/.../vm-name" -DestinationAddress "10.0.0.4" -DestinationPort 80
+Este laboratorio establece las bases para enterprise-grade network security que continuaremos desarrollando en las próximas sesiones con vulnerability assessment y compliance testing. ¡Excelente trabajo! 💪
+Controles del chat
+Sonnet 4
+
