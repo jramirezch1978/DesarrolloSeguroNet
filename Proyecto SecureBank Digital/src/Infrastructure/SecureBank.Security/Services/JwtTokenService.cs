@@ -1,453 +1,271 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using SecureBank.Application.Common.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using SecureBank.Application.Common.DTOs;
-using SecureBank.Domain.Enums;
 
-namespace SecureBank.Security.Services;
+namespace SecureBank.Infrastructure.Security.Services;
 
 /// <summary>
-/// Servicio JWT para SecureBank Digital
-/// Implementa JWT con refresh tokens y rotación automática según el prompt inicial
+/// Implementación del servicio de tokens JWT
 /// </summary>
 public class JwtTokenService : IJwtTokenService
 {
-    private readonly JwtOptions _jwtOptions;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<JwtTokenService> _logger;
-    private readonly SymmetricSecurityKey _signingKey;
-    private readonly TokenValidationParameters _tokenValidationParameters;
+    private readonly Dictionary<string, RefreshTokenInfo> _refreshTokens = new();
 
-    // Store para refresh tokens en memoria (en producción sería Redis/DB)
-    private static readonly Dictionary<string, RefreshTokenInfo> _refreshTokens = new();
-    private static readonly object _lockObject = new();
-
-    public JwtTokenService(IOptions<JwtOptions> jwtOptions, ILogger<JwtTokenService> logger)
+    public JwtTokenService(IConfiguration configuration, ILogger<JwtTokenService> logger)
     {
-        _jwtOptions = jwtOptions.Value;
+        _configuration = configuration;
         _logger = logger;
-        
-        ValidateConfiguration();
-        
-        _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
-        _tokenValidationParameters = CreateTokenValidationParameters();
     }
 
-    /// <summary>
-    /// Genera tokens de acceso y refresh para un usuario
-    /// </summary>
-    public AuthenticationTokens GenerateTokens(UserDto user, string deviceFingerprint, string ipAddress)
+    public async Task<AuthenticationTokens> GenerateTokensAsync(Guid userId, string email, string role,
+        string deviceFingerprint, string ipAddress)
     {
         try
         {
-            var accessToken = GenerateAccessToken(user, deviceFingerprint, ipAddress);
-            var refreshToken = GenerateRefreshToken(user.Id, deviceFingerprint, ipAddress);
+            var accessToken = GenerateAccessToken(userId, email, role, deviceFingerprint, ipAddress);
+            var refreshToken = GenerateRefreshToken();
 
-            var tokens = new AuthenticationTokens
+            var refreshTokenInfo = new RefreshTokenInfo
             {
-                AccessToken = accessToken.Token,
-                RefreshToken = refreshToken.Token,
-                AccessTokenExpiresAt = accessToken.ExpiresAt,
-                RefreshTokenExpiresAt = refreshToken.ExpiresAt,
-                TokenType = "Bearer",
-                Scopes = GetUserScopes(user.Role)
+                UserId = userId,
+                Email = email,
+                Role = role,
+                DeviceFingerprint = deviceFingerprint,
+                IpAddress = ipAddress,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                IsRevoked = false
             };
 
-            _logger.LogInformation("Tokens generados para usuario {UserId} desde {IpAddress}", 
-                user.Id, ipAddress);
+            _refreshTokens[refreshToken] = refreshTokenInfo;
 
-            return tokens;
+            return new AuthenticationTokens
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                AccessTokenExpiry = DateTime.UtcNow.AddMinutes(15),
+                RefreshTokenExpiry = refreshTokenInfo.ExpiresAt,
+                TokenType = "Bearer"
+            };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generando tokens para usuario {UserId}", user.Id);
-            throw new SecurityException("Error durante la generación de tokens", ex);
+            _logger.LogError(ex, "Error generando tokens para usuario {UserId}", userId);
+            throw;
         }
     }
 
-    /// <summary>
-    /// Refresca los tokens usando el refresh token
-    /// </summary>
-    public AuthenticationTokens RefreshTokens(string refreshToken, string deviceFingerprint, string ipAddress)
+    public async Task<AuthenticationTokens?> RefreshTokensAsync(string refreshToken, string deviceFingerprint, string ipAddress)
     {
         try
         {
-            // Validar refresh token
-            var refreshTokenInfo = ValidateRefreshToken(refreshToken, deviceFingerprint, ipAddress);
-            
-            // Generar nuevos tokens
-            var userClaims = ExtractUserClaimsFromRefreshToken(refreshTokenInfo);
-            var user = CreateUserDtoFromClaims(userClaims);
-            
-            // Revocar el refresh token usado
-            RevokeRefreshToken(refreshToken);
-            
-            // Generar nuevos tokens
-            var newTokens = GenerateTokens(user, deviceFingerprint, ipAddress);
+            if (!_refreshTokens.TryGetValue(refreshToken, out var tokenInfo))
+            {
+                _logger.LogWarning("Intento de refresh con token inválido desde {IpAddress}", ipAddress);
+                return null;
+            }
 
-            _logger.LogInformation("Tokens refrescados para usuario {UserId} desde {IpAddress}", 
-                user.Id, ipAddress);
+            if (tokenInfo.IsRevoked || tokenInfo.ExpiresAt < DateTime.UtcNow)
+            {
+                _refreshTokens.Remove(refreshToken);
+                _logger.LogWarning("Intento de refresh con token expirado o revocado para usuario {UserId}", tokenInfo.UserId);
+                return null;
+            }
+
+            if (tokenInfo.DeviceFingerprint != deviceFingerprint)
+            {
+                _logger.LogWarning("Device fingerprint no coincide para refresh token del usuario {UserId}", tokenInfo.UserId);
+                return null;
+            }
+
+            // Generar nuevos tokens
+            var newTokens = await GenerateTokensAsync(tokenInfo.UserId, tokenInfo.Email, tokenInfo.Role, deviceFingerprint, ipAddress);
+
+            // Revocar el token anterior
+            _refreshTokens.Remove(refreshToken);
 
             return newTokens;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error refrescando tokens desde {IpAddress}", ipAddress);
-            throw new SecurityException("Error durante el refresh de tokens", ex);
+            _logger.LogError(ex, "Error en refresh de tokens");
+            return null;
         }
     }
 
-    /// <summary>
-    /// Valida un access token
-    /// </summary>
-    public ClaimsPrincipal ValidateAccessToken(string token)
+    public async Task<Application.Common.Interfaces.TokenValidationResult> ValidateAccessTokenAsync(string accessToken)
     {
         try
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, _tokenValidationParameters, out var validatedToken);
+            var key = Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured"));
 
-            // Validaciones adicionales de seguridad
-            ValidateTokenSecurity(validatedToken as JwtSecurityToken);
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = _configuration["JWT:Issuer"],
+                ValidateAudience = true,
+                ValidAudience = _configuration["JWT:Audience"],
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
 
-            return principal;
+            var principal = tokenHandler.ValidateToken(accessToken, validationParameters, out SecurityToken validatedToken);
+
+            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var emailClaim = principal.FindFirst(ClaimTypes.Email)?.Value;
+            var roleClaim = principal.FindFirst(ClaimTypes.Role)?.Value;
+
+            return new Application.Common.Interfaces.TokenValidationResult
+            {
+                IsValid = true,
+                UserId = Guid.TryParse(userIdClaim, out var userId) ? userId : null,
+                Email = emailClaim,
+                Role = roleClaim,
+                ExpiresAt = validatedToken.ValidTo
+            };
         }
-        catch (SecurityTokenExpiredException)
+        catch (SecurityTokenException ex)
         {
-            _logger.LogWarning("Token de acceso expirado");
-            throw new SecurityException("Token expirado");
-        }
-        catch (SecurityTokenInvalidSignatureException)
-        {
-            _logger.LogError("Token con firma inválida detectado");
-            throw new SecurityException("Token inválido");
+            _logger.LogWarning(ex, "Token de acceso inválido");
+            return new Application.Common.Interfaces.TokenValidationResult
+            {
+                IsValid = false,
+                Errors = new List<string> { "Token inválido" }
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error validando token de acceso");
-            throw new SecurityException("Token inválido", ex);
-        }
-    }
-
-    /// <summary>
-    /// Revoca un refresh token específico
-    /// </summary>
-    public void RevokeRefreshToken(string refreshToken)
-    {
-        lock (_lockObject)
-        {
-            if (_refreshTokens.ContainsKey(refreshToken))
+            return new Application.Common.Interfaces.TokenValidationResult
             {
-                _refreshTokens[refreshToken].IsRevoked = true;
-                _refreshTokens[refreshToken].RevokedAt = DateTime.UtcNow;
-                
-                _logger.LogInformation("Refresh token revocado: {TokenId}", 
-                    _refreshTokens[refreshToken].TokenId);
-            }
+                IsValid = false,
+                Errors = new List<string> { "Error interno de validación" }
+            };
         }
     }
 
-    /// <summary>
-    /// Revoca todos los refresh tokens de un usuario
-    /// </summary>
-    public void RevokeAllUserTokens(Guid userId)
+    public async Task<bool> RevokeRefreshTokenAsync(string refreshToken)
     {
-        lock (_lockObject)
+        try
         {
-            var userTokens = _refreshTokens.Values.Where(rt => rt.UserId == userId && !rt.IsRevoked);
+            if (_refreshTokens.TryGetValue(refreshToken, out var tokenInfo))
+            {
+                tokenInfo.IsRevoked = true;
+                _logger.LogInformation("Refresh token revocado para usuario {UserId}", tokenInfo.UserId);
+                return true;
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error revocando refresh token");
+            return false;
+        }
+    }
+
+    public async Task<bool> RevokeAllUserTokensAsync(Guid userId)
+    {
+        try
+        {
+            var userTokens = _refreshTokens.Where(kvp => kvp.Value.UserId == userId).ToList();
             
             foreach (var token in userTokens)
             {
-                token.IsRevoked = true;
-                token.RevokedAt = DateTime.UtcNow;
+                token.Value.IsRevoked = true;
             }
 
             _logger.LogInformation("Todos los tokens revocados para usuario {UserId}", userId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error revocando todos los tokens del usuario {UserId}", userId);
+            return false;
         }
     }
 
-    /// <summary>
-    /// Limpia tokens expirados del store
-    /// </summary>
-    public void CleanupExpiredTokens()
+    public async Task CleanupExpiredTokensAsync()
     {
-        lock (_lockObject)
+        try
         {
             var expiredTokens = _refreshTokens
-                .Where(kvp => kvp.Value.ExpiresAt <= DateTime.UtcNow || kvp.Value.IsRevoked)
+                .Where(kvp => kvp.Value.ExpiresAt < DateTime.UtcNow || kvp.Value.IsRevoked)
                 .Select(kvp => kvp.Key)
                 .ToList();
 
-            foreach (var tokenKey in expiredTokens)
+            foreach (var token in expiredTokens)
             {
-                _refreshTokens.Remove(tokenKey);
+                _refreshTokens.Remove(token);
             }
 
-            _logger.LogInformation("Limpiados {Count} tokens expirados", expiredTokens.Count);
+            _logger.LogInformation("Limpieza de tokens: {Count} tokens expirados eliminados", expiredTokens.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error en limpieza de tokens expirados");
         }
     }
 
-    // Métodos privados
-    private TokenInfo GenerateAccessToken(UserDto user, string deviceFingerprint, string ipAddress)
+    private string GenerateAccessToken(Guid userId, string email, string role, string deviceFingerprint, string ipAddress)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenId = Guid.NewGuid().ToString();
-        var issuedAt = DateTime.UtcNow;
-        var expiresAt = issuedAt.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes);
+        var key = Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured"));
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName),
-            new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName),
-            new Claim(JwtRegisteredClaimNames.Jti, tokenId),
-            new Claim(JwtRegisteredClaimNames.Iat, ((DateTimeOffset)issuedAt).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
-            new Claim(ClaimTypes.Role, user.Role.ToString()),
-            new Claim("user_status", user.Status.ToString()),
-            new Claim("device_fingerprint", deviceFingerprint),
-            new Claim("ip_address", ipAddress),
-            new Claim("is_verified", user.IsVerified.ToString()),
-            new Claim("is_2fa_enabled", user.IsTwoFactorEnabled.ToString()),
-            new Claim("token_type", "access")
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimTypes.Email, email),
+            new(ClaimTypes.Role, role),
+            new("device_fingerprint", deviceFingerprint),
+            new("ip_address", ipAddress),
+            new("jti", Guid.NewGuid().ToString()),
+            new("iat", new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
         };
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = expiresAt,
-            NotBefore = issuedAt,
-            IssuedAt = issuedAt,
-            Issuer = _jwtOptions.Issuer,
-            Audience = _jwtOptions.Audience,
-            SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256Signature)
+            Expires = DateTime.UtcNow.AddMinutes(15),
+            Issuer = _configuration["JWT:Issuer"],
+            Audience = _configuration["JWT:Audience"],
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
-        var tokenString = tokenHandler.WriteToken(token);
-
-        return new TokenInfo
-        {
-            Token = tokenString,
-            TokenId = tokenId,
-            ExpiresAt = expiresAt
-        };
+        return tokenHandler.WriteToken(token);
     }
 
-    private TokenInfo GenerateRefreshToken(Guid userId, string deviceFingerprint, string ipAddress)
+    private string GenerateRefreshToken()
     {
-        var tokenId = Guid.NewGuid().ToString();
-        var token = GenerateSecureRandomToken();
-        var issuedAt = DateTime.UtcNow;
-        var expiresAt = issuedAt.AddDays(_jwtOptions.RefreshTokenExpirationDays);
-
-        var refreshTokenInfo = new RefreshTokenInfo
-        {
-            TokenId = tokenId,
-            Token = token,
-            UserId = userId,
-            DeviceFingerprint = deviceFingerprint,
-            IpAddress = ipAddress,
-            IssuedAt = issuedAt,
-            ExpiresAt = expiresAt,
-            IsRevoked = false
-        };
-
-        lock (_lockObject)
-        {
-            _refreshTokens[token] = refreshTokenInfo;
-        }
-
-        return new TokenInfo
-        {
-            Token = token,
-            TokenId = tokenId,
-            ExpiresAt = expiresAt
-        };
-    }
-
-    private RefreshTokenInfo ValidateRefreshToken(string refreshToken, string deviceFingerprint, string ipAddress)
-    {
-        lock (_lockObject)
-        {
-            if (!_refreshTokens.TryGetValue(refreshToken, out var tokenInfo))
-            {
-                throw new SecurityException("Refresh token no encontrado");
-            }
-
-            if (tokenInfo.IsRevoked)
-            {
-                _logger.LogWarning("Intento de uso de refresh token revocado desde {IpAddress}", ipAddress);
-                throw new SecurityException("Refresh token revocado");
-            }
-
-            if (tokenInfo.ExpiresAt <= DateTime.UtcNow)
-            {
-                throw new SecurityException("Refresh token expirado");
-            }
-
-            // Validar device fingerprint (seguridad adicional)
-            if (tokenInfo.DeviceFingerprint != deviceFingerprint)
-            {
-                _logger.LogError("Device fingerprint no coincide para refresh token desde {IpAddress}", ipAddress);
-                throw new SecurityException("Token inválido para este dispositivo");
-            }
-
-            // Opcional: validar IP (puede ser muy estricto para usuarios móviles)
-            if (_jwtOptions.ValidateIpAddress && tokenInfo.IpAddress != ipAddress)
-            {
-                _logger.LogWarning("IP address cambió para refresh token: {OldIp} -> {NewIp}", 
-                    tokenInfo.IpAddress, ipAddress);
-                // No lanzar excepción, solo loggear por ahora
-            }
-
-            return tokenInfo;
-        }
-    }
-
-    private void ValidateTokenSecurity(JwtSecurityToken? jwtToken)
-    {
-        if (jwtToken == null)
-            throw new SecurityException("Token JWT inválido");
-
-        // Validar algoritmo de firma
-        if (jwtToken.Header.Alg != SecurityAlgorithms.HmacSha256Signature)
-        {
-            throw new SecurityException("Algoritmo de firma no permitido");
-        }
-
-        // Validar que es un access token
-        var tokenTypeClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "token_type")?.Value;
-        if (tokenTypeClaim != "access")
-        {
-            throw new SecurityException("Tipo de token inválido");
-        }
-    }
-
-    private TokenValidationParameters CreateTokenValidationParameters()
-    {
-        return new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = _signingKey,
-            ValidateIssuer = true,
-            ValidIssuer = _jwtOptions.Issuer,
-            ValidateAudience = true,
-            ValidAudience = _jwtOptions.Audience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(1), // Tolerancia mínima para sincronización de reloj
-            RequireExpirationTime = true,
-            RequireSignedTokens = true
-        };
-    }
-
-    private List<string> GetUserScopes(UserRole role)
-    {
-        return role switch
-        {
-            UserRole.Customer => new List<string> { "read:accounts", "write:transactions", "read:profile" },
-            UserRole.CustomerPremium => new List<string> { "read:accounts", "write:transactions", "read:profile", "read:investments" },
-            UserRole.CustomerBusiness => new List<string> { "read:accounts", "write:transactions", "read:profile", "read:reports", "manage:users" },
-            UserRole.SupportOperator => new List<string> { "read:accounts", "read:users" },
-            UserRole.Manager => new List<string> { "read:accounts", "write:approvals", "read:reports", "manage:limits" },
-            UserRole.SecurityAuditor => new List<string> { "read:logs", "read:security", "read:reports" },
-            UserRole.Administrator => new List<string> { "admin:all" },
-            _ => new List<string>()
-        };
-    }
-
-    private string GenerateSecureRandomToken()
-    {
-        var randomBytes = new byte[64]; // 512 bits
-        RandomNumberGenerator.Fill(randomBytes);
-        return Convert.ToBase64String(randomBytes);
-    }
-
-    private Dictionary<string, string> ExtractUserClaimsFromRefreshToken(RefreshTokenInfo refreshTokenInfo)
-    {
-        // En un escenario real, esto vendría de la base de datos
-        // Por ahora, usamos los datos almacenados en el refresh token
-        return new Dictionary<string, string>
-        {
-            ["user_id"] = refreshTokenInfo.UserId.ToString()
-        };
-    }
-
-    private UserDto CreateUserDtoFromClaims(Dictionary<string, string> claims)
-    {
-        // En producción, esto haría una consulta a la base de datos
-        // Por ahora, devolvemos un DTO básico
-        return new UserDto
-        {
-            Id = Guid.Parse(claims["user_id"]),
-            // Otros campos se llenarían desde DB
-        };
-    }
-
-    private void ValidateConfiguration()
-    {
-        if (string.IsNullOrEmpty(_jwtOptions.SecretKey))
-            throw new InvalidOperationException("JWT SecretKey no configurada");
-
-        if (_jwtOptions.SecretKey.Length < 32)
-            throw new InvalidOperationException("JWT SecretKey debe tener al menos 32 caracteres");
-
-        if (string.IsNullOrEmpty(_jwtOptions.Issuer))
-            throw new InvalidOperationException("JWT Issuer no configurado");
-
-        if (string.IsNullOrEmpty(_jwtOptions.Audience))
-            throw new InvalidOperationException("JWT Audience no configurada");
-
-        if (_jwtOptions.AccessTokenExpirationMinutes <= 0)
-            throw new InvalidOperationException("AccessTokenExpirationMinutes inválido");
-
-        if (_jwtOptions.RefreshTokenExpirationDays <= 0)
-            throw new InvalidOperationException("RefreshTokenExpirationDays inválido");
-
-        _logger.LogInformation("Servicio JWT inicializado correctamente");
+        var randomNumber = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
     }
 }
 
-// Clases auxiliares
-public interface IJwtTokenService
+/// <summary>
+/// Información del refresh token
+/// </summary>
+internal class RefreshTokenInfo
 {
-    AuthenticationTokens GenerateTokens(UserDto user, string deviceFingerprint, string ipAddress);
-    AuthenticationTokens RefreshTokens(string refreshToken, string deviceFingerprint, string ipAddress);
-    ClaimsPrincipal ValidateAccessToken(string token);
-    void RevokeRefreshToken(string refreshToken);
-    void RevokeAllUserTokens(Guid userId);
-    void CleanupExpiredTokens();
-}
-
-public class JwtOptions
-{
-    public string SecretKey { get; set; } = string.Empty;
-    public string Issuer { get; set; } = string.Empty;
-    public string Audience { get; set; } = string.Empty;
-    public int AccessTokenExpirationMinutes { get; set; } = 15;
-    public int RefreshTokenExpirationDays { get; set; } = 7;
-    public bool ValidateIpAddress { get; set; } = false;
-}
-
-public class TokenInfo
-{
-    public string Token { get; set; } = string.Empty;
-    public string TokenId { get; set; } = string.Empty;
-    public DateTime ExpiresAt { get; set; }
-}
-
-public class RefreshTokenInfo
-{
-    public string TokenId { get; set; } = string.Empty;
-    public string Token { get; set; } = string.Empty;
     public Guid UserId { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
     public string DeviceFingerprint { get; set; } = string.Empty;
     public string IpAddress { get; set; } = string.Empty;
-    public DateTime IssuedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
     public DateTime ExpiresAt { get; set; }
     public bool IsRevoked { get; set; }
-    public DateTime? RevokedAt { get; set; }
 } 

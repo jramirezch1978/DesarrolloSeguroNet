@@ -1,0 +1,6 @@
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Infrastructure\SecureBank.Security\obj\Release\net9.0\SecureBank.Security.csproj.AssemblyReference.cache
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Infrastructure\SecureBank.Security\obj\Release\net9.0\SecureBank.Security.GeneratedMSBuildEditorConfig.editorconfig
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Infrastructure\SecureBank.Security\obj\Release\net9.0\SecureBank.Security.AssemblyInfoInputs.cache
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Infrastructure\SecureBank.Security\obj\Release\net9.0\SecureBank.Security.AssemblyInfo.cs
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Infrastructure\SecureBank.Security\obj\Release\net9.0\SecureBank.Security.csproj.CoreCompileInputs.cache
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Infrastructure\SecureBank.Security\obj\Release\net9.0\SecureBank.Security.sourcelink.json

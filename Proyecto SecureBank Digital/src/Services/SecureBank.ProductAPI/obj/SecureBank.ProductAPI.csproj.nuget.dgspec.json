@@ -1,0 +1,652 @@
+{
+  "format": 1,
+  "restore": {
+    "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Services\\SecureBank.ProductAPI\\SecureBank.ProductAPI.csproj": {}
+  },
+  "projects": {
+    "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj",
+        "projectName": "SecureBank.Application",
+        "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj",
+        "packagesPath": "C:\\Users\\Jhonny R\\.nuget\\packages\\",
+        "outputPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Jhonny R\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj": {
+                "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "AutoMapper": {
+              "target": "Package",
+              "version": "[12.0.1, )"
+            },
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[11.10.0, )"
+            },
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.4.1, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj",
+        "projectName": "SecureBank.Domain",
+        "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj",
+        "packagesPath": "C:\\Users\\Jhonny R\\.nuget\\packages\\",
+        "outputPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Jhonny R\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Microsoft.Extensions.Identity.Core": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\SecureBank.Infrastructure.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\SecureBank.Infrastructure.csproj",
+        "projectName": "SecureBank.Infrastructure",
+        "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\SecureBank.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\Jhonny R\\.nuget\\packages\\",
+        "outputPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Jhonny R\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj": {
+                "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj"
+              },
+              "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj": {
+                "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.Http.Abstractions": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Hosting.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj",
+        "projectName": "SecureBank.Security",
+        "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj",
+        "packagesPath": "C:\\Users\\Jhonny R\\.nuget\\packages\\",
+        "outputPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Jhonny R\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj": {
+                "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Azure.Identity": {
+              "target": "Package",
+              "version": "[1.12.0, )"
+            },
+            "Azure.Security.KeyVault.Secrets": {
+              "target": "Package",
+              "version": "[4.6.0, )"
+            },
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.0.3, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Options": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.IdentityModel.Tokens": {
+              "target": "Package",
+              "version": "[8.2.1, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.2.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Services\\SecureBank.ProductAPI\\SecureBank.ProductAPI.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Services\\SecureBank.ProductAPI\\SecureBank.ProductAPI.csproj",
+        "projectName": "SecureBank.ProductAPI",
+        "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Services\\SecureBank.ProductAPI\\SecureBank.ProductAPI.csproj",
+        "packagesPath": "C:\\Users\\Jhonny R\\.nuget\\packages\\",
+        "outputPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Services\\SecureBank.ProductAPI\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Jhonny R\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj": {
+                "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj"
+              },
+              "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\SecureBank.Infrastructure.csproj": {
+                "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\SecureBank.Infrastructure.csproj"
+              },
+              "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj": {
+                "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj"
+              },
+              "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj": {
+                "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "allWarningsAsErrors": true,
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "AspNetCore.HealthChecks.NpgSql": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "AspNetCore.HealthChecks.UI": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Azure.Extensions.AspNetCore.Configuration.Secrets": {
+              "target": "Package",
+              "version": "[1.3.2, )"
+            },
+            "Azure.Identity": {
+              "target": "Package",
+              "version": "[1.12.0, )"
+            },
+            "Azure.Monitor.OpenTelemetry.AspNetCore": {
+              "target": "Package",
+              "version": "[1.2.0, )"
+            },
+            "FluentValidation.AspNetCore": {
+              "target": "Package",
+              "version": "[11.3.1, )"
+            },
+            "MathNet.Numerics": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
+            "MathNet.Numerics.Data.Text": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
+            "Microsoft.ApplicationInsights.AspNetCore": {
+              "target": "Package",
+              "version": "[2.22.0, )"
+            },
+            "Microsoft.AspNetCore.Authentication.Certificate": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.AspNetCore.Mvc.NewtonsoftJson": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.AspNetCore.Mvc.Versioning": {
+              "target": "Package",
+              "version": "[5.1.0, )"
+            },
+            "Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer": {
+              "target": "Package",
+              "version": "[5.1.0, )"
+            },
+            "Microsoft.AspNetCore.OpenApi": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Caching.Memory": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Caching.StackExchangeRedis": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Diagnostics.HealthChecks": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Logging.ApplicationInsights": {
+              "target": "Package",
+              "version": "[2.22.0, )"
+            },
+            "Microsoft.ML": {
+              "target": "Package",
+              "version": "[3.0.1, )"
+            },
+            "Microsoft.ML.AutoML": {
+              "target": "Package",
+              "version": "[0.21.1, )"
+            },
+            "OpenTelemetry.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[1.9.0, )"
+            },
+            "OpenTelemetry.Instrumentation.AspNetCore": {
+              "target": "Package",
+              "version": "[1.9.0, )"
+            },
+            "OpenTelemetry.Instrumentation.Http": {
+              "target": "Package",
+              "version": "[1.9.0, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[6.8.0, )"
+            },
+            "Swashbuckle.AspNetCore.Filters": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "System.Diagnostics.DiagnosticSource": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj",
+        "projectName": "SecureBank.Shared",
+        "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj",
+        "packagesPath": "C:\\Users\\Jhonny R\\.nuget\\packages\\",
+        "outputPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Jhonny R\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "System.ComponentModel.Annotations": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

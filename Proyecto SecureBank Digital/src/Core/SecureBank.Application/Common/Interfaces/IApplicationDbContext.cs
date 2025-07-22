@@ -4,23 +4,26 @@ using SecureBank.Domain.Entities;
 namespace SecureBank.Application.Common.Interfaces;
 
 /// <summary>
-/// Interfaz del contexto de base de datos para SecureBank Digital
-/// Define las entidades disponibles para la capa Application
+/// Interfaz para el contexto de base de datos de la aplicación
 /// </summary>
 public interface IApplicationDbContext
 {
-    // Entidades principales
-    DbSet<User> Users { get; }
-    DbSet<Account> Accounts { get; }
-    DbSet<Transaction> Transactions { get; }
-    
-    // Entidades de auditoría y seguridad
-    DbSet<AuditLog> AuditLogs { get; }
-    DbSet<LoginAttempt> LoginAttempts { get; }
-    DbSet<UserDevice> UserDevices { get; }
+    /// <summary>
+    /// Conjunto de entidades de usuarios
+    /// </summary>
+    DbSet<User> Users { get; set; }
+    DbSet<Account> Accounts { get; set; }
+    DbSet<Transaction> Transactions { get; set; }
 
     /// <summary>
-    /// Guarda los cambios en la base de datos de forma asíncrona
+    /// Auditoría y logs
+    /// </summary>
+    DbSet<AuditLog> AuditLogs { get; set; }
+    DbSet<LoginAttempt> LoginAttempts { get; set; }
+    DbSet<UserDevice> UserDevices { get; set; }
+
+    /// <summary>
+    /// Guarda los cambios de forma asíncrona
     /// </summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
@@ -33,15 +36,8 @@ public interface IApplicationDbContext
 /// <summary>
 /// Interfaz para transacciones de base de datos
 /// </summary>
-public interface IDbContextTransaction : IDisposable, IAsyncDisposable
+public interface IDbContextTransaction : IDisposable
 {
-    /// <summary>
-    /// Confirma la transacción
-    /// </summary>
     Task CommitAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Deshace la transacción
-    /// </summary>
     Task RollbackAsync(CancellationToken cancellationToken = default);
 } 

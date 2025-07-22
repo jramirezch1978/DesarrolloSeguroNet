@@ -28,7 +28,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
     
     <!-- Validación y Serialización -->
-    <PackageReference Include="FluentValidation.AspNetCore" Version="11.8.1" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.0" />
     
     <!-- Azure Monitor y Application Insights -->
@@ -50,15 +50,11 @@
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.1" />
     
     <!-- Rate Limiting y Security -->
-    <PackageReference Include="Microsoft.AspNetCore.RateLimiting" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Certificate" Version="9.0.0" />
     
     <!-- Caching y Performance -->
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
-    
-    <!-- SignalR para notificaciones en tiempo real -->
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="9.0.0" />
     
     <!-- Correlación y Telemetría -->
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.0" />

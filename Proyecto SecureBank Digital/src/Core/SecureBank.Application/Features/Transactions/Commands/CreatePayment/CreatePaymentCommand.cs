@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 namespace SecureBank.Application.Features.Transactions.Commands.CreatePayment;
 
 /// <summary>
-/// Command para crear un pago de servicios
+/// Comando para crear un pago de servicios
 /// </summary>
 public class CreatePaymentCommand : IRequest<CreatePaymentResponse>
 {
@@ -16,7 +16,7 @@ public class CreatePaymentCommand : IRequest<CreatePaymentResponse>
     public Guid UserId { get; set; }
 
     /// <summary>
-    /// ID de la cuenta origen del pago
+    /// ID de la cuenta desde la cual se realiza el pago
     /// </summary>
     [Required]
     public Guid FromAccountId { get; set; }
@@ -28,158 +28,190 @@ public class CreatePaymentCommand : IRequest<CreatePaymentResponse>
     public ServiceType ServiceType { get; set; }
 
     /// <summary>
-    /// Código de la empresa proveedora del servicio
-    /// </summary>
-    [Required]
-    [StringLength(20)]
-    public string ServiceProviderCode { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Nombre de la empresa proveedora
-    /// </summary>
-    [Required]
-    [StringLength(100)]
-    public string ServiceProviderName { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Número de suministro, cliente o código identificador
+    /// Código del proveedor del servicio
     /// </summary>
     [Required]
     [StringLength(50)]
+    public string ServiceProviderCode { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Nombre del proveedor del servicio
+    /// </summary>
+    [Required]
+    [StringLength(200)]
+    public string ServiceProviderName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Número de servicio (número de suministro, cliente, etc.)
+    /// </summary>
+    [Required]
+    [StringLength(100)]
     public string ServiceNumber { get; set; } = string.Empty;
 
     /// <summary>
     /// Monto del pago
     /// </summary>
     [Required]
-    [Range(0.01, 20000, ErrorMessage = "El monto debe estar entre 0.01 y 20,000")]
+    [Range(0.01, 1000000)]
     public decimal Amount { get; set; }
 
     /// <summary>
     /// Moneda del pago
     /// </summary>
     [Required]
-    [StringLength(3, MinimumLength = 3)]
+    [StringLength(3)]
     public string Currency { get; set; } = "PEN";
 
     /// <summary>
     /// Descripción del pago
     /// </summary>
-    [Required]
-    [StringLength(200, MinimumLength = 5)]
+    [StringLength(500)]
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// Período de facturación (mes/año)
+    /// Período de facturación (ejemplo: "2024-01", "2024-Q1")
     /// </summary>
     [StringLength(20)]
     public string? BillingPeriod { get; set; }
 
     /// <summary>
-    /// Número de factura o recibo
+    /// Número de factura o referencia
     /// </summary>
-    [StringLength(50)]
+    [StringLength(100)]
     public string? InvoiceNumber { get; set; }
 
     /// <summary>
-    /// Fecha de vencimiento de la factura
+    /// Fecha de vencimiento del servicio
     /// </summary>
     public DateTime? DueDate { get; set; }
 
     /// <summary>
-    /// Es un pago programado
+    /// Indica si el pago está programado para una fecha futura
     /// </summary>
     public bool IsScheduled { get; set; } = false;
 
     /// <summary>
-    /// Fecha programada para el pago
+    /// Fecha programada para el pago (requerida si IsScheduled = true)
     /// </summary>
     public DateTime? ScheduledDate { get; set; }
 
     /// <summary>
-    /// Es un pago recurrente (débito automático)
+    /// Indica si es un pago recurrente
     /// </summary>
     public bool IsRecurring { get; set; } = false;
 
     /// <summary>
-    /// Configuración de recurrencia
+    /// Configuración de recurrencia (requerida si IsRecurring = true)
     /// </summary>
     public PaymentRecurrence? RecurrenceConfig { get; set; }
 
     /// <summary>
-    /// Solicitar notificación por email
+    /// Notificar por email
     /// </summary>
     public bool NotifyByEmail { get; set; } = true;
 
     /// <summary>
-    /// Solicitar notificación por SMS
+    /// Notificar por SMS
     /// </summary>
     public bool NotifyBySms { get; set; } = false;
 
     /// <summary>
-    /// PIN de confirmación
+    /// PIN de confirmación para la transacción
     /// </summary>
     [Required]
     [StringLength(6, MinimumLength = 4)]
     public string ConfirmationPin { get; set; } = string.Empty;
 
     /// <summary>
-    /// Código de doble factor (si está habilitado)
+    /// Código de segundo factor (si está habilitado)
     /// </summary>
     [StringLength(10)]
     public string? TwoFactorCode { get; set; }
 
     /// <summary>
-    /// Información de auditoría - dirección IP
+    /// Dirección IP desde la cual se origina la transacción
     /// </summary>
+    [Required]
     public string IpAddress { get; set; } = string.Empty;
 
     /// <summary>
-    /// Información de auditoría - user agent
+    /// User Agent del cliente
     /// </summary>
+    [Required]
     public string UserAgent { get; set; } = string.Empty;
 
     /// <summary>
     /// Huella digital del dispositivo
     /// </summary>
+    [Required]
     public string DeviceFingerprint { get; set; } = string.Empty;
 
     /// <summary>
     /// ID de sesión
     /// </summary>
+    [Required]
     public string SessionId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Datos adicionales del servicio
+    /// Datos adicionales específicos del servicio (JSON)
     /// </summary>
-    public Dictionary<string, string> AdditionalServiceData { get; set; } = new();
+    public Dictionary<string, object>? AdditionalServiceData { get; set; }
 }
 
 /// <summary>
-/// Response de la creación de pago
+/// Respuesta del comando de creación de pago
 /// </summary>
 public class CreatePaymentResponse
 {
+    /// <summary>
+    /// Indica si el pago fue exitoso
+    /// </summary>
     public bool Success { get; set; }
-    public Guid TransactionId { get; set; }
-    public string TransactionNumber { get; set; } = string.Empty;
+
+    /// <summary>
+    /// ID de la transacción generada
+    /// </summary>
+    public Guid? TransactionId { get; set; }
+
+    /// <summary>
+    /// Número de transacción para seguimiento
+    /// </summary>
+    public string? TransactionNumber { get; set; }
+
+    /// <summary>
+    /// Estado actual de la transacción
+    /// </summary>
     public TransactionStatus Status { get; set; }
-    public decimal Amount { get; set; }
-    public decimal Fee { get; set; }
-    public decimal TotalAmount { get; set; }
-    public string Currency { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-    public DateTime? EstimatedCompletionTime { get; set; }
-    public string ServiceProviderName { get; set; } = string.Empty;
-    public string ServiceNumber { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string? ConfirmationCode { get; set; }
-    public RiskLevel RiskLevel { get; set; }
-    public bool RequiresApproval { get; set; }
-    public PaymentProcessingInfo ProcessingInfo { get; set; } = new();
+
+    /// <summary>
+    /// Información de procesamiento del pago
+    /// </summary>
+    public PaymentProcessingInfo? ProcessingInfo { get; set; }
+
+    /// <summary>
+    /// Mensajes de respuesta
+    /// </summary>
+    public List<string> Messages { get; set; } = new();
+
+    /// <summary>
+    /// Errores de validación si los hay
+    /// </summary>
     public List<string> Errors { get; set; } = new();
-    public List<string> Warnings { get; set; } = new();
+
+    /// <summary>
+    /// Alertas de seguridad generadas
+    /// </summary>
     public List<SecurityAlert> SecurityAlerts { get; set; } = new();
+
+    /// <summary>
+    /// Nivel de riesgo asignado
+    /// </summary>
+    public RiskLevel RiskLevel { get; set; }
+
+    /// <summary>
+    /// Timestamp de la respuesta
+    /// </summary>
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>
@@ -187,13 +219,35 @@ public class CreatePaymentResponse
 /// </summary>
 public class PaymentRecurrence
 {
+    /// <summary>
+    /// Frecuencia de recurrencia
+    /// </summary>
     public RecurrenceFrequency Frequency { get; set; }
-    public int DayOfMonth { get; set; } // Para pagos mensuales
-    public DateTime StartDate { get; set; }
+
+    /// <summary>
+    /// Intervalo entre pagos (para frecuencias personalizadas)
+    /// </summary>
+    public int Interval { get; set; } = 1;
+
+    /// <summary>
+    /// Día del mes para pagos mensuales (1-31)
+    /// </summary>
+    public int? DayOfMonth { get; set; }
+
+    /// <summary>
+    /// Fecha de fin de recurrencia
+    /// </summary>
     public DateTime? EndDate { get; set; }
-    public int? MaxOccurrences { get; set; }
-    public decimal? MaxAmount { get; set; } // Límite máximo por pago
-    public bool AutoAdjustForHolidays { get; set; } = true;
+
+    /// <summary>
+    /// Número máximo de pagos (alternativa a EndDate)
+    /// </summary>
+    public int? MaxPayments { get; set; }
+
+    /// <summary>
+    /// Indica si está activa la recurrencia
+    /// </summary>
+    public bool IsActive { get; set; } = true;
 }
 
 /// <summary>
@@ -201,12 +255,35 @@ public class PaymentRecurrence
 /// </summary>
 public class PaymentProcessingInfo
 {
+    /// <summary>
+    /// Tiempo estimado de procesamiento
+    /// </summary>
     public TimeSpan EstimatedProcessingTime { get; set; }
-    public bool RequiresManualReview { get; set; }
-    public bool RequiresTwoFactor { get; set; }
-    public string ProcessingRoute { get; set; } = string.Empty; // Inmediato, Lote, Manual
-    public List<string> NextSteps { get; set; } = new();
-    public string? BankReferenceNumber { get; set; }
+
+    /// <summary>
+    /// Comisión aplicada
+    /// </summary>
+    public decimal Fee { get; set; }
+
+    /// <summary>
+    /// Saldo disponible después del pago
+    /// </summary>
+    public decimal BalanceAfter { get; set; }
+
+    /// <summary>
+    /// Número de confirmación del proveedor (si aplica)
+    /// </summary>
+    public string? ProviderConfirmationNumber { get; set; }
+
+    /// <summary>
+    /// Requiere aprobación manual
+    /// </summary>
+    public bool RequiresApproval { get; set; }
+
+    /// <summary>
+    /// Razón de aprobación manual
+    /// </summary>
+    public string? ApprovalReason { get; set; }
 }
 
 /// <summary>
@@ -215,37 +292,52 @@ public class PaymentProcessingInfo
 public enum ServiceType
 {
     // Servicios básicos
-    Electricity = 1,        // Luz
-    Water = 2,             // Agua
-    Gas = 3,               // Gas
-    Telephone = 4,         // Teléfono fijo
-    Internet = 5,          // Internet
-    Cable = 6,             // TV Cable
-    Mobile = 7,            // Teléfono móvil
-
-    // Servicios financieros
-    CreditCard = 10,       // Tarjeta de crédito
-    Loan = 11,            // Préstamo
-    Insurance = 12,        // Seguro
-    Investment = 13,       // Inversión
-
-    // Servicios públicos
-    Municipality = 20,     // Municipalidad
-    Tax = 21,             // Impuestos
-    Traffic = 22,         // Multas de tránsito
-    Education = 23,       // Educación
-    Health = 24,          // Salud
-
+    Electricity = 1,
+    Water = 2,
+    Gas = 3,
+    Internet = 4,
+    Phone = 5,
+    CableTV = 6,
+    
+    // Educación
+    School = 10,
+    University = 11,
+    OnlineCourse = 12,
+    
+    // Seguros
+    HealthInsurance = 20,
+    CarInsurance = 21,
+    HomeInsurance = 22,
+    LifeInsurance = 23,
+    
+    // Gobierno
+    Taxes = 30,
+    Fines = 31,
+    Permits = 32,
+    
     // Entretenimiento
-    Streaming = 30,       // Netflix, Spotify, etc.
-    Gaming = 31,          // Juegos online
-    Subscription = 32,    // Suscripciones
-
+    Streaming = 40,
+    Gaming = 41,
+    Gym = 42,
+    
     // Transporte
-    Transport = 40,       // Transporte público
-    Parking = 41,         // Estacionamiento
-    Toll = 42,           // Peajes
-
+    PublicTransport = 50,
+    Toll = 51,
+    Parking = 52,
+    
     // Otros
-    Other = 99           // Otros servicios
+    Credit = 60,
+    Loan = 61,
+    Other = 99
+}
+
+/// <summary>
+/// Alerta de seguridad
+/// </summary>
+public class SecurityAlert
+{
+    public string Type { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public RiskLevel Level { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 } 
