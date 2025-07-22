@@ -1,13 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using SecureBank.Application.Features.Authentication.Commands.RegisterUser;
 using SecureBank.Application.Features.Authentication.Commands.LoginUser;
-using SecureBank.Application.Common.DTOs;
 using SecureBank.Application.Common.Interfaces;
-using SecureBank.AuthAPI.Services;
+using SecureBank.Shared.DTOs;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
+using AppAuthTokens = SecureBank.Application.Common.Interfaces.AuthenticationTokens;
 
 namespace SecureBank.AuthAPI.Controllers;
 
@@ -22,34 +22,31 @@ namespace SecureBank.AuthAPI.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly Application.Common.Interfaces.IAzureMonitorService _azureMonitorService;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IAzureMonitorService _azureMonitor;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
-        IMediator mediator,
+        IMediator mediator, 
+        Application.Common.Interfaces.IAzureMonitorService azureMonitorService,
         ICurrentUserService currentUserService,
-        IAzureMonitorService azureMonitor,
         ILogger<AuthController> logger)
     {
         _mediator = mediator;
+        _azureMonitorService = azureMonitorService;
         _currentUserService = currentUserService;
-        _azureMonitor = azureMonitor;
         _logger = logger;
     }
 
     /// <summary>
-    /// Registra un nuevo usuario en SecureBank Digital
+    /// Registra un nuevo usuario en el sistema
     /// </summary>
-    /// <param name="command">Datos de registro del usuario</param>
-    /// <returns>Resultado del registro con pasos de verificación</returns>
+    /// <param name="request">Datos del usuario a registrar</param>
+    /// <returns>Confirmación de registro</returns>
     [HttpPost("register")]
-    [EnableRateLimiting("Registration")]
-    [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<RegisterUserResponse>> RegisterUser([FromBody] RegisterUserCommand command)
+    [ProducesResponseType(typeof(BaseResponse), 200)]
+    [ProducesResponseType(typeof(ErrorResponse), 400)]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         try
         {
@@ -61,7 +58,7 @@ public class AuthController : ControllerBase
             _logger.LogInformation("Iniciando registro de usuario: {Email}", command.Email);
 
             // Log de inicio de registro para análisis ML
-            await _azureMonitor.LogSecurityEventAsync("UserRegistrationStarted", new
+            await _azureMonitorService.LogSecurityEventAsync("UserRegistrationStarted", new
             {
                 Email = command.Email,
                 DocumentType = command.DocumentType,
@@ -78,7 +75,7 @@ public class AuthController : ControllerBase
             if (response.Success)
             {
                 // Log de registro exitoso
-                await _azureMonitor.LogSecurityEventAsync("UserRegistrationCompleted", new
+                await _azureMonitorService.LogSecurityEventAsync("UserRegistrationCompleted", new
                 {
                     UserId = response.UserId,
                     Email = command.Email,
@@ -88,7 +85,7 @@ public class AuthController : ControllerBase
                 }, response.UserId.ToString());
 
                 // Métricas de negocio
-                await _azureMonitor.LogBusinessMetricAsync("NewUserRegistrations", 1, new Dictionary<string, string>
+                await _azureMonitorService.LogBusinessMetricAsync("NewUserRegistrations", 1, new Dictionary<string, string>
                 {
                     ["DocumentType"] = command.DocumentType,
                     ["HasAddress"] = (command.Address != null).ToString(),
@@ -101,7 +98,7 @@ public class AuthController : ControllerBase
             else
             {
                 // Log de fallo en registro
-                await _azureMonitor.LogSecurityEventAsync("UserRegistrationFailed", new
+                await _azureMonitorService.LogSecurityEventAsync("UserRegistrationFailed", new
                 {
                     Email = command.Email,
                     Errors = response.Errors,
@@ -117,7 +114,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            await _azureMonitor.LogSecurityEventAsync("UserRegistrationError", new
+            await _azureMonitorService.LogSecurityEventAsync("UserRegistrationError", new
             {
                 Email = command.Email,
                 Error = ex.Message,
@@ -125,7 +122,7 @@ public class AuthController : ControllerBase
                 Timestamp = DateTime.UtcNow
             });
 
-            _azureMonitor.TrackException(ex, new Dictionary<string, string>
+            _azureMonitorService.TrackException(ex, new Dictionary<string, string>
             {
                 ["Operation"] = "UserRegistration",
                 ["Email"] = command.Email
@@ -161,7 +158,7 @@ public class AuthController : ControllerBase
             _logger.LogInformation("Intento de login iniciado: {EmailOrDocument}", command.EmailOrDocument);
 
             // Log de intento de login para análisis ML
-            await _azureMonitor.LogSecurityEventAsync("LoginAttemptStarted", new
+            await _azureMonitorService.LogSecurityEventAsync("LoginAttemptStarted", new
             {
                 EmailOrDocument = command.EmailOrDocument,
                 IpAddress = command.IpAddress,
@@ -181,7 +178,7 @@ public class AuthController : ControllerBase
             if (response.Success)
             {
                 // Log de login exitoso
-                await _azureMonitor.LogSecurityEventAsync("LoginSuccess", new
+                await _azureMonitorService.LogSecurityEventAsync("LoginSuccess", new
                 {
                     UserId = response.User?.Id,
                     EmailOrDocument = command.EmailOrDocument,
@@ -196,7 +193,7 @@ public class AuthController : ControllerBase
                 }, response.User?.Id.ToString());
 
                 // Métricas de rendimiento
-                await _azureMonitor.LogPerformanceMetricAsync("LoginDuration", duration.TotalMilliseconds, 
+                await _azureMonitorService.LogPerformanceMetricAsync("LoginDuration", duration.TotalMilliseconds, 
                     new Dictionary<string, string>
                     {
                         ["Success"] = "true",
@@ -204,7 +201,7 @@ public class AuthController : ControllerBase
                     });
 
                 // Métricas de negocio
-                await _azureMonitor.LogBusinessMetricAsync("SuccessfulLogins", 1, new Dictionary<string, string>
+                await _azureMonitorService.LogBusinessMetricAsync("SuccessfulLogins", 1, new Dictionary<string, string>
                 {
                     ["Hour"] = startTime.Hour.ToString(),
                     ["DayOfWeek"] = startTime.DayOfWeek.ToString(),
@@ -217,7 +214,7 @@ public class AuthController : ControllerBase
             else
             {
                 // Log de fallo en login
-                await _azureMonitor.LogSecurityEventAsync("LoginFailed", new
+                await _azureMonitorService.LogSecurityEventAsync("LoginFailed", new
                 {
                     EmailOrDocument = command.EmailOrDocument,
                     IpAddress = command.IpAddress,
@@ -227,7 +224,7 @@ public class AuthController : ControllerBase
                     Timestamp = DateTime.UtcNow
                 });
 
-                await _azureMonitor.LogPerformanceMetricAsync("LoginDuration", duration.TotalMilliseconds, 
+                await _azureMonitorService.LogPerformanceMetricAsync("LoginDuration", duration.TotalMilliseconds, 
                     new Dictionary<string, string>
                     {
                         ["Success"] = "false"
@@ -243,7 +240,7 @@ public class AuthController : ControllerBase
         {
             var duration = DateTime.UtcNow - startTime;
             
-            await _azureMonitor.LogSecurityEventAsync("LoginError", new
+            await _azureMonitorService.LogSecurityEventAsync("LoginError", new
             {
                 EmailOrDocument = command.EmailOrDocument,
                 Error = ex.Message,
@@ -252,7 +249,7 @@ public class AuthController : ControllerBase
                 Timestamp = DateTime.UtcNow
             });
 
-            _azureMonitor.TrackException(ex, new Dictionary<string, string>
+            _azureMonitorService.TrackException(ex, new Dictionary<string, string>
             {
                 ["Operation"] = "Login",
                 ["EmailOrDocument"] = command.EmailOrDocument
@@ -282,7 +279,7 @@ public class AuthController : ControllerBase
 
             // Implementar lógica de refresh
             // Por ahora retornamos unauthorized para simular
-            await _azureMonitor.LogSecurityEventAsync("TokenRefreshAttempt", new
+            await _azureMonitorService.LogSecurityEventAsync("TokenRefreshAttempt", new
             {
                 IpAddress = ipAddress,
                 DeviceFingerprint = deviceFingerprint,
@@ -293,7 +290,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _azureMonitor.TrackException(ex, new Dictionary<string, string>
+            _azureMonitorService.TrackException(ex, new Dictionary<string, string>
             {
                 ["Operation"] = "RefreshTokens"
             });
@@ -320,7 +317,7 @@ public class AuthController : ControllerBase
 
             _logger.LogInformation("Logout de usuario: {UserId}", userId);
 
-            await _azureMonitor.LogSecurityEventAsync("UserLogout", new
+            await _azureMonitorService.LogSecurityEventAsync("UserLogout", new
             {
                 UserId = userId,
                 IpAddress = ipAddress,
@@ -333,7 +330,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _azureMonitor.TrackException(ex, new Dictionary<string, string>
+            _azureMonitorService.TrackException(ex, new Dictionary<string, string>
             {
                 ["Operation"] = "Logout",
                 ["UserId"] = _currentUserService.UserId?.ToString() ?? "unknown"
@@ -359,9 +356,9 @@ public class AuthController : ControllerBase
         {
             var ipAddress = GetClientIpAddress();
 
-            await _azureMonitor.LogSecurityEventAsync("EmailVerificationAttempt", new
+            await _azureMonitorService.LogSecurityEventAsync("EmailVerificationAttempt", new
             {
-                Token = request.Token?.Substring(0, Math.Min(10, request.Token.Length ?? 0)) + "...",
+                Token = request.VerificationCode?.Substring(0, Math.Min(10, request.VerificationCode.Length ?? 0)) + "...",
                 IpAddress = ipAddress,
                 Timestamp = DateTime.UtcNow
             });
@@ -372,7 +369,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _azureMonitor.TrackException(ex, new Dictionary<string, string>
+            _azureMonitorService.TrackException(ex, new Dictionary<string, string>
             {
                 ["Operation"] = "VerifyEmail"
             });
@@ -397,9 +394,9 @@ public class AuthController : ControllerBase
         {
             var ipAddress = GetClientIpAddress();
 
-            await _azureMonitor.LogSecurityEventAsync("PhoneVerificationAttempt", new
+            await _azureMonitorService.LogSecurityEventAsync("PhoneVerificationAttempt", new
             {
-                CodeLength = request.Code?.Length ?? 0,
+                CodeLength = request.VerificationCode?.Length ?? 0,
                 IpAddress = ipAddress,
                 Timestamp = DateTime.UtcNow
             });
@@ -410,7 +407,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _azureMonitor.TrackException(ex, new Dictionary<string, string>
+            _azureMonitorService.TrackException(ex, new Dictionary<string, string>
             {
                 ["Operation"] = "VerifyPhone"
             });
@@ -421,40 +418,48 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Obtiene información del usuario actual autenticado
+    /// Obtiene información del usuario actual
     /// </summary>
-    /// <returns>Información del usuario</returns>
+    /// <returns>Información del usuario autenticado</returns>
     [HttpGet("me")]
     [Authorize]
-    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<UserDto>> GetCurrentUser()
+    [ProducesResponseType(typeof(UserDto), 200)]
+    [ProducesResponseType(typeof(ErrorResponse), 401)]
+    public async Task<IActionResult> GetCurrentUser()
     {
         try
         {
             var userId = _currentUserService.UserId;
-            
-            await _azureMonitor.LogUserBehaviorAsync("ProfileViewed", new
+            if (!userId.HasValue)
             {
-                UserId = userId,
-                IpAddress = _currentUserService.IpAddress,
-                Timestamp = DateTime.UtcNow
-            }, userId?.ToString() ?? "unknown");
+                return Unauthorized(new ErrorResponse 
+                { 
+                    Message = "Usuario no autenticado",
+                    Code = "UNAUTHORIZED"
+                });
+            }
 
-            // Implementar obtención de datos del usuario aquí
-            
-            return Ok(new UserDto { Id = userId ?? Guid.Empty });
+            // Por ahora devolvemos datos simulados
+            var userDto = new UserDto
+            {
+                Id = userId.Value,
+                Email = _currentUserService.Email ?? "",
+                Role = _currentUserService.Role ?? "",
+                IsEmailVerified = true,
+                IsPhoneVerified = false,
+                LastLoginAt = DateTime.UtcNow
+            };
+
+            return Ok(userDto);
         }
         catch (Exception ex)
         {
-            _azureMonitor.TrackException(ex, new Dictionary<string, string>
-            {
-                ["Operation"] = "GetCurrentUser",
-                ["UserId"] = _currentUserService.UserId?.ToString() ?? "unknown"
+            _logger.LogError(ex, "Error obteniendo información del usuario {UserId}", _currentUserService.UserId);
+            return StatusCode(500, new ErrorResponse 
+            { 
+                Message = "Error interno del servidor",
+                Code = "INTERNAL_ERROR"
             });
-
-            _logger.LogError(ex, "Error obteniendo usuario actual");
-            return StatusCode(500, new { Message = "Error interno del servidor" });
         }
     }
 
@@ -466,26 +471,100 @@ public class AuthController : ControllerBase
                HttpContext.Connection.RemoteIpAddress?.ToString() ??
                "unknown";
     }
+
+    /// <summary>
+    /// Mapea tokens de aplicación a respuesta de API
+    /// </summary>
+    private LoginResponse MapToLoginResponse(AppAuthTokens tokens, string deviceFingerprint)
+    {
+        return new LoginResponse
+        {
+            AccessToken = tokens.AccessToken,
+            RefreshToken = tokens.RefreshToken,
+            ExpiresIn = 3600, // 1 hora
+            TokenType = "Bearer",
+            DeviceFingerprint = deviceFingerprint,
+            Scope = "api"
+        };
+    }
+
+    /// <summary>
+    /// Mapea tokens para respuesta de refresh
+    /// </summary>
+    private RefreshTokenResponse MapToRefreshResponse(AppAuthTokens tokens)
+    {
+        return new RefreshTokenResponse
+        {
+            AccessToken = tokens.AccessToken,
+            RefreshToken = tokens.RefreshToken,
+            ExpiresIn = 3600, // 1 hora
+            TokenType = "Bearer"
+        };
+    }
+
+    public class VerifyEmailRequest
+    {
+        [Required]
+        public string VerificationCode { get; set; } = string.Empty;
+    }
+
+    public class VerifyPhoneRequest
+    {
+        [Required]
+        public string VerificationCode { get; set; } = string.Empty;
+    }
 }
 
-// DTOs para requests
+// DTOs para las operaciones de autenticación
+public class RegisterRequest
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(6, MinimumLength = 6)]
+    public string Pin { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(12, MinimumLength = 8)]
+    public string DocumentNumber { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(100)]
+    public string FirstName { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(100)]
+    public string LastName { get; set; } = string.Empty;
+}
+
+public class LoginRequest
+{
+    [Required]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    public string Pin { get; set; } = string.Empty;
+
+    public string? DeviceFingerprint { get; set; }
+}
+
 public class RefreshTokenRequest
 {
     [Required]
     public string RefreshToken { get; set; } = string.Empty;
+
+    public string? DeviceFingerprint { get; set; }
 }
 
-public class VerifyEmailRequest
+public class UserDto
 {
-    [Required]
-    public string Token { get; set; } = string.Empty;
-}
-
-public class VerifyPhoneRequest
-{
-    [Required]
-    public string Code { get; set; } = string.Empty;
-    
-    [Required]
-    public string PhoneNumber { get; set; } = string.Empty;
+    public Guid Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+    public bool IsEmailVerified { get; set; }
+    public bool IsPhoneVerified { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 } 

@@ -12,7 +12,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using SecureBank.Infrastructure.Data;
 using SecureBank.Application.Common.Interfaces;
-using SecureBank.Security.Services;
+using SecureBank.Infrastructure.Security.Services;
 using SecureBank.Infrastructure.Services;
 using SecureBank.AuthAPI.Services;
 using SecureBank.AuthAPI.Middleware;

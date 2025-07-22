@@ -1,11 +1,14 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using SecureBank.Application.Features.Transactions.Commands.CreatePayment;
+using SecureBank.Application.Features.Transactions.Queries.GetPaymentHistory;
 using SecureBank.Application.Common.Interfaces;
-using SecureBank.AuthAPI.Services;
+using SecureBank.Domain.Enums;
+using SecureBank.Shared.DTOs;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
+using DomainServiceType = SecureBank.Domain.Enums.ServiceType;
 
 namespace SecureBank.TransactionAPI.Controllers;
 
@@ -43,7 +46,6 @@ public class PaymentsController : ControllerBase
     /// <param name="command">Datos del pago</param>
     /// <returns>Resultado del pago con confirmación</returns>
     [HttpPost]
-    [EnableRateLimiting("PaymentLimits")]
     [ProducesResponseType(typeof(CreatePaymentResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -311,7 +313,6 @@ public class PaymentsController : ControllerBase
     /// <param name="transactionId">ID de la transacción de pago</param>
     /// <returns>Estado actual del pago</returns>
     [HttpGet("{transactionId}/status")]
-    [EnableRateLimiting("GeneralApi")]
     [ProducesResponseType(typeof(PaymentStatusResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -365,7 +366,6 @@ public class PaymentsController : ControllerBase
     /// <param name="serviceType">Tipo de servicio</param>
     /// <returns>Lista de proveedores disponibles</returns>
     [HttpGet("providers/{serviceType}")]
-    [EnableRateLimiting("GeneralApi")]
     [ProducesResponseType(typeof(List<ServiceProvider>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<List<ServiceProvider>>> GetServiceProviders([FromRoute] ServiceType serviceType)
@@ -406,7 +406,6 @@ public class PaymentsController : ControllerBase
     /// <param name="request">Configuración del débito automático</param>
     /// <returns>Confirmación del débito automático</returns>
     [HttpPost("recurring")]
-    [EnableRateLimiting("GeneralApi")]
     [ProducesResponseType(typeof(RecurringPaymentResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -457,7 +456,6 @@ public class PaymentsController : ControllerBase
     /// <param name="recurringPaymentId">ID del débito automático</param>
     /// <returns>Información del débito automático</returns>
     [HttpGet("recurring/{recurringPaymentId}")]
-    [EnableRateLimiting("GeneralApi")]
     [ProducesResponseType(typeof(RecurringPaymentInfo), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<RecurringPaymentInfo>> GetRecurringPayment([FromRoute] Guid recurringPaymentId)
@@ -684,6 +682,30 @@ public class PaymentsController : ControllerBase
             < 500 => "200-500",
             < 1000 => "500-1000",
             _ => "1000+"
+        };
+    }
+
+    private string GetServiceProvider(DomainServiceType serviceType)
+    {
+        return serviceType switch
+        {
+            DomainServiceType.Electricity => "Luz del Sur, Enel",
+            DomainServiceType.Water => "Sedapal, Eps Grau",
+            DomainServiceType.Gas => "Cálidda, Contugas", 
+            DomainServiceType.Mobile => "Claro, Movistar, Entel, Bitel",
+            DomainServiceType.Cable => "Movistar TV, Claro TV, DirecTV",
+            DomainServiceType.Telephone => "Telefónica, Claro",
+            DomainServiceType.CreditCard => "Visa, MasterCard, Amex, Diners",
+            DomainServiceType.Insurance => "Rímac, Pacífico, La Positiva",
+            DomainServiceType.Investment => "Fondos Mutuos, AFP",
+            DomainServiceType.Municipality => "Municipalidades",
+            DomainServiceType.Tax => "SUNAT, SAT",
+            DomainServiceType.Traffic => "Policía Nacional",
+            DomainServiceType.Education => "Universidades, Colegios",
+            DomainServiceType.Health => "EsSalud, Clínicas",
+            DomainServiceType.Subscription => "Netflix, Spotify, Prime",
+            DomainServiceType.Transport => "ATU, Metropolitano",
+            _ => "Proveedor General"
         };
     }
 }

@@ -2190,7 +2190,8 @@
           "Microsoft.EntityFrameworkCore": "9.0.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0",
           "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
-          "SecureBank.Domain": "1.0.0"
+          "SecureBank.Domain": "1.0.0",
+          "SecureBank.Shared": "1.0.0"
         },
         "compile": {
           "bin/placeholder/SecureBank.Application.dll": {}

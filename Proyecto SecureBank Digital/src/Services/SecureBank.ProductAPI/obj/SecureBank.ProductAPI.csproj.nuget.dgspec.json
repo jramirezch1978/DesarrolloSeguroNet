@@ -31,6 +31,9 @@
             "projectReferences": {
               "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj": {
                 "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj"
+              },
+              "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj": {
+                "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj"
               }
             }
           }
@@ -192,6 +195,9 @@
               "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj": {
                 "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj"
               },
+              "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj": {
+                "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj"
+              },
               "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj": {
                 "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj"
               }
@@ -214,6 +220,14 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "Microsoft.ApplicationInsights": {
+              "target": "Package",
+              "version": "[2.22.0, )"
+            },
+            "Microsoft.ApplicationInsights.AspNetCore": {
+              "target": "Package",
+              "version": "[2.22.0, )"
+            },
             "Microsoft.AspNetCore.Http.Abstractions": {
               "target": "Package",
               "version": "[2.2.0, )"
@@ -411,6 +425,9 @@
               "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj": {
                 "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj"
               },
+              "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj": {
+                "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj"
+              },
               "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\SecureBank.Infrastructure.csproj": {
                 "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\SecureBank.Infrastructure.csproj"
               },
@@ -424,7 +441,6 @@
           }
         },
         "warningProperties": {
-          "allWarningsAsErrors": true,
           "warnAsError": [
             "NU1605"
           ]
@@ -456,6 +472,10 @@
               "target": "Package",
               "version": "[1.12.0, )"
             },
+            "Azure.Messaging.ServiceBus": {
+              "target": "Package",
+              "version": "[7.18.1, )"
+            },
             "Azure.Monitor.OpenTelemetry.AspNetCore": {
               "target": "Package",
               "version": "[1.2.0, )"
@@ -465,10 +485,6 @@
               "version": "[11.3.1, )"
             },
             "MathNet.Numerics": {
-              "target": "Package",
-              "version": "[5.0.0, )"
-            },
-            "MathNet.Numerics.Data.Text": {
               "target": "Package",
               "version": "[5.0.0, )"
             },
@@ -524,9 +540,13 @@
               "target": "Package",
               "version": "[3.0.1, )"
             },
-            "Microsoft.ML.AutoML": {
+            "Microsoft.ML.FastTree": {
               "target": "Package",
-              "version": "[0.21.1, )"
+              "version": "[3.0.1, )"
+            },
+            "Microsoft.ML.LightGbm": {
+              "target": "Package",
+              "version": "[3.0.1, )"
             },
             "OpenTelemetry.Extensions.Hosting": {
               "target": "Package",
@@ -542,7 +562,7 @@
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
-              "version": "[6.8.0, )"
+              "version": "[6.8.1, )"
             },
             "Swashbuckle.AspNetCore.Filters": {
               "target": "Package",

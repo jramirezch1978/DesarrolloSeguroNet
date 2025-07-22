@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SecureBank.Security\SecureBank.Security.csproj" />
     <ProjectReference Include="..\..\Core\SecureBank.Application\SecureBank.Application.csproj" />
+    <ProjectReference Include="..\..\Core\SecureBank.Domain\SecureBank.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +37,8 @@
     
     <!-- HTTP Context Accessor para CurrentUserService -->
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.22.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
   </ItemGroup>
 
 </Project> 

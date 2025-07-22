@@ -14,7 +14,8 @@
           "Microsoft.EntityFrameworkCore": "9.0.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0",
           "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
-          "SecureBank.Domain": "1.0.0"
+          "SecureBank.Domain": "1.0.0",
+          "SecureBank.Shared": "1.0.0"
         },
         "runtime": {
           "SecureBank.Application.dll": {}
@@ -204,12 +205,26 @@
           }
         }
       },
+      "System.ComponentModel.Annotations/5.0.0": {},
+      "System.Text.Json/9.0.0": {},
       "SecureBank.Domain/1.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Identity.Core": "9.0.0"
         },
         "runtime": {
           "SecureBank.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "SecureBank.Shared/1.0.0": {
+        "dependencies": {
+          "System.ComponentModel.Annotations": "5.0.0",
+          "System.Text.Json": "9.0.0"
+        },
+        "runtime": {
+          "SecureBank.Shared.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
           }
@@ -356,7 +371,26 @@
       "path": "microsoft.extensions.primitives/9.0.0",
       "hashPath": "microsoft.extensions.primitives.9.0.0.nupkg.sha512"
     },
+    "System.ComponentModel.Annotations/5.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dMkqfy2el8A8/I76n2Hi1oBFEbG1SfxD2l5nhwXV3XjlnOmwxJlQbYpJH4W51odnU9sARCSAgv7S3CyAFMkpYg==",
+      "path": "system.componentmodel.annotations/5.0.0",
+      "hashPath": "system.componentmodel.annotations.5.0.0.nupkg.sha512"
+    },
+    "System.Text.Json/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-js7+qAu/9mQvnhA4EfGMZNEzXtJCDxgkgj8ohuxq/Qxv+R56G+ljefhiJHOxTNiw54q8vmABCWUwkMulNdlZ4A==",
+      "path": "system.text.json/9.0.0",
+      "hashPath": "system.text.json.9.0.0.nupkg.sha512"
+    },
     "SecureBank.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SecureBank.Shared/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

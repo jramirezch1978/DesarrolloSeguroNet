@@ -1,12 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using SecureBank.Application.Features.Transactions.Commands.CreateTransfer;
 using SecureBank.Application.Common.Interfaces;
-using SecureBank.AuthAPI.Services;
-using SecureBank.Domain.Enums;
+using SecureBank.Shared.DTOs;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
+using DomainTransactionStatus = SecureBank.Domain.Enums.TransactionStatus;
+using DomainRiskLevel = SecureBank.Domain.Enums.RiskLevel;
 
 namespace SecureBank.TransactionAPI.Controllers;
 
@@ -44,7 +45,6 @@ public class TransfersController : ControllerBase
     /// <param name="command">Datos de la transferencia</param>
     /// <returns>Resultado de la transferencia con análisis de riesgo</returns>
     [HttpPost]
-    [EnableRateLimiting("TransferLimits")]
     [ProducesResponseType(typeof(CreateTransferResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -129,7 +129,7 @@ public class TransfersController : ControllerBase
             // Validar límites y riesgos
             var riskAssessment = await AssessTransactionRisk(command, fraudAnalysis);
             
-            if (riskAssessment.RiskLevel >= RiskLevel.High)
+            if (riskAssessment.RiskLevel >= DomainRiskLevel.High)
             {
                 await _azureMonitor.LogFraudDetectionEventAsync("HighRiskTransfer", new
                 {
@@ -271,7 +271,6 @@ public class TransfersController : ControllerBase
     /// <param name="transactionId">ID de la transacción</param>
     /// <returns>Estado actual de la transferencia</returns>
     [HttpGet("{transactionId}/status")]
-    [EnableRateLimiting("GeneralApi")]
     [ProducesResponseType(typeof(TransferStatusResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -298,7 +297,7 @@ public class TransfersController : ControllerBase
             var response = new TransferStatusResponse
             {
                 TransactionId = transactionId,
-                Status = TransactionStatus.Completed,
+                Status = DomainTransactionStatus.Completed,
                 LastUpdated = DateTime.UtcNow.AddMinutes(-5)
             };
 
@@ -325,7 +324,6 @@ public class TransfersController : ControllerBase
     /// <param name="request">Motivo de cancelación</param>
     /// <returns>Confirmación de cancelación</returns>
     [HttpDelete("{transactionId}")]
-    [EnableRateLimiting("GeneralApi")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -391,14 +389,13 @@ public class TransfersController : ControllerBase
     /// <param name="pageNumber">Número de página</param>
     /// <returns>Lista paginada de transferencias</returns>
     [HttpGet]
-    [EnableRateLimiting("GeneralApi")]
     [ProducesResponseType(typeof(PaginatedTransfersResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<PaginatedTransfersResponse>> GetTransfers(
         [FromQuery] Guid? accountId = null,
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null,
-        [FromQuery] TransactionStatus? status = null,
+        [FromQuery] DomainTransactionStatus? status = null,
         [FromQuery] int pageSize = 20,
         [FromQuery] int pageNumber = 1)
     {
@@ -522,10 +519,10 @@ public class TransfersController : ControllerBase
 
         var riskLevel = riskScore switch
         {
-            <= 2 => RiskLevel.Low,
-            <= 4 => RiskLevel.Medium,
-            <= 6 => RiskLevel.High,
-            _ => RiskLevel.VeryHigh
+            <= 2 => DomainRiskLevel.Low,
+            <= 4 => DomainRiskLevel.Medium,
+            <= 6 => DomainRiskLevel.High,
+            _ => DomainRiskLevel.VeryHigh
         };
 
         return new RiskAssessment
@@ -533,8 +530,8 @@ public class TransfersController : ControllerBase
             RiskLevel = riskLevel,
             FraudScore = riskScore,
             RiskFactors = riskFactors,
-            RequiresApproval = riskLevel >= RiskLevel.High,
-            ShouldBlock = riskLevel >= RiskLevel.VeryHigh && riskScore > 8,
+            RequiresApproval = riskLevel >= DomainRiskLevel.High,
+            ShouldBlock = riskLevel >= DomainRiskLevel.VeryHigh && riskScore > 8,
             SecurityAlerts = securityAlerts
         };
     }
@@ -581,7 +578,7 @@ public class TransfersController : ControllerBase
 public class TransferStatusResponse
 {
     public Guid TransactionId { get; set; }
-    public TransactionStatus Status { get; set; }
+    public DomainTransactionStatus Status { get; set; }
     public DateTime LastUpdated { get; set; }
     public string? StatusDescription { get; set; }
     public string? EstimatedCompletion { get; set; }
@@ -611,14 +608,14 @@ public class TransferSummary
     public string Currency { get; set; } = string.Empty;
     public string ToAccountNumber { get; set; } = string.Empty;
     public string BeneficiaryName { get; set; } = string.Empty;
-    public TransactionStatus Status { get; set; }
+    public DomainTransactionStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public string Description { get; set; } = string.Empty;
 }
 
 public class RiskAssessment
 {
-    public RiskLevel RiskLevel { get; set; }
+    public DomainRiskLevel RiskLevel { get; set; }
     public int FraudScore { get; set; }
     public List<string> RiskFactors { get; set; } = new();
     public bool RequiresApproval { get; set; }

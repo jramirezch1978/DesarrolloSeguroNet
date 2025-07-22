@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using SecureBank.Application.Common.Interfaces;
+using SecureBank.Domain.Enums;
 using System.Security.Claims;
 
 namespace SecureBank.Infrastructure.Services;
@@ -27,7 +28,14 @@ public class CurrentUserService : ICurrentUserService
 
     public string? Email => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
 
-    public string? Role => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Role)?.Value;
+    public UserRole? Role
+    {
+        get
+        {
+            var roleClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Role)?.Value;
+            return Enum.TryParse<UserRole>(roleClaim, out var role) ? role : null;
+        }
+    }
 
     public string? IpAddress
     {
@@ -64,16 +72,34 @@ public class CurrentUserService : ICurrentUserService
         return _httpContextAccessor.HttpContext?.User?.IsInRole(role) ?? false;
     }
 
+    public bool HasRole(UserRole role)
+    {
+        var currentRole = Role;
+        return currentRole.HasValue && currentRole.Value == role;
+    }
+
+    public bool HasAnyRole(params UserRole[] roles)
+    {
+        var currentRole = Role;
+        return currentRole.HasValue && roles.Contains(currentRole.Value);
+    }
+
     public bool HasAccessToAccount(Guid accountId)
     {
-        // Implementar lógica de verificación de acceso a cuenta
+        // TODO: Implementar lógica de verificación de acceso a cuenta
+        // Esto debería verificar que el usuario actual tiene acceso a la cuenta específica
         // Por ahora retorna true si el usuario está autenticado
         return IsAuthenticated;
     }
 
-    public SecurityContext GetSecurityContext()
+    public bool CanAccessAccount(Guid accountId)
     {
-        return new SecurityContext
+        return HasAccessToAccount(accountId);
+    }
+
+    public Application.Common.Interfaces.SecurityContext GetSecurityContext()
+    {
+        return new Application.Common.Interfaces.SecurityContext
         {
             UserId = UserId,
             Email = Email,
@@ -94,14 +120,83 @@ public class CurrentUserService : ICurrentUserService
 /// </summary>
 public class SecurityContext
 {
+    /// <summary>
+    /// ID del usuario actual
+    /// </summary>
     public Guid? UserId { get; set; }
+
+    /// <summary>
+    /// Email del usuario actual
+    /// </summary>
     public string? Email { get; set; }
-    public string? Role { get; set; }
+
+    /// <summary>
+    /// Rol del usuario actual
+    /// </summary>
+    public UserRole? Role { get; set; }
+
+    /// <summary>
+    /// Dirección IP de la solicitud
+    /// </summary>
     public string? IpAddress { get; set; }
+
+    /// <summary>
+    /// User Agent del navegador
+    /// </summary>
     public string? UserAgent { get; set; }
+
+    /// <summary>
+    /// Huella digital del dispositivo
+    /// </summary>
     public string? DeviceFingerprint { get; set; }
+
+    /// <summary>
+    /// ID de sesión
+    /// </summary>
     public string? SessionId { get; set; }
+
+    /// <summary>
+    /// Indica si el usuario está autenticado
+    /// </summary>
     public bool IsAuthenticated { get; set; }
+
+    /// <summary>
+    /// Indica si es un dispositivo de confianza
+    /// </summary>
     public bool IsTrustedDevice { get; set; }
+
+    /// <summary>
+    /// Timestamp de la solicitud
+    /// </summary>
     public DateTime RequestTimestamp { get; set; }
+
+    /// <summary>
+    /// Información geográfica derivada de la IP
+    /// </summary>
+    public string? Country { get; set; }
+
+    /// <summary>
+    /// Ciudad derivada de la IP
+    /// </summary>
+    public string? City { get; set; }
+
+    /// <summary>
+    /// Score de riesgo de la sesión
+    /// </summary>
+    public RiskLevel RiskLevel { get; set; } = RiskLevel.Low;
+
+    /// <summary>
+    /// Indica si se requiere autenticación de segundo factor
+    /// </summary>
+    public bool RequiresTwoFactor { get; set; }
+
+    /// <summary>
+    /// Duración de la sesión actual
+    /// </summary>
+    public TimeSpan? SessionDuration { get; set; }
+
+    /// <summary>
+    /// Último acceso registrado
+    /// </summary>
+    public DateTime? LastAccess { get; set; }
 } 

@@ -1,10 +1,12 @@
 using MediatR;
+using SecureBank.Domain.Enums;
+using SecureBank.Shared.DTOs;
 using System.ComponentModel.DataAnnotations;
 
 namespace SecureBank.Application.Features.Products.Commands.ApplyForCredit;
 
 /// <summary>
-/// Command para solicitar un crédito en SecureBank Digital
+/// Comando para solicitar un crédito
 /// </summary>
 public class ApplyForCreditCommand : IRequest<ApplyForCreditResponse>
 {
@@ -24,35 +26,22 @@ public class ApplyForCreditCommand : IRequest<ApplyForCreditResponse>
     /// Monto solicitado
     /// </summary>
     [Required]
-    [Range(1000, 500000, ErrorMessage = "El monto debe estar entre 1,000 y 500,000")]
+    [Range(1000, 500000)]
     public decimal RequestedAmount { get; set; }
 
     /// <summary>
-    /// Plazo solicitado en meses
+    /// Plazo en meses
     /// </summary>
     [Required]
-    [Range(6, 360, ErrorMessage = "El plazo debe estar entre 6 y 360 meses")]
-    public int RequestedTermMonths { get; set; }
-
-    /// <summary>
-    /// Moneda del crédito
-    /// </summary>
-    [Required]
-    [StringLength(3, MinimumLength = 3)]
-    public string Currency { get; set; } = "PEN";
+    [Range(6, 360)]
+    public int TermInMonths { get; set; }
 
     /// <summary>
     /// Propósito del crédito
     /// </summary>
     [Required]
-    [StringLength(500, MinimumLength = 10)]
+    [StringLength(500)]
     public string Purpose { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Información laboral del solicitante
-    /// </summary>
-    [Required]
-    public EmploymentInfo EmploymentInfo { get; set; } = new();
 
     /// <summary>
     /// Información de ingresos
@@ -61,72 +50,10 @@ public class ApplyForCreditCommand : IRequest<ApplyForCreditResponse>
     public IncomeInfo IncomeInfo { get; set; } = new();
 
     /// <summary>
-    /// Información de gastos mensuales
+    /// Información de gastos
     /// </summary>
     [Required]
     public ExpenseInfo ExpenseInfo { get; set; } = new();
-
-    /// <summary>
-    /// Información de bienes y patrimonio
-    /// </summary>
-    public AssetInfo? AssetInfo { get; set; }
-
-    /// <summary>
-    /// Referencias personales
-    /// </summary>
-    [Required]
-    [MinLength(2, ErrorMessage = "Se requieren al menos 2 referencias personales")]
-    public List<PersonalReference> PersonalReferences { get; set; } = new();
-
-    /// <summary>
-    /// Referencias comerciales (opcional)
-    /// </summary>
-    public List<CommercialReference> CommercialReferences { get; set; } = new();
-
-    /// <summary>
-    /// Documentos adjuntos requeridos
-    /// </summary>
-    [Required]
-    public List<DocumentAttachment> Documents { get; set; } = new();
-
-    /// <summary>
-    /// Acepta términos y condiciones
-    /// </summary>
-    [Required]
-    [Range(typeof(bool), "true", "true", ErrorMessage = "Debe aceptar los términos y condiciones")]
-    public bool AcceptTermsAndConditions { get; set; }
-
-    /// <summary>
-    /// Acepta verificación de información crediticia
-    /// </summary>
-    [Required]
-    [Range(typeof(bool), "true", "true", ErrorMessage = "Debe autorizar la verificación crediticia")]
-    public bool AuthorizeCreditCheck { get; set; }
-
-    /// <summary>
-    /// Acepta recibir información comercial
-    /// </summary>
-    public bool AcceptCommercialInformation { get; set; } = false;
-
-    /// <summary>
-    /// Información de auditoría - dirección IP
-    /// </summary>
-    public string IpAddress { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Información de auditoría - user agent
-    /// </summary>
-    public string UserAgent { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Huella digital del dispositivo
-    /// </summary>
-    public string DeviceFingerprint { get; set; } = string.Empty;
-
-    /// <summary>
-    /// ID de sesión
-    /// </summary>
-    public string SessionId { get; set; } = string.Empty;
 }
 
 /// <summary>

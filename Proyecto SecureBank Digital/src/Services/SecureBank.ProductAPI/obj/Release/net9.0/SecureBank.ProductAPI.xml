@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SecureBank.ProductAPI</name>
+    </assembly>
+    <members>
+        <member name="T:SecureBank.ProductAPI.Controllers.CreditsController">
+            <summary>
+            Controlador para gestión de productos crediticios
+            Maneja solicitudes de crédito con ML y análisis de riesgo
+            </summary>
+        </member>
+        <member name="M:SecureBank.ProductAPI.Controllers.CreditsController.ApplyForCredit(SecureBank.ProductAPI.Controllers.ApplyForCreditRequest)">
+            <summary>
+            Solicita un crédito con análisis ML integrado
+            </summary>
+            <param name="request">Datos de la solicitud de crédito</param>
+            <returns>Respuesta de la evaluación crediticia</returns>
+        </member>
+        <member name="M:SecureBank.ProductAPI.Controllers.CreditsController.GetCreditApplications">
+            <summary>
+            Obtiene el historial de solicitudes de crédito
+            </summary>
+            <returns>Lista de solicitudes de crédito</returns>
+        </member>
+    </members>
+</doc>

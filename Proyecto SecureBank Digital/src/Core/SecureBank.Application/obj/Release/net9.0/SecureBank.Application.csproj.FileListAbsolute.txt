@@ -14,3 +14,5 @@ E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\Desarrollo
 E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Core\SecureBank.Application\obj\Release\net9.0\refint\SecureBank.Application.dll
 E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Core\SecureBank.Application\obj\Release\net9.0\SecureBank.Application.pdb
 E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Core\SecureBank.Application\obj\Release\net9.0\ref\SecureBank.Application.dll
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Core\SecureBank.Application\bin\Release\net9.0\SecureBank.Shared.dll
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Core\SecureBank.Application\bin\Release\net9.0\SecureBank.Shared.pdb

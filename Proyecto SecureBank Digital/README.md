@@ -1,538 +1,811 @@
-# 🏦 SecureBank Digital - Sistema Bancario Seguro
+# SecureBank Digital - Proyecto de Banca Digital Segura
 
-<div align="center">
+## Historia de SecureBank Digital
 
-![SecureBank Digital](https://img.shields.io/badge/SecureBank-Digital-blue?style=for-the-badge)
-![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?style=for-the-badge&logo=dotnet)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-![Azure](https://img.shields.io/badge/Azure-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white)
+**SecureBank Digital** fue fundado en 2018 en Lima, Perú, con una visión revolucionaria: crear el primer banco 100% digital del país con un enfoque inquebrantable en la seguridad cibernética. 
 
-*"Security First, Innovation Always"*
+### Nuestra Filosofía
+> **"Security First, Innovation Always"** - La seguridad es nuestro fundamento, la innovación es nuestro motor.
 
-</div>
+### Misión
+Democratizar el acceso a servicios financieros seguros y modernos, proporcionando a los peruanos una experiencia bancaria digital que combine:
+- **Seguridad de nivel mundial**
+- **Innovación tecnológica constante**
+- **Accesibilidad universal**
+- **Transparencia total**
 
-## 🏛️ Historia de SecureBank Digital
+### Evolución y Crecimiento
 
-### Fundación y Orígenes (2018)
-SecureBank Digital fue fundado en Lima, Perú, en 2018 por un grupo de ex-ejecutivos de tecnología financiera y expertos en ciberseguridad, liderados por la visionaria **María Elena Vásquez** (ex-CTO de una fintech internacional) y el especialista en seguridad **Carlos Mendoza** (ex-CISO de una institución bancaria tradicional).
+#### 2018 - Fundación
+- Creación del concepto SecureBank Digital
+- Desarrollo del marco de seguridad inicial
+- Registro ante la SBS (Superintendencia de Banca y Seguros)
 
-### La Visión Inicial
-Los fundadores identificaron una brecha crítica en el mercado financiero peruano: la necesidad de un banco 100% digital que pusiera la seguridad cibernética en el centro de su propuesta de valor, no como una característica adicional, sino como su principal diferenciador competitivo.
+#### 2019 - Lanzamiento MVP
+- Productos básicos: Cuentas de ahorro y corriente
+- Transferencias interbancarias
+- 10,000 primeros usuarios
 
-### 🚀 Hitos Importantes
+#### 2020 - Expansión de Servicios
+- Tarjetas de débito virtuales y físicas
+- Pagos QR y contactless
+- 50,000 usuarios activos
 
-- **2018**: Constitución de la empresa y obtención de licencia bancaria digital
-- **2019**: Lanzamiento del primer producto: cuentas de ahorro con autenticación biométrica
-- **2020**: Durante la pandemia, experimentó un crecimiento del 300% al ser el único banco que garantizó cero brechas de seguridad
-- **2021**: Expansión a servicios empresariales con foco en PyMES del sector tecnológico
-- **2022**: Implementación pionera de tecnología blockchain para validación de transacciones
-- **2023**: Reconocimiento como "Banco Más Seguro de Latinoamérica" por CyberSecurity Excellence Awards
-- **2024**: Alianza estratégica con Microsoft Azure para infraestructura cloud híbrida
-- **2025**: Lanzamiento de la plataforma de Open Banking más segura de la región
+#### 2021 - Era Digital
+- Implementación de inteligencia artificial para prevención de fraudes
+- Lanzamiento de productos de inversión
+- 150,000 usuarios activos
 
-### 🎯 Misión
-*"Democratizar el acceso a servicios financieros digitales de clase mundial, garantizando los más altos estándares de seguridad cibernética y protección de datos, mientras promovemos la inclusión financiera y el crecimiento económico sostenible de nuestros clientes en Perú y la región."*
+#### 2022 - Consolidación
+- Introducción de servicios de préstamos personales
+- Partnership con fintechs locales
+- 300,000 usuarios activos
 
-### 💎 Valores Corporativos
+#### 2023 - Innovación Avanzada
+- Implementación de blockchain para auditorías
+- Servicios de criptomonedas reguladas
+- 500,000 usuarios activos
 
-#### 1. 🛡️ SEGURIDAD PRIMERO
-*"La seguridad no es negociable"*
-- Implementamos controles de seguridad desde el diseño
-- Invertimos continuamente en tecnologías de protección avanzada
-- Mantenemos certificaciones internacionales de seguridad
-- Transparencia total en nuestras prácticas de ciberseguridad
+#### 2024 - Expansión Regional (Proyectada)
+- Lanzamiento en Colombia y Chile
+- Productos empresariales avanzados
+- Meta: 1,000,000 usuarios
 
-#### 2. 🚀 INNOVACIÓN RESPONSABLE
-*"Innovamos sin comprometer la seguridad"*
-- Adoptamos nuevas tecnologías solo después de rigurosas evaluaciones de seguridad
-- Desarrollamos soluciones propias cuando el mercado no ofrece alternativas seguras
-- Contribuimos al ecosistema open source de seguridad financiera
-- Investigación y desarrollo constante en fintech segura
+#### 2025 - Open Banking (Proyectada)
+- Plataforma abierta para terceros
+- Servicios financieros como servicio (FaaS)
+- Liderazgo regional en innovación
 
-#### 3. 🔍 TRANSPARENCIA RADICAL
-*"Nuestros clientes conocen exactamente cómo protegemos su información"*
-- Comunicación clara sobre políticas de seguridad y privacidad
-- Reportes regulares de auditorías de seguridad
-- Educación continua a clientes sobre mejores prácticas de seguridad
-- Admisión proactiva de incidentes y medidas correctivas
+### Valores Corporativos
 
-#### 4. ⭐ EXCELENCIA OPERACIONAL
-*"Cada proceso está diseñado para la perfección y la seguridad"*
-- Automatización inteligente de procesos críticos
-- Monitoreo 24/7 de todos los sistemas
-- Mejora continua basada en métricas de seguridad y satisfacción
-- Personal altamente calificado y certificado en seguridad
+1. **Seguridad Primero** - Cada decisión se evalúa bajo la lente de la seguridad
+2. **Innovación Responsable** - Tecnología de vanguardia con implementación cuidadosa
+3. **Transparencia Radical** - Comunicación abierta y honesta con todos los stakeholders
+4. **Excelencia Operacional** - Procesos optimizados y mejora continua
+5. **Inclusión Digital** - Acceso financiero para todos los segmentos de la población
+6. **Sostenibilidad** - Compromiso con el medio ambiente y la responsabilidad social
 
-#### 5. 🌍 INCLUSIÓN DIGITAL
-*"Tecnología segura para todos"*
-- Interfaces accesibles para personas con discapacidades
-- Servicios financieros para poblaciones rurales y de bajos ingresos
-- Educación financiera digital gratuita
-- Tecnología que se adapta a diferentes niveles de alfabetización digital
+## Arquitectura Tecnológica
 
-#### 6. 🌱 SOSTENIBILIDAD
-*"Crecimiento responsable con el planeta y la sociedad"*
-- Infraestructura cloud eficiente energéticamente
-- Digitalización de procesos para reducir huella de carbono
-- Inversión en proyectos de impacto social positivo
-- Gobierno corporativo ético y responsable
+### Stack Tecnológico Principal
+- **.NET 9** - Framework principal
+- **PostgreSQL en Azure** - Base de datos principal
+- **Azure Key Vault** - Gestión de secretos y claves
+- **Azure Monitor** - Telemetría y Machine Learning
+- **Docker** - Containerización
+- **Azure Service Bus** - Mensajería asíncrona
 
-## 🏗️ Arquitectura del Sistema
+### Arquitectura Modular Híbrida
 
-### Stack Tecnológico
-- **Framework**: ASP.NET Core 9.0 con Clean Architecture
-- **Lenguaje**: C# 12 con nullable reference types
-- **Base de Datos**: PostgreSQL con Entity Framework Core 9
-- **Autenticación**: JWT + OAuth 2.0 + OpenID Connect
-- **Gestión de Secretos**: Azure Key Vault
-- **Logging**: Serilog con structured logging
-- **Validación**: FluentValidation
-- **Mapping**: AutoMapper
-- **Mediator**: MediatR para CQRS
-- **Testing**: xUnit con security tests
+El proyecto implementa una **arquitectura modular híbrida** que combina los principios de **Clean Architecture** con un enfoque de **microservicios modulares**:
 
-### Estructura de Proyectos
+#### Core/Domain Layer
+- **SecureBank.Domain**: Entidades, value objects, enums
+- **SecureBank.Application**: Commands, queries, DTOs, interfaces
+
+#### Infrastructure Layer  
+- **SecureBank.Infrastructure**: Data access, EF Core, PostgreSQL
+- **SecureBank.Security**: JWT, encryption, Key Vault integration
+
+#### API Services
+- **SecureBank.AuthAPI**: Autenticación, registro, login, MFA
+- **SecureBank.AccountAPI**: Gestión de cuentas, saldos
+- **SecureBank.TransactionAPI**: Transferencias, pagos
+- **SecureBank.ProductAPI**: Créditos, inversiones
+
+#### Web Applications
+- **SecureBank.WebApp**: Aplicación web cliente (MVC)
+- **SecureBank.AdminPortal**: Panel administrativo
+
+#### Cross-Cutting
+- **SecureBank.Shared**: DTOs compartidos, utilidades
+- **SecureBank.Tests**: Pruebas unitarias e integración
+
+---
+
+## Configuración de PostgreSQL en Azure
+
+### 1. Creación de la Base de Datos PostgreSQL en Azure
+
+#### Opción A: Portal de Azure (Interfaz Gráfica)
+
+1. **Iniciar sesión en Azure Portal**
+   - Navegar a https://portal.azure.com
+   - Autenticarse con las credenciales de Azure
+
+2. **Crear Azure Database for PostgreSQL**
+   ```
+   Servicios > Bases de datos > Azure Database for PostgreSQL
+   ```
+
+3. **Configuración del Servidor**
+   ```
+   Subscription: [Tu suscripción]
+   Resource Group: rg-securebank-prod
+   Server Name: securebank-postgresql-prod
+   Region: East US 2
+   PostgreSQL Version: 14
+   Compute + Storage: General Purpose, 2 vCores, 100 GB SSD
+   ```
+
+4. **Configuración de Autenticación**
+   ```
+   Authentication Method: PostgreSQL authentication only
+   Admin Username: securebank_admin
+   Password: [Generar contraseña segura]
+   ```
+
+#### Opción B: Azure CLI (Recomendado para Automatización)
+
+```bash
+# Variables de configuración
+RESOURCE_GROUP="rg-securebank-prod"
+LOCATION="eastus2"
+SERVER_NAME="securebank-postgresql-prod"
+ADMIN_USER="securebank_admin"
+ADMIN_PASSWORD="[GenerarPasswordSeguro123!]"
+DATABASE_NAME="securebank_prod"
+
+# Crear resource group
+az group create --name $RESOURCE_GROUP --location $LOCATION
+
+# Crear servidor PostgreSQL
+az postgres server create \
+  --resource-group $RESOURCE_GROUP \
+  --name $SERVER_NAME \
+  --location $LOCATION \
+  --admin-user $ADMIN_USER \
+  --admin-password $ADMIN_PASSWORD \
+  --sku-name GP_Gen5_2 \
+  --version 14 \
+  --storage-size 102400 \
+  --backup-retention 35 \
+  --geo-redundant-backup Enabled \
+  --ssl-enforcement Enabled
+
+# Crear la base de datos
+az postgres db create \
+  --resource-group $RESOURCE_GROUP \
+  --server-name $SERVER_NAME \
+  --name $DATABASE_NAME
+
+# Configurar firewall para Azure Services
+az postgres server firewall-rule create \
+  --resource-group $RESOURCE_GROUP \
+  --server $SERVER_NAME \
+  --name "AllowAzureServices" \
+  --start-ip-address 0.0.0.0 \
+  --end-ip-address 0.0.0.0
+```
+
+#### Opción C: Terraform (Infrastructure as Code)
+
+```hcl
+# main.tf
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>3.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "securebank" {
+  name     = "rg-securebank-prod"
+  location = "East US 2"
+}
+
+resource "azurerm_postgresql_server" "securebank_db" {
+  name                = "securebank-postgresql-prod"
+  location            = azurerm_resource_group.securebank.location
+  resource_group_name = azurerm_resource_group.securebank.name
+
+  administrator_login          = "securebank_admin"
+  administrator_login_password = var.db_admin_password
+
+  sku_name   = "GP_Gen5_2"
+  version    = "14"
+  storage_mb = 102400
+
+  backup_retention_days        = 35
+  geo_redundant_backup_enabled = true
+  auto_grow_enabled           = true
+
+  public_network_access_enabled = false
+  ssl_enforcement_enabled       = true
+  ssl_minimal_tls_version_enforced = "TLS1_2"
+
+  threat_detection_policy {
+    enabled = true
+  }
+
+  tags = {
+    Environment = "Production"
+    Project     = "SecureBank"
+    Security    = "High"
+  }
+}
+
+resource "azurerm_postgresql_database" "securebank_prod" {
+  name                = "securebank_prod"
+  resource_group_name = azurerm_resource_group.securebank.name
+  server_name         = azurerm_postgresql_server.securebank_db.name
+  charset             = "UTF8"
+  collation           = "English_United States.1252"
+}
+
+resource "azurerm_postgresql_virtual_network_rule" "securebank_vnet_rule" {
+  name                                 = "postgresql-vnet-rule"
+  resource_group_name                  = azurerm_resource_group.securebank.name
+  server_name                          = azurerm_postgresql_server.securebank_db.name
+  subnet_id                           = azurerm_subnet.internal.id
+  ignore_missing_vnet_service_endpoint = true
+}
+
+variable "db_admin_password" {
+  description = "Password for PostgreSQL administrator"
+  type        = string
+  sensitive   = true
+}
+```
+
+### 2. Configuración de Seguridad Avanzada
+
+#### Configuración de Red Virtual (VNet)
+
+```bash
+# Crear VNet para aislamiento de red
+az network vnet create \
+  --resource-group $RESOURCE_GROUP \
+  --name securebank-vnet \
+  --address-prefix 10.0.0.0/16 \
+  --subnet-name database-subnet \
+  --subnet-prefix 10.0.1.0/24
+
+# Configurar service endpoint para PostgreSQL
+az network vnet subnet update \
+  --resource-group $RESOURCE_GROUP \
+  --vnet-name securebank-vnet \
+  --name database-subnet \
+  --service-endpoints Microsoft.Sql
+
+# Configurar VNet rule para PostgreSQL
+az postgres server vnet-rule create \
+  --resource-group $RESOURCE_GROUP \
+  --server $SERVER_NAME \
+  --name securebank-vnet-rule \
+  --subnet /subscriptions/[SUBSCRIPTION-ID]/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Network/virtualNetworks/securebank-vnet/subnets/database-subnet
+```
+
+#### Configuración de Private Endpoint
+
+```bash
+# Crear Private Endpoint para mayor seguridad
+az network private-endpoint create \
+  --resource-group $RESOURCE_GROUP \
+  --name securebank-postgresql-pe \
+  --vnet-name securebank-vnet \
+  --subnet database-subnet \
+  --private-connection-resource-id /subscriptions/[SUBSCRIPTION-ID]/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.DBforPostgreSQL/servers/$SERVER_NAME \
+  --group-id postgresqlServer \
+  --connection-name securebank-postgresql-connection
+```
+
+### 3. Obtención de la Cadena de Conexión
+
+#### Método 1: Azure Portal
+
+1. Navegar a tu servidor PostgreSQL en Azure Portal
+2. En el menú izquierdo, seleccionar "Connection strings"
+3. Copiar la cadena de conexión para .NET:
 
 ```
-SecureBankDigital.sln
-├── 📁 Core/Domain
-│   ├── SecureBank.Domain              # Entidades, Value Objects, Enums
-│   └── SecureBank.Application         # Commands, Queries, DTOs, Interfaces
-│
-├── 📁 Infrastructure  
-│   ├── SecureBank.Infrastructure      # Data Access, External Services
-│   └── SecureBank.Security           # JWT, Encryption, KeyVault
-│
-├── 📁 API Services
-│   ├── SecureBank.AuthAPI            # Autenticación/Autorización
-│   ├── SecureBank.AccountAPI         # Cuentas y Saldos
-│   ├── SecureBank.TransactionAPI     # Transferencias y Pagos
-│   └── SecureBank.ProductAPI         # Productos Financieros
-│
-├── 📁 Web Applications
-│   ├── SecureBank.WebApp             # Cliente Web (MVC)
-│   └── SecureBank.AdminPortal        # Panel Administrativo
-│
-└── 📁 Cross-Cutting
-    ├── SecureBank.Shared             # DTOs Compartidos, Utilities
-    └── SecureBank.Tests              # Pruebas Integradas
+Server=securebank-postgresql-prod.postgres.database.azure.com;Database=securebank_prod;Port=5432;User Id=securebank_admin@securebank-postgresql-prod;Password={your_password};Ssl Mode=Require;
 ```
 
-## 🔐 Funcionalidades Principales
+#### Método 2: Azure CLI
 
-### 1. 🔑 Sistema de Autenticación y Autorización Avanzada
+```bash
+# Obtener información del servidor
+az postgres server show \
+  --resource-group $RESOURCE_GROUP \
+  --name $SERVER_NAME \
+  --query "{FQDN:fullyQualifiedDomainName,Name:name}" \
+  --output table
 
-#### Proceso de Registro Seguro:
-1. **Validación de identidad multi-paso:**
-   - Formulario con validación en tiempo real (email, teléfono, documento)
-   - Verificación de email con token temporal encriptado
-   - Verificación de SMS con código de 6 dígitos
-   - Validación de documento de identidad (simulada con OCR mock)
-   - Selfie con documento para verificación biométrica (simulada)
+# La cadena de conexión será:
+# Server={FQDN};Database=securebank_prod;Port=5432;User Id=securebank_admin@{ServerName};Password={Password};Ssl Mode=Require;Trust Server Certificate=true;
+```
 
-2. **Configuración de seguridad inicial:**
-   - Creación de PIN de 6 dígitos con políticas robustas
-   - Configuración obligatoria de pregunta de seguridad
-   - Setup de autenticación de dos factores (TOTP o SMS)
-   - Registro de dispositivo confiable con fingerprinting
-   - Aceptación de términos y condiciones con timestamp y IP
+#### Ejemplo de Cadena de Conexión Completa
 
-#### Proceso de Login Multi-Factor:
-1. **Primera fase - Credenciales básicas:**
-   - Email/documento + PIN con hash BCrypt
-   - Validación de dispositivo (nuevo vs confiable)
-   - Rate limiting: 3 intentos por minuto, bloqueo temporal tras 5 fallos
-   - CAPTCHA después de 2 intentos fallidos
+```
+Server=securebank-postgresql-prod.postgres.database.azure.com;Database=securebank_prod;Port=5432;User Id=securebank_admin@securebank-postgresql-prod;Password=SuperSecurePassword123!;Ssl Mode=Require;Trust Server Certificate=true;Include Error Detail=true;
+```
 
-2. **Segunda fase - Autenticación adicional:**
-   - Si dispositivo nuevo: SMS + pregunta de seguridad
-   - Si dispositivo confiable: Solo TOTP o SMS
-   - Para operaciones críticas: Biometric simulation (huella/facial)
-   - Validación geográfica (bloquear si país diferente sin autorización)
+### 4. Configuración en Azure Key Vault
 
-#### Roles y Permisos:
-- **👤 Cliente Regular**: Consultas, transferencias hasta $1,000, pagos básicos
-- **⭐ Cliente Premium**: Límites elevados, productos de inversión, asesoría
-- **🏢 Cliente Empresarial**: Múltiples usuarios, aprobaciones jerárquicas, reportes
-- **🎧 Operador de Soporte**: Solo lectura de cuentas, no acceso a transacciones
-- **👨‍💼 Gerente**: Aprobación de transacciones sospechosas, gestión de límites
-- **🔍 Auditor de Seguridad**: Acceso completo a logs, métricas de seguridad
-- **⚙️ Administrador**: Gestión completa del sistema
+#### Crear Azure Key Vault
 
-### 2. 💰 Gestión Integral de Cuentas Bancarias
+```bash
+# Variables
+KEY_VAULT_NAME="securebank-keyvault-prod"
 
-#### Tipos de Cuenta:
+# Crear Key Vault
+az keyvault create \
+  --resource-group $RESOURCE_GROUP \
+  --name $KEY_VAULT_NAME \
+  --location $LOCATION \
+  --enabled-for-disk-encryption true \
+  --enabled-for-deployment true \
+  --enabled-for-template-deployment true \
+  --sku premium
 
-##### 🏦 Cuenta de Ahorros
-- **Tasa de interés**: 2.5% anual, cálculo diario
-- **Límite transferencias**: $2,000 diarios, $20,000 mensuales
-- **Sin comisión** de mantenimiento
-- **Retiros gratuitos**: 4 por mes, después $2 por retiro
+# Configurar políticas de acceso para la aplicación
+az keyvault set-policy \
+  --name $KEY_VAULT_NAME \
+  --resource-group $RESOURCE_GROUP \
+  --object-id [APP-OBJECT-ID] \
+  --secret-permissions get list \
+  --key-permissions get list decrypt encrypt \
+  --certificate-permissions get list
+```
 
-##### 💼 Cuenta Corriente
-- **Sin intereses**, sobregiro hasta $500
-- **Límite transferencias**: $5,000 diarios, $50,000 mensuales
-- **Comisión mantenimiento**: $8 mensuales
-- **Chequera digital** incluida
+#### Almacenar la Cadena de Conexión en Key Vault
 
-##### 💎 Cuenta Premium
-- **Tasa preferencial**: 3.2% anual
-- **Límites elevados**: $10,000 diarios, $100,000 mensuales
-- **Sin comisiones** por servicios
-- **Acceso a productos** de inversión exclusivos
+```bash
+# Almacenar la cadena de conexión completa
+az keyvault secret set \
+  --vault-name $KEY_VAULT_NAME \
+  --name "ConnectionStrings--DefaultConnection" \
+  --value "Server=securebank-postgresql-prod.postgres.database.azure.com;Database=securebank_prod;Port=5432;User Id=securebank_admin@securebank-postgresql-prod;Password=SuperSecurePassword123!;Ssl Mode=Require;Trust Server Certificate=true;Include Error Detail=true;"
 
-##### 🏢 Cuenta Empresarial
-- **Multi-usuario** con niveles de aprobación
-- **Límites configurables** por empresa
-- **Reportería avanzada** y API access
-- **Integración** con sistemas contables
+# Almacenar componentes individuales para mayor flexibilidad
+az keyvault secret set \
+  --vault-name $KEY_VAULT_NAME \
+  --name "Database--Server" \
+  --value "securebank-postgresql-prod.postgres.database.azure.com"
 
-### 3. 💸 Sistema de Transferencias con Validación Multi-Capa
+az keyvault secret set \
+  --vault-name $KEY_VAULT_NAME \
+  --name "Database--Name" \
+  --value "securebank_prod"
 
-#### Tipos de Transferencia:
+az keyvault secret set \
+  --vault-name $KEY_VAULT_NAME \
+  --name "Database--UserId" \
+  --value "securebank_admin@securebank-postgresql-prod"
 
-##### 🔄 Transferencias Internas
-- **Validación**: Solo PIN + device verification
-- **Tiempo**: Inmediato
-- **Comisión**: Gratuito
-- **Límite**: Según tipo de cuenta
+az keyvault secret set \
+  --vault-name $KEY_VAULT_NAME \
+  --name "Database--Password" \
+  --value "SuperSecurePassword123!"
 
-##### 🏦 Transferencias Interbancarias
-- **Validación**: PIN + MFA obligatorio para montos > $500
-- **Tiempo**: 1-24 horas según destino
-- **Comisión**: $3 para cuentas regulares, gratuito premium
-- **Verificación**: Cuenta destino con nombre del titular
+# Claves de encriptación para datos sensibles
+az keyvault key create \
+  --vault-name $KEY_VAULT_NAME \
+  --name "data-encryption-key" \
+  --protection software \
+  --size 2048
 
-##### ⏰ Transferencias Programadas/Recurrentes
-- **Configuración**: Fechas y montos fijos
-- **Pre-autorización**: MFA para toda la serie
-- **Cancelación**: Permitida hasta 1 hora antes
-- **Notificaciones**: 24h antes de ejecución
+az keyvault key create \
+  --vault-name $KEY_VAULT_NAME \
+  --name "pii-encryption-key" \
+  --protection software \
+  --size 2048
+```
 
-##### ⚡ Transferencias Express
-- **Comisión adicional**: $5
-- **Disponibilidad**: 24/7 incluso fines de semana
-- **Límite máximo**: $5,000 por operación
-- **Requiere**: Biometric authentication
+#### Configuración usando Managed Identity
 
-#### Proceso de Validación:
-1. **Validación inicial**: Saldo, límites, estado de cuenta, formato
-2. **Scoring de riesgo**: Patrón, lista negra, geolocalización, historial
-3. **Validaciones por monto**: 
-   - $0-500: Solo PIN
-   - $501-2000: PIN + SMS
-   - $2001-5000: PIN + TOTP + pregunta seguridad
-   - >$5000: PIN + biometric + aprobación telefónica
-4. **Post-validación**: Bloqueo temporal, audit log, ejecución atómica, notificación
+```bash
+# Crear Managed Identity para la aplicación
+az identity create \
+  --resource-group $RESOURCE_GROUP \
+  --name securebank-app-identity
 
-### 4. 🧾 Sistema de Pagos y Servicios Integrado
+# Obtener el Object ID de la Managed Identity
+MANAGED_IDENTITY_OBJECT_ID=$(az identity show \
+  --resource-group $RESOURCE_GROUP \
+  --name securebank-app-identity \
+  --query principalId \
+  --output tsv)
 
-#### Categorías de Pagos:
+# Asignar permisos de Key Vault a la Managed Identity
+az keyvault set-policy \
+  --name $KEY_VAULT_NAME \
+  --object-id $MANAGED_IDENTITY_OBJECT_ID \
+  --secret-permissions get list \
+  --key-permissions get list decrypt encrypt unwrapKey wrapKey
+```
 
-##### ⚡ Servicios Básicos
-- Luz, agua, gas, teléfono, internet, cable
-- Validación automática de códigos de cliente
+### 5. Configuración en el Código .NET
+
+#### appsettings.json (para desarrollo local)
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=securebank_dev;Port=5432;User Id=postgres;Password=devpassword;Ssl Mode=Disable;"
+  },
+  "KeyVault": {
+    "VaultUrl": "https://securebank-keyvault-prod.vault.azure.net/"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
+}
+```
+
+#### Program.cs - Configuración de Key Vault
+
+```csharp
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Configurar Key Vault
+if (!builder.Environment.IsDevelopment())
+{
+    var keyVaultUrl = builder.Configuration["KeyVault:VaultUrl"];
+    if (!string.IsNullOrEmpty(keyVaultUrl))
+    {
+        var secretClient = new SecretClient(
+            new Uri(keyVaultUrl), 
+            new DefaultAzureCredential());
+        
+        builder.Configuration.AddAzureKeyVault(
+            new Uri(keyVaultUrl),
+            new DefaultAzureCredential());
+    }
+}
+
+// Configurar Entity Framework con PostgreSQL
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorCodesToAdd: null);
+        npgsqlOptions.CommandTimeout(30);
+    });
+    
+    // Configuraciones adicionales para producción
+    if (!builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging(false);
+        options.EnableDetailedErrors(false);
+    }
+});
+
+var app = builder.Build();
+
+// Aplicar migraciones automáticamente en producción
+if (!app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await context.Database.MigrateAsync();
+}
+
+app.Run();
+```
+
+#### Configuración de DbContext
+
+```csharp
+// ApplicationDbContext.cs
+public class ApplicationDbContext : DbContext, IApplicationDbContext
+{
+    private readonly IConfiguration _configuration;
+    private readonly ICurrentUserService _currentUserService;
+
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        IConfiguration configuration,
+        ICurrentUserService currentUserService) : base(options)
+    {
+        _configuration = configuration;
+        _currentUserService = currentUserService;
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+            optionsBuilder.UseNpgsql(connectionString);
+        }
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Configurar esquema por defecto
+        modelBuilder.HasDefaultSchema("securebank");
+        
+        // Configuraciones adicionales...
+        base.OnModelCreating(modelBuilder);
+    }
+}
+```
+
+### 6. Configuración de Variables de Entorno para Producción
+
+#### Azure App Service - Configuration
+
+```bash
+# Configurar variables de entorno en Azure App Service
+az webapp config appsettings set \
+  --resource-group $RESOURCE_GROUP \
+  --name securebank-webapp-prod \
+  --settings \
+  "ASPNETCORE_ENVIRONMENT=Production" \
+  "KeyVault__VaultUrl=https://securebank-keyvault-prod.vault.azure.net/" \
+  "AZURE_CLIENT_ID=[MANAGED-IDENTITY-CLIENT-ID]"
+```
+
+#### Docker - docker-compose.yml para producción
+
+```yaml
+version: '3.8'
+services:
+  securebank-api:
+    image: securebank/api:latest
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - KeyVault__VaultUrl=https://securebank-keyvault-prod.vault.azure.net/
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+    depends_on:
+      - postgres
+    networks:
+      - securebank-network
+
+  postgres:
+    image: postgres:14
+    environment:
+      - POSTGRES_DB=securebank_prod
+      - POSTGRES_USER=securebank_admin
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - securebank-network
+
+secrets:
+  postgres_password:
+    external: true
+
+volumes:
+  postgres_data:
+
+networks:
+  securebank-network:
+    driver: bridge
+```
+
+### 7. Monitoreo y Backup
+
+#### Configuración de Backup Automático
+
+```bash
+# Configurar backup automático
+az postgres server configuration set \
+  --resource-group $RESOURCE_GROUP \
+  --server-name $SERVER_NAME \
+  --name backup_retention_days \
+  --value 35
+
+# Configurar backup geo-redundante
+az postgres server configuration set \
+  --resource-group $RESOURCE_GROUP \
+  --server-name $SERVER_NAME \
+  --name geo_redundant_backup \
+  --value on
+```
+
+#### Configuración de Alertas
+
+```bash
+# Crear alert rule para conexiones
+az monitor metrics alert create \
+  --name "PostgreSQL High Connections" \
+  --resource-group $RESOURCE_GROUP \
+  --scopes /subscriptions/[SUBSCRIPTION-ID]/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.DBforPostgreSQL/servers/$SERVER_NAME \
+  --condition "count static average active_connections > 80" \
+  --description "Alert when active connections exceed 80"
+```
+
+### 8. Mejores Prácticas de Seguridad
+
+1. **Encriptación en Tránsito**: Siempre usar SSL/TLS
+2. **Encriptación en Reposo**: Habilitar Azure Storage Service Encryption
+3. **Acceso de Red**: Usar Private Endpoints cuando sea posible
+4. **Autenticación**: Implementar Azure AD authentication
+5. **Auditoría**: Habilitar audit logging
+6. **Backup**: Configurar backups automáticos geo-redundantes
+7. **Monitoreo**: Implementar alertas proactivas
+8. **Rotación de Contraseñas**: Rotar credenciales regularmente
+
+---
+
+## Funcionalidades Principales
+
+### 1. Autenticación y Seguridad
+- Registro de usuarios con verificación multi-factor
+- Login seguro con protección anti-fraude
+- Gestión de dispositivos de confianza
+- Encriptación end-to-end de datos sensibles
+
+### 2. Gestión de Cuentas
+- Apertura de cuentas digitales (ahorro, corriente, premium, empresarial)
+- Consulta de saldos y movimientos en tiempo real
+- Configuración de límites personalizados
+- Estados de cuenta digitales
+
+### 3. Transferencias y Pagos
+- Transferencias entre cuentas propias
+- Transferencias interbancarias (CCI)
+- Pagos de servicios (luz, agua, teléfono, etc.)
 - Programación de pagos recurrentes
-- Descuentos por pago anticipado
 
-##### 📊 Impuestos y Tributos
-- SUNAT: renta, IGV, tributos municipales
-- Validación de RUC/DNI automática
-- Generación de constancias de pago
-- Integración con cronograma de vencimientos
+### 4. Productos Financieros
+- Solicitud de créditos personales con scoring automático
+- Productos de inversión (depósitos a plazo, fondos mutuos)
+- Simuladores financieros
+- Recomendaciones personalizadas
 
-##### 🛡️ Seguros y Pensiones
-- Seguros vehiculares, vida, hogar
-- AFP y sistemas previsionales
-- Validación de pólizas activas
-- Cálculo automático de primas
+### 5. Panel Administrativo
+- Dashboard de métricas en tiempo real
+- Gestión de usuarios y roles
+- Monitoreo de transacciones
+- Reportes de seguridad y auditoría
 
-##### 🎓 Educación y Entretenimiento
-- Colegios, universidades, institutos
-- Plataformas streaming, gaming, apps
-- Validación de códigos estudiantiles
-- Descuentos por volumen familiar
+## Características de Seguridad
 
-### 5. 📈 Productos Financieros con Simuladores
+### Encriptación
+- **AES-256-GCM** para datos sensibles
+- **BCrypt** para contraseñas y PINs
+- **SHA-256** para integridad de datos
 
-#### Módulo de Créditos y Préstamos:
+### Autenticación
+- **JWT** con rotación de refresh tokens
+- **Multi-Factor Authentication (MFA)**
+- **Device fingerprinting**
 
-##### 📊 Evaluación Crediticia Automática
-- Análisis de historial transaccional (6 meses mínimo)
-- Scoring basado en ingresos promedio y regularidad
-- Verificación en centrales de riesgo (simulada)
-- Cálculo de capacidad de pago (30% ingresos máximo)
+### Auditoría
+- **Audit trail inmutable** con hash chaining
+- **Logging estructurado** en Azure Monitor
+- **Detección de fraude** en tiempo real
 
-##### 💰 Tipos de Crédito
-- **Personal**: hasta $15,000, 12-60 meses, 15-25% TEA
-- **Vehicular**: hasta $80,000, 12-84 meses, 12-18% TEA
-- **Hipotecario**: hasta $200,000, 120-360 meses, 8-12% TEA
-- **Línea de crédito**: revolving, hasta $5,000, 18-30% TEA
+### Cumplimiento
+- **Rate limiting** para prevenir ataques
+- **Validación robusta** de inputs
+- **Headers de seguridad** (CSP, HSTS, etc.)
+- **Protección PII** con encriptación específica
 
-#### Módulo de Inversiones:
+## Integración con Azure Monitor para ML
 
-##### 🏦 Depósitos a Plazo Fijo
-- **Plazos**: 30, 60, 90, 180, 360 días
-- **Tasas**: Escalonadas según monto y plazo
-- **Simulador**: Rentabilidad con proyecciones
-- **Renovación**: Automática opcional
+El proyecto incluye una integración completa con Azure Monitor y Application Insights, diseñada específicamente para extraer datos relevantes para Machine Learning:
 
-##### 📊 Fondos Mutuos
-- **Conservador** (bonos): 5-8% anual
-- **Moderado** (mixto): 8-12% anual
-- **Agresivo** (acciones): 10-18% anual con volatilidad
-- **Simulación**: Con datos históricos de mercado
+### Categorías de Datos Capturados
+- **Eventos de Seguridad**: Intentos de login, accesos no autorizados
+- **Eventos de Transacción**: Patrones de gasto, frecuencia de uso
+- **Comportamiento de Usuario**: Navegación, preferencias, horarios de uso
+- **Detección de Fraude**: Análisis de riesgo, alertas automáticas
 
-##### 📈 Trading Básico
-- **Compra/venta**: Acciones principales de BVL
-- **Órdenes**: Limitadas y de mercado
-- **Portfolio tracking**: P&L en tiempo real
-- **Alertas**: Precio y noticias relevantes
+### Modelos de ML Implementados
+- **Isolation Forest**: Detección de anomalías
+- **Gradient Boosting**: Scoring de crédito
+- **LSTM**: Análisis de series temporales
+- **K-Means**: Segmentación de usuarios
+- **XGBoost**: Predicción de riesgo
 
-### 6. 🔔 Centro de Notificaciones y Alertas Inteligentes
+Para más detalles, consultar la documentación en `docs/azure/azure-monitor-ml-integration.md`
 
-#### Sistema Multi-Canal:
-
-##### 📱 Push Notifications In-App
-- Transacciones completadas/fallidas
-- Alertas de seguridad en tiempo real
-- Recordatorios de pagos próximos a vencer
-- Ofertas personalizadas de productos
-
-##### 📧 Email Notifications
-- Estados de cuenta mensuales
-- Resúmenes de actividad semanal
-- Alertas de cambios en configuración
-- Confirmaciones de operaciones importantes
-
-##### 📱 SMS Alerts
-- Transacciones mayores a $200
-- Intentos de login desde dispositivos nuevos
-- Códigos de verificación para MFA
-- Alertas de saldo bajo (configurable)
-
-#### Configuración Personalizable:
-- **Umbrales personalizables** para cada tipo de alerta
-- **Horarios de silencio** para notificaciones no críticas
-- **Canales preferenciales** por tipo de operación
-- **Frecuencia de resúmenes** (diario, semanal, mensual)
-
-### 7. 🎛️ Panel Administrativo con Analytics Avanzado
-
-#### Dashboard Operacional:
-
-##### 📊 Métricas en Tiempo Real
-- Transacciones por segundo/minuto/hora
-- Valor total procesado en el día
-- Usuarios activos concurrentes
-- Tiempo de respuesta promedio de APIs
-
-##### 🛡️ Indicadores de Seguridad
-- Intentos de login fallidos por hora
-- Transacciones bloqueadas por fraude
-- Alertas de seguridad activas
-- Eventos sospechosos detectados
-
-##### 👥 Gestión de Usuarios
-- Lista completa con filtros avanzados
-- Histórico de actividad por usuario
-- Bloqueo/desbloqueo de cuentas
-- Reset de credenciales de emergencia
-
-#### Sistema de Detección de Fraude:
-
-##### 🤖 Reglas Automáticas
-- Múltiples transacciones en corto tiempo
-- Transacciones desde ubicaciones geográficas inusuales
-- Montos atípicos basados en historial del usuario
-- Patrones de comportamiento anómalos
-
-##### 🧠 Machine Learning Simulado
-- Scoring de riesgo basado en variables múltiples
-- Detección de anomalías en tiempo real
-- Aprendizaje de patrones normales por usuario
-- Ajuste automático de umbrales de detección
-
-##### 🔍 Workflow de Investigación
-- Cola de casos sospechosos para revisión manual
-- Herramientas de investigación con timeline
-- Capacidad de bloquear/permitir transacciones
-- Documentación de decisiones para auditoría
-
-## 🛡️ Características de Seguridad
-
-### Encriptación y Protección de Datos
-- **Datos en reposo**: AES-256 para todos los campos sensibles
-- **Datos en tránsito**: HTTPS obligatorio con TLS 1.3
-- **PII protection**: Hash irreversible para documentos de identidad
-- **Key rotation**: Automática cada 90 días
-
-### Audit Trail Inmutable
-- **Logging completo**: Toda acción del usuario genera log estructurado
-- **Retention policy**: Logs de seguridad por 7 años, transaccionales por 10 años
-- **Tamper detection**: Hash chains para detectar modificación de logs
-- **Real-time alerting**: Alertas automáticas para eventos críticos
-
-### Validación y Sanitización Robusta
-- **Input validation**: FluentValidation para todos los endpoints
-- **Output encoding**: Prevención de XSS en todas las respuestas HTML
-- **SQL injection prevention**: Uso exclusivo de parameterized queries
-- **Rate limiting**: Throttling por usuario y por endpoint
-
-### Session Management Seguro
-- **JWT con refresh tokens**: Rotación automática cada 15 minutos
-- **Session timeout**: 30 minutos de inactividad, logout automático
-- **Concurrent sessions**: Máximo 2 sesiones activas por usuario
-- **Device binding**: Tokens vinculados a device fingerprint
-
-## 🚀 Instalación y Configuración
+## Configuración y Despliegue
 
 ### Prerrequisitos
-- .NET 9.0 SDK
+- .NET 9 SDK
 - PostgreSQL 14+
-- Azure CLI (para Key Vault)
-- Visual Studio 2022 o VS Code
+- Azure Subscription
+- Docker (opcional)
 
-### Configuración de Base de Datos
+### Variables de Entorno
+
 ```bash
-# Cadena de conexión (almacenada en Key Vault)
-Server=localhost;Database=SecureBankDigital;User Id=postgres;Password=123456;
+# Desarrollo Local
+export ASPNETCORE_ENVIRONMENT=Development
+export ConnectionStrings__DefaultConnection="Server=localhost;Database=securebank_dev;Port=5432;User Id=postgres;Password=devpassword;"
+
+# Producción (usando Key Vault)
+export ASPNETCORE_ENVIRONMENT=Production
+export KeyVault__VaultUrl="https://securebank-keyvault-prod.vault.azure.net/"
+export AZURE_CLIENT_ID="[managed-identity-client-id]"
 ```
 
-### Configuración de Key Vault
-Los siguientes secretos deben estar configurados en Azure Key Vault:
-- `ConnectionString-Database`
-- `JWT-SecretKey`
-- `JWT-Issuer`
-- `JWT-Audience`
-- `Encryption-MasterKey`
-- `SMS-ApiKey`
-- `Email-ApiKey`
+### Comandos de Instalación
 
-### Comandos de Inicio
 ```bash
 # Clonar el repositorio
-git clone [repository-url]
-cd SecureBankDigital
+git clone https://github.com/securebank/SecureBank.Digital.git
+cd SecureBank.Digital
 
-# Restaurar paquetes
+# Restaurar dependencias
 dotnet restore
 
 # Ejecutar migraciones
 dotnet ef database update --project src/Infrastructure/SecureBank.Infrastructure
 
-# Ejecutar aplicación web
-dotnet run --project src/Web/SecureBank.WebApp
+# Compilar la solución
+dotnet build --configuration Release
 
-# Ejecutar APIs (en terminales separadas)
-dotnet run --project src/Services/SecureBank.AuthAPI
-dotnet run --project src/Services/SecureBank.AccountAPI
-dotnet run --project src/Services/SecureBank.TransactionAPI
-dotnet run --project src/Services/SecureBank.ProductAPI
-```
-
-## 🧪 Testing
-
-### Ejecutar Pruebas
-```bash
-# Todas las pruebas
+# Ejecutar tests
 dotnet test
 
-# Pruebas de seguridad específicas
-dotnet test --filter Category=Security
-
-# Pruebas de integración
-dotnet test --filter Category=Integration
-
-# Cobertura de código
-dotnet test --collect:"XPlat Code Coverage"
+# Ejecutar la aplicación
+dotnet run --project src/Services/SecureBank.AuthAPI
 ```
 
-### Cobertura Requerida
-- **Lógica de negocio**: Mínimo 80%
-- **Funciones de seguridad**: Mínimo 95%
-- **APIs críticas**: 100%
+### Docker Compose
 
-## 📊 Monitoreo y Métricas
+```bash
+# Levantar el stack completo
+docker-compose up -d
 
-### Dashboards Disponibles
-- **Operacional**: Transacciones, rendimiento, usuarios activos
-- **Seguridad**: Intentos de fraude, alertas, eventos sospechosos
-- **Negocio**: Productos más usados, ingresos, conversiones
+# Ver logs
+docker-compose logs -f
 
-### Alertas Configuradas
-- **Críticas**: Brechas de seguridad, fallos del sistema
-- **Advertencias**: Patrones inusuales, límites alcanzados
-- **Informativas**: Métricas de rendimiento, estadísticas de uso
+# Parar el stack
+docker-compose down
+```
 
-## 🤝 Contribución
+## Contribución
 
-### Estándares de Código
-- **C# Guidelines**: Seguir convenciones de Microsoft
-- **Security First**: Toda funcionalidad debe pasar revisión de seguridad
-- **Testing**: Cobertura mínima del 80%
-- **Documentation**: Comentarios XML en APIs públicas
+### Estructura de Commits
+```
+type(scope): description
 
-### Proceso de Pull Request
-1. **Fork** del repositorio
-2. **Crear branch** con nombre descriptivo
-3. **Implementar** funcionalidad con tests
-4. **Ejecutar** suite completa de pruebas
-5. **Crear PR** con descripción detallada
-6. **Revisión** de seguridad obligatoria
-7. **Merge** después de aprobación
+- feat: nueva funcionalidad
+- fix: corrección de bugs
+- docs: documentación
+- style: formato de código
+- refactor: refactorización
+- test: tests
+- chore: tareas de mantenimiento
+```
 
-## 📋 Casos de Uso Implementados
+### Proceso de Desarrollo
+1. Fork del repositorio
+2. Crear branch feature/nombre-funcionalidad
+3. Desarrollar con tests
+4. Pull request con descripción detallada
+5. Code review y aprobación
+6. Merge a develop
 
-### ✅ Casos Críticos Completados
+## Licencia
 
-#### 1. Onboarding Completo de Cliente
-- ✅ Registro inicial con validación de identidad en múltiples pasos
-- ✅ Configuración de seguridad (MFA, preguntas, dispositivos)
-- ✅ Apertura automática de cuenta según perfil
-- ✅ Tutorial interactivo de seguridad
-- ✅ Primera transacción guiada con validaciones
+Este proyecto es propiedad de SecureBank Digital S.A. Todos los derechos reservados.
 
-#### 2. Transferencia de Alto Riesgo
-- ✅ Detección de patrones inusuales
-- ✅ Escalación de nivel de verificación
-- ✅ Proceso de aprobación manual
-- ✅ Monitoreo post-transacción
+## Contacto
 
-#### 3. Detección y Respuesta a Fraude
-- ✅ Bloqueo automático de cuentas
-- ✅ Notificación multi-canal
-- ✅ Proceso de verificación para desbloqueo
-- ✅ Investigación forense
-
-#### 4. Renovación de Producto Financiero
-- ✅ Alertas automatizadas
-- ✅ Simulador de condiciones
-- ✅ Proceso de renovación digital
-- ✅ Confirmación y actualización
-
-## 📞 Soporte
-
-### Contacto
-- **Email**: support@securebankdigital.pe
-- **Teléfono**: +51 1 234-5678
-- **Chat**: Disponible 24/7 en la aplicación
-
-### Documentación Técnica
-- **API Reference**: `/docs/api`
-- **Architecture Guide**: `/docs/architecture`
-- **Security Whitepaper**: `/docs/security`
+- **Email**: developers@securebank.digital
+- **Slack**: #securebank-dev
+- **Wiki**: https://wiki.securebank.digital
 
 ---
 
-<div align="center">
-
-**SecureBank Digital** - *Innovando con Seguridad desde 2018*
-
-[![Estado del Build](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Cobertura de Código](https://img.shields.io/badge/coverage-92%25-brightgreen)]()
-[![Última Auditoría de Seguridad](https://img.shields.io/badge/security%20audit-passed-brightgreen)]()
-
-*© 2025 SecureBank Digital. Todos los derechos reservados.*
-
-</div> 
+**SecureBank Digital** - Construyendo el futuro de la banca digital en Latinoamérica 🏦🔒 

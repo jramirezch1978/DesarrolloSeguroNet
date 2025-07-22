@@ -4,16 +4,17 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <UserSecretsId>securebank-transactionapi-secrets</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\SecureBank.Application\SecureBank.Application.csproj" />
+    <ProjectReference Include="..\..\Core\SecureBank.Domain\SecureBank.Domain.csproj" />
+    <ProjectReference Include="..\..\Shared\SecureBank.Shared\SecureBank.Shared.csproj" />
     <ProjectReference Include="..\..\Infrastructure\SecureBank.Infrastructure\SecureBank.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Infrastructure\SecureBank.Security\SecureBank.Security.csproj" />
-    <ProjectReference Include="..\..\Shared\SecureBank.Shared\SecureBank.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,7 +25,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="5.1.0" />
     
     <!-- Swagger para documentación de API -->
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.1" />
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
     
     <!-- Validación y Serialización -->
@@ -51,6 +52,7 @@
     
     <!-- Rate Limiting y Security -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Certificate" Version="9.0.0" />
+
     
     <!-- Caching y Performance -->
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.0" />

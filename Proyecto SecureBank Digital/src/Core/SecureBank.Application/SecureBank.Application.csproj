@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SecureBank.Domain\SecureBank.Domain.csproj" />
+    <ProjectReference Include="..\..\Shared\SecureBank.Shared\SecureBank.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

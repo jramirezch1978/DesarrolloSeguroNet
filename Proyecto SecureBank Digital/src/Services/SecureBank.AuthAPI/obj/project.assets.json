@@ -2882,7 +2882,8 @@
           "Microsoft.EntityFrameworkCore": "9.0.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0",
           "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
-          "SecureBank.Domain": "1.0.0"
+          "SecureBank.Domain": "1.0.0",
+          "SecureBank.Shared": "1.0.0"
         },
         "compile": {
           "bin/placeholder/SecureBank.Application.dll": {}
@@ -2908,6 +2909,8 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
+          "Microsoft.ApplicationInsights": "2.22.0",
+          "Microsoft.ApplicationInsights.AspNetCore": "2.22.0",
           "Microsoft.AspNetCore.Http.Abstractions": "2.2.0",
           "Microsoft.EntityFrameworkCore": "9.0.0",
           "Microsoft.Extensions.Configuration.Abstractions": "9.0.0",
@@ -2916,6 +2919,7 @@
           "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.0",
           "SecureBank.Application": "1.0.0",
+          "SecureBank.Domain": "1.0.0",
           "SecureBank.Security": "1.0.0"
         },
         "compile": {
