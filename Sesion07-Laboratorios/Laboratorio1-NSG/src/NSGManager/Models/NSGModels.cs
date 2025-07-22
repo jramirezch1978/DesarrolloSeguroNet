@@ -183,7 +183,7 @@ public class ConnectivityInfo
 /// </summary>
 public class FlowLogMetrics
 {
-    public DateTime Period { get; set; }
+    public TimeSpan Period { get; set; }
     public long TotalFlows { get; set; }
     public long AllowedFlows { get; set; }
     public long DeniedFlows { get; set; }

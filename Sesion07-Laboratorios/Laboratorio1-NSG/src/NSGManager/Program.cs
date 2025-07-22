@@ -75,15 +75,6 @@ class Program
 
     static RootCommand CreateRootCommand(IServiceProvider services)
     {
-        var rootCommand = new RootCommand("🛡️ NSG Manager - Gestión Avanzada de Network Security Groups")
-        {
-            CreateBasicCommand(services),
-            CreateAdvancedCommand(services),
-            CreateValidateCommand(services),
-            CreateReportCommand(services),
-            CreateCleanupCommand(services)
-        };
-
         // Opciones globales
         var resourceGroupOption = new Option<string>(
             "--resource-group",
@@ -98,6 +89,15 @@ class Program
             "--subscription",
             description: "ID de la suscripción de Azure (opcional)");
 
+        var rootCommand = new RootCommand("🛡️ NSG Manager - Gestión Avanzada de Network Security Groups")
+        {
+            CreateBasicCommand(services, resourceGroupOption, locationOption, subscriptionOption),
+            CreateAdvancedCommand(services, resourceGroupOption, locationOption, subscriptionOption),
+            CreateValidateCommand(services, resourceGroupOption, locationOption, subscriptionOption),
+            CreateReportCommand(services, resourceGroupOption, locationOption, subscriptionOption),
+            CreateCleanupCommand(services, resourceGroupOption, locationOption, subscriptionOption)
+        };
+
         rootCommand.AddGlobalOption(resourceGroupOption);
         rootCommand.AddGlobalOption(locationOption);
         rootCommand.AddGlobalOption(subscriptionOption);
@@ -105,7 +105,7 @@ class Program
         return rootCommand;
     }
 
-    static Command CreateBasicCommand(IServiceProvider services)
+    static Command CreateBasicCommand(IServiceProvider services, Option<string> resourceGroupOption, Option<string> locationOption, Option<string> subscriptionOption)
     {
         var command = new Command("create-basic", "🔧 Crear NSGs básicos con reglas estándar");
         
@@ -136,13 +136,12 @@ class Program
             
             logger.LogInformation("✅ NSGs básicos creados exitosamente");
             
-        }, new Argument<string>("resource-group"), new Argument<string>("location"), 
-           new Argument<string>("subscription"), vnetNameOption);
+        }, resourceGroupOption, locationOption, subscriptionOption, vnetNameOption);
 
         return command;
     }
 
-    static Command CreateAdvancedCommand(IServiceProvider services)
+    static Command CreateAdvancedCommand(IServiceProvider services, Option<string> resourceGroupOption, Option<string> locationOption, Option<string> subscriptionOption)
     {
         var command = new Command("create-advanced", "🎯 Crear NSGs avanzados con ASGs y reglas granulares");
         
@@ -189,13 +188,12 @@ class Program
             
             logger.LogInformation("✅ NSGs avanzados creados exitosamente");
             
-        }, new Argument<string>("resource-group"), new Argument<string>("location"), 
-           new Argument<string>("subscription"), enableASGsOption, enableFlowLogsOption);
+        }, resourceGroupOption, locationOption, subscriptionOption, enableASGsOption, enableFlowLogsOption);
 
         return command;
     }
 
-    static Command CreateValidateCommand(IServiceProvider services)
+    static Command CreateValidateCommand(IServiceProvider services, Option<string> resourceGroupOption, Option<string> locationOption, Option<string> subscriptionOption)
     {
         var command = new Command("validate", "🔍 Validar configuración de NSGs existentes");
         
@@ -225,13 +223,12 @@ class Program
             // Mostrar resultados
             DisplayValidationResults(results, logger);
             
-        }, new Argument<string>("resource-group"), new Argument<string>("location"), 
-           new Argument<string>("subscription"), detailedOption);
+        }, resourceGroupOption, locationOption, subscriptionOption, detailedOption);
 
         return command;
     }
 
-    static Command CreateReportCommand(IServiceProvider services)
+    static Command CreateReportCommand(IServiceProvider services, Option<string> resourceGroupOption, Option<string> locationOption, Option<string> subscriptionOption)
     {
         var command = new Command("security-report", "📊 Generar reporte de seguridad completo");
         
@@ -239,6 +236,16 @@ class Program
             "--format",
             getDefaultValue: () => "console",
             description: "Formato de salida: console, json, html, csv");
+        
+        // Configurar valores válidos para la opción format
+        outputFormatOption.AddValidator(result =>
+        {
+            var value = result.GetValueForOption(outputFormatOption);
+            if (value != null && !new[] { "console", "json", "html", "csv" }.Contains(value.ToLower()))
+            {
+                result.ErrorMessage = $"Formato '{value}' no válido. Usar: console, json, html, csv";
+            }
+        });
             
         var outputFileOption = new Option<string>(
             "--output",
@@ -258,21 +265,22 @@ class Program
             {
                 ResourceGroupName = resourceGroup,
                 SubscriptionId = subscription,
-                Format = format,
-                OutputFile = output
+                Format = format?.ToLower() ?? "console",
+                OutputFile = output,
+                IncludeRecommendations = true,
+                IncludeComplianceCheck = true
             };
             
             await reportingService.GenerateSecurityReportAsync(options);
             
             logger.LogInformation("✅ Reporte generado exitosamente");
             
-        }, new Argument<string>("resource-group"), new Argument<string>("location"), 
-           new Argument<string>("subscription"), outputFormatOption, outputFileOption);
+        }, resourceGroupOption, locationOption, subscriptionOption, outputFormatOption, outputFileOption);
 
         return command;
     }
 
-    static Command CreateCleanupCommand(IServiceProvider services)
+    static Command CreateCleanupCommand(IServiceProvider services, Option<string> resourceGroupOption, Option<string> locationOption, Option<string> subscriptionOption)
     {
         var command = new Command("cleanup", "🧹 Limpiar recursos creados por el laboratorio");
         
@@ -311,8 +319,7 @@ class Program
             
             logger.LogInformation("✅ Recursos eliminados exitosamente");
             
-        }, new Argument<string>("resource-group"), new Argument<string>("location"), 
-           new Argument<string>("subscription"), confirmOption);
+        }, resourceGroupOption, locationOption, subscriptionOption, confirmOption);
 
         return command;
     }
