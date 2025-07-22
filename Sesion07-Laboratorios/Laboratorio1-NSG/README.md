@@ -224,7 +224,7 @@ Los ASGs permiten agrupar máquinas virtuales lógicamente por función, indepen
 Internet → Subnet NSG → NIC NSG → Virtual Machine
 ```
 
-#### Flujo de Evaluación para Tráfico Saliente
+#### Flujo de Evaluación para Tráfico Saliente  
 
 ```
 Virtual Machine → NIC NSG → Subnet NSG → Internet
@@ -697,7 +697,7 @@ var webNsgRules = new[]
         SourceAddressPrefix = "Internet",
         DestinationAddressPrefix = "VirtualNetwork"
     },
-  
+    
     // Priority 110: HTTP desde Internet (para redirecciones)
     new SecurityRule
     {
@@ -711,7 +711,7 @@ var webNsgRules = new[]
         SourceAddressPrefix = "Internet",
         DestinationAddressPrefix = "VirtualNetwork"
     },
-  
+    
     // Priority 120: Health Probes
     new SecurityRule
     {
@@ -725,7 +725,7 @@ var webNsgRules = new[]
         SourceAddressPrefix = "AzureLoadBalancer",
         DestinationAddressPrefix = "*"
     },
-  
+    
     // Priority 4000: Bloqueo explícito de protocolos inseguros
     new SecurityRule
     {
@@ -773,7 +773,7 @@ var asgRules = new[]
         DestinationApplicationSecurityGroups = new[] { "asg-appservers" },
         DestinationPortRanges = new[] { "80", "443", "8080", "8443" }
     },
-  
+    
     // App servers pueden comunicarse con DB servers
     new SecurityRule
     {
@@ -786,7 +786,7 @@ var asgRules = new[]
         DestinationApplicationSecurityGroups = new[] { "asg-dbservers" },
         DestinationPortRanges = new[] { "1433", "3306", "5432", "1521" }
     },
-  
+    
     // Bloqueo explícito: Web servers NO pueden acceder a DB servers
     new SecurityRule
     {
@@ -812,13 +812,13 @@ public class ZeroTrustPrinciples
 {
     // Nunca confíes, siempre verifica
     public bool NeverTrustAlwaysVerify => true;
-  
+    
     // Menor privilegio por defecto
     public string DefaultAccess => "Deny";
-  
+    
     // Verificación explícita de cada conexión
     public bool ExplicitVerification => true;
-  
+    
     // Segmentación de red granular
     public bool MicroSegmentation => true;
 }
@@ -832,13 +832,13 @@ public class ComplianceSettings
 {
     // PCI DSS: Segmentación de red
     public bool PCIDSSCompliant => HasDatabaseSegmentation();
-  
+    
     // HIPAA: Cifrado en tránsito obligatorio
     public bool HIPAACompliant => RequiresHTTPS();
-  
+    
     // SOX: Auditoría completa de accesos
     public bool SOXCompliant => EnablesFullAuditing();
-  
+    
     // GDPR: Control de ubicación geográfica
     public bool GDPRCompliant => RestrictsGeographicAccess();
 }
@@ -856,7 +856,7 @@ public class DevSecOpsIntegration
         var violations = await SecurityScanner.ScanNSGRules();
         return violations.Count == 0;
     }
-  
+    
     // Rollback automático si se detectan vulnerabilidades
     public async Task AutoRollbackIfInsecure()
     {
@@ -876,7 +876,7 @@ public class DevSecOpsIntegration
 - Configura VNETs con subredes optimizadas
 - Establece convenciones de naming
 
-### script-deploy-nsgs.ps1
+### script-deploy-nsgs.ps1  
 
 - Despliega NSGs con mejores prácticas
 - Configura reglas según el patrón de arquitectura
@@ -949,7 +949,7 @@ Al completar este laboratorio, habrán dominado:
 ### Conocimientos Técnicos
 
 - ✅ **Arquitectura NSG avanzada** con múltiples capas
-- ✅ **Service Tags** para simplificación y mantenimiento
+- ✅ **Service Tags** para simplificación y mantenimiento  
 - ✅ **Application Security Groups** para escalabilidad
 - ✅ **Programación con Azure SDK** para automatización
 - ✅ **Templates Infrastructure as Code** con Bicep
@@ -1165,4 +1165,4 @@ dotnet run -- create-advanced --resource-group $resourceGroup --location $locati
 
 **¡Excelente trabajo!** Han implementado una arquitectura de seguridad de red enterprise-grade que puede proteger aplicaciones críticas de negocio.
 
-**Siguiente:** [Laboratorio 2 - Azure DDoS Protection](../Laboratorio2-DDoS/README.md)
+**Siguiente:** [Laboratorio 2 - Azure DDoS Protection](../Laboratorio2-DDoS/README.md) 

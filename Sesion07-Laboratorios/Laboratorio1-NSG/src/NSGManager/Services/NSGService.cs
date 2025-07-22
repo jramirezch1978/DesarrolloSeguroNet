@@ -104,7 +104,7 @@ public class NSGService : INSGService
         
         try
         {
-            var nsg = await resourceGroupResource.GetNetworkSecurityGroupAsync(nsgName);
+        var nsg = await resourceGroupResource.GetNetworkSecurityGroupAsync(nsgName);
             _logger.LogInformation($"✅ NSG {nsgName} encontrado, actualizando reglas...");
             
             // Implementación simplificada - en una versión completa se actualizarían las reglas
