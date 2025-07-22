@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using NetworkTester.Models;
 
 namespace NetworkTester.Services;

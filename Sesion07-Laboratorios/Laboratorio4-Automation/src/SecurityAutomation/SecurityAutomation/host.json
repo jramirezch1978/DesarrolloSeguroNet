@@ -1,0 +1,43 @@
+{
+  "version": "2.0",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      },
+      "enableLiveMetricsFilters": true
+    }
+  },
+  "functionTimeout": "00:05:00",
+  "extensions": {
+    "serviceBus": {
+      "prefetchCount": 10,
+      "maxConcurrentCalls": 16,
+      "autoRenewTimeout": "00:05:00",
+      "sessionHandlerOptions": {
+        "autoComplete": false,
+        "messageWaitTimeout": "00:00:30",
+        "maxAutoRenewDuration": "00:55:00",
+        "maxConcurrentSessions": 8
+      }
+    },
+    "eventGrid": {
+      "maxEventsPerBatch": 100,
+      "preferredBatchSizeInKilobytes": 512
+    },
+    "http": {
+      "routePrefix": "api",
+      "maxOutstandingRequests": 200,
+      "maxConcurrentRequests": 100,
+      "dynamicThrottlesEnabled": true
+    }
+  },
+  "managedDependency": {
+    "enabled": true
+  },
+  "extensionBundle": {
+    "id": "Microsoft.Azure.Functions.ExtensionBundle",
+    "version": "[4.*, 5.0.0)"
+  }
+} 

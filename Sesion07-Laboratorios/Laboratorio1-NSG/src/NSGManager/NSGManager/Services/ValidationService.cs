@@ -92,8 +92,11 @@ public class ValidationService : IValidationService
         // Validar compliance si se especificaron estándares
         if (options.ComplianceStandards.Any())
         {
-            results.ComplianceResults = await ValidateComplianceAsync(
+            var complianceResults = await ValidateComplianceAsync(
                 options.ResourceGroupName, options.ComplianceStandards, options.SubscriptionId);
+            results.ComplianceResults = complianceResults.ToDictionary(
+                kvp => kvp.Key.ToString(), 
+                kvp => kvp.Value);
         }
         
         _logger.LogInformation($"✅ Validación completada: {nsgCount} NSGs, {totalRules} reglas analizadas");
@@ -522,7 +525,7 @@ public class ValidationService : IValidationService
         await Task.CompletedTask;
     }
 
-    private NSGRuleConfiguration ConvertToNSGRuleConfiguration(Azure.ResourceManager.Network.Models.SecurityRuleData rule)
+    private NSGRuleConfiguration ConvertToNSGRuleConfiguration(SecurityRuleData rule)
     {
         return new NSGRuleConfiguration
         {
@@ -591,7 +594,7 @@ public class ValidationService : IValidationService
         return false;
     }
 
-    private bool IsOverpermissiveRule(Azure.ResourceManager.Network.Models.SecurityRuleData rule)
+    private bool IsOverpermissiveRule(SecurityRuleData rule)
     {
         return rule.Access == Azure.ResourceManager.Network.Models.SecurityRuleAccess.Allow &&
                (rule.SourceAddressPrefix == "*" || rule.SourceAddressPrefix == "Internet") &&
