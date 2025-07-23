@@ -85,6 +85,17 @@ public class CreateAccountCommand : IRequest<CreateAccountResponse>
 public class CreateAccountResponse
 {
     public bool Success { get; set; }
+    
+    /// <summary>
+    /// Compatibilidad: alias para Success
+    /// </summary>
+    public bool IsSuccess => Success;
+    
+    /// <summary>
+    /// Mensaje descriptivo del resultado
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
+    
     public Guid AccountId { get; set; }
     public string AccountNumber { get; set; } = string.Empty;
     public AccountType AccountType { get; set; }

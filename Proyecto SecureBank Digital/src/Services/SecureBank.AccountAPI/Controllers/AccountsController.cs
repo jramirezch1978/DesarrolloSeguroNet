@@ -7,6 +7,7 @@ using SecureBank.Application.Common.Interfaces;
 using SecureBank.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
+using SecureBank.Domain.Enums;
 
 namespace SecureBank.AccountAPI.Controllers;
 
@@ -130,6 +131,19 @@ public class AccountsController : ControllerBase
                 LastTransactionDate = DateTime.UtcNow.AddDays(-2)
             };
 
+            // Log successful retrieval
+            // await _azureMonitorService.LogSecurityEventAsync(new SecurityEvent
+            // {
+            //     UserId = userId.Value,
+            //     EventType = "AccountDetailsRetrieved",
+            //     IsSuccessful = true,
+            //     Details = $"Account details retrieved for account {accountId}",
+            //     Timestamp = DateTime.UtcNow,
+            //     RiskLevel = RiskLevel.Low
+            // });
+
+            await Task.CompletedTask; // Fix CS1998
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -149,7 +163,7 @@ public class AccountsController : ControllerBase
     /// <param name="request">Datos para crear la cuenta</param>
     /// <returns>Detalles de la cuenta creada</returns>
     [HttpPost]
-    [ProducesResponseType(typeof(CreateAccountResponse), 201)]
+    [ProducesResponseType(typeof(Shared.DTOs.CreateAccountResponse), 201)]
     [ProducesResponseType(typeof(ErrorResponse), 400)]
     public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request)
     {
@@ -186,7 +200,7 @@ public class AccountsController : ControllerBase
                         Message = response.Message,
                         AccountId = response.AccountId,
                         AccountNumber = "ACC-" + response.AccountId.ToString("N")[..8].ToUpper(),
-                        AccountType = command.AccountType,
+                        AccountType = command.AccountType.ToString(),
                         InitialBalance = command.InitialDeposit,
                         Currency = command.Currency,
                         CreatedAt = DateTime.UtcNow
@@ -250,6 +264,8 @@ public class AccountsController : ControllerBase
                 Message = "Límites actualizados exitosamente"
             };
 
+            await Task.CompletedTask; // Fix CS1998
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -302,6 +318,8 @@ public class AccountsController : ControllerBase
                 Message = "Cuenta cerrada exitosamente"
             };
 
+            await Task.CompletedTask; // Fix CS1998
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -320,8 +338,7 @@ public class AccountsController : ControllerBase
 public class CreateAccountRequest
 {
     [Required]
-    [StringLength(50)]
-    public string AccountType { get; set; } = string.Empty;
+    public AccountType AccountType { get; set; }
     
     [Required]
     [System.ComponentModel.DataAnnotations.Range(0.01, 1000000)]

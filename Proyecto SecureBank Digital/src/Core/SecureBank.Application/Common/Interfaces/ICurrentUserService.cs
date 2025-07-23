@@ -66,7 +66,9 @@ public interface ICurrentUserService
     /// <summary>
     /// Verifica si el usuario actual puede acceder a una cuenta específica
     /// </summary>
-    bool CanAccessAccount(Guid accountId);
+    /// <param name="accountId">ID de la cuenta a verificar</param>
+    /// <returns>True si tiene acceso, false en caso contrario</returns>
+    bool HasAccessToAccount(Guid accountId);
 
     /// <summary>
     /// Obtiene información completa del contexto de seguridad

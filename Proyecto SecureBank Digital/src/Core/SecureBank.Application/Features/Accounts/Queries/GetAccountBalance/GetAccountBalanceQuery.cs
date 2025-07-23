@@ -16,6 +16,11 @@ public class GetAccountBalanceQuery : IRequest<GetAccountBalanceResponse>
     public string AccountIdentifier { get; set; } = string.Empty;
 
     /// <summary>
+    /// ID único de la cuenta (Guid)
+    /// </summary>
+    public Guid AccountId { get; set; }
+
+    /// <summary>
     /// ID del usuario que solicita la información
     /// </summary>
     [Required]
@@ -64,6 +69,17 @@ public class GetAccountBalanceQuery : IRequest<GetAccountBalanceResponse>
 public class GetAccountBalanceResponse
 {
     public bool Success { get; set; }
+    
+    /// <summary>
+    /// Compatibilidad: alias para Success
+    /// </summary>
+    public bool IsSuccess => Success;
+    
+    /// <summary>
+    /// Mensaje descriptivo del resultado
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
+    
     public AccountBalanceInfo? Account { get; set; }
     public List<RecentTransactionDto> RecentTransactions { get; set; } = new();
     public AccountLimitsInfo? Limits { get; set; }

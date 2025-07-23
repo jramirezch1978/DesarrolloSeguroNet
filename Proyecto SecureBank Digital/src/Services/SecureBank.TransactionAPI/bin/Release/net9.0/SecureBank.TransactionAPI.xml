@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SecureBank.TransactionAPI</name>
+    </assembly>
+    <members>
+        <member name="T:SecureBank.TransactionAPI.Controllers.PaymentsSimpleController">
+            <summary>
+            Controlador simplificado de pagos que compila sin errores
+            </summary>
+        </member>
+        <member name="M:SecureBank.TransactionAPI.Controllers.PaymentsSimpleController.CreatePayment(SecureBank.TransactionAPI.Controllers.CreatePaymentRequestSimple)">
+            <summary>
+            Crear un pago simplificado
+            </summary>
+        </member>
+        <member name="M:SecureBank.TransactionAPI.Controllers.PaymentsSimpleController.GetPaymentStatus(System.Guid)">
+            <summary>
+            Obtener estado de pago
+            </summary>
+        </member>
+    </members>
+</doc>

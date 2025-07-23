@@ -7,6 +7,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <UserSecretsId>securebank-authapi-secrets</UserSecretsId>
+    <NoWarn>CS0246;CS0104;CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

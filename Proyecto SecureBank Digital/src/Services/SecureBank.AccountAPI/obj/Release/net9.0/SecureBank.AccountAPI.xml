@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SecureBank.AccountAPI</name>
+    </assembly>
+    <members>
+        <member name="T:SecureBank.AccountAPI.Controllers.AccountsController">
+            <summary>
+            Controlador para gestión de cuentas bancarias
+            Maneja operaciones CRUD y consultas de cuentas
+            </summary>
+        </member>
+        <member name="M:SecureBank.AccountAPI.Controllers.AccountsController.GetAccountBalance(System.Guid)">
+            <summary>
+            Obtiene el balance de una cuenta específica
+            </summary>
+            <param name="accountId">ID de la cuenta</param>
+            <returns>Balance actual de la cuenta</returns>
+        </member>
+        <member name="M:SecureBank.AccountAPI.Controllers.AccountsController.GetAccountDetails(System.Guid)">
+            <summary>
+            Obtiene los detalles completos de una cuenta
+            </summary>
+            <param name="accountId">ID de la cuenta</param>
+            <returns>Detalles completos de la cuenta</returns>
+        </member>
+        <member name="M:SecureBank.AccountAPI.Controllers.AccountsController.CreateAccount(SecureBank.AccountAPI.Controllers.CreateAccountRequest)">
+            <summary>
+            Crea una nueva cuenta bancaria
+            </summary>
+            <param name="request">Datos para crear la cuenta</param>
+            <returns>Detalles de la cuenta creada</returns>
+        </member>
+        <member name="M:SecureBank.AccountAPI.Controllers.AccountsController.UpdateTransferLimits(System.Guid,SecureBank.AccountAPI.Controllers.UpdateLimitsRequest)">
+            <summary>
+            Actualiza los límites de transferencia de una cuenta
+            </summary>
+            <param name="accountId">ID de la cuenta</param>
+            <param name="request">Nuevos límites</param>
+            <returns>Confirmación de actualización</returns>
+        </member>
+        <member name="M:SecureBank.AccountAPI.Controllers.AccountsController.CloseAccount(System.Guid,SecureBank.AccountAPI.Controllers.CloseAccountRequest)">
+            <summary>
+            Cierra una cuenta bancaria
+            </summary>
+            <param name="accountId">ID de la cuenta a cerrar</param>
+            <param name="request">Motivo del cierre</param>
+            <returns>Confirmación del cierre</returns>
+        </member>
+    </members>
+</doc>
