@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SecureBank.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:SecureBank.Infrastructure.Data.ApplicationDbContext">
+            <summary>
+            Contexto de base de datos principal para SecureBank Digital
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Data.DbContextTransactionWrapper">
+            <summary>
+            Wrapper para IDbContextTransaction de Entity Framework
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Data.UtcDateTimeConverter">
+            <summary>
+            Convertidor para DateTime UTC
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Data.Configurations.AccountConfiguration">
+            <summary>
+            Configuración de Entity Framework para la entidad Account
+            Implementa mapeo con PostgreSQL para cuentas bancarias
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Data.Configurations.AuditLogConfiguration">
+            <summary>
+            Configuración de Entity Framework para la entidad AuditLog
+            Implementa audit trail inmutable con hash chains para detectar modificaciones
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Data.Configurations.LoginAttemptConfiguration">
+            <summary>
+            Configuración de Entity Framework para la entidad LoginAttempt
+            Implementa tracking de intentos de login para detección de fraude
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Data.Configurations.TransactionConfiguration">
+            <summary>
+            Configuración de Entity Framework para la entidad Transaction
+            Implementa mapeo con PostgreSQL para transacciones bancarias
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Data.Configurations.UserConfiguration">
+            <summary>
+            Configuración de Entity Framework para la entidad User
+            Implementa mapeo con PostgreSQL y configuraciones de seguridad
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Data.Configurations.UserDeviceConfiguration">
+            <summary>
+            Configuración de Entity Framework para la entidad UserDevice
+            Implementa device fingerprinting y gestión de dispositivos confiables
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Services.AzureMonitorService">
+            <summary>
+            Implementación del servicio Azure Monitor para SecureBank Digital
+            Integra con Application Insights para logging estructurado y ML
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Services.CurrentUserService">
+            <summary>
+            Implementación del servicio de usuario actual
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Services.SecurityContext">
+            <summary>
+            Contexto de seguridad del usuario actual
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.UserId">
+            <summary>
+            ID del usuario actual
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.Email">
+            <summary>
+            Email del usuario actual
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.Role">
+            <summary>
+            Rol del usuario actual
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.IpAddress">
+            <summary>
+            Dirección IP de la solicitud
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.UserAgent">
+            <summary>
+            User Agent del navegador
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.DeviceFingerprint">
+            <summary>
+            Huella digital del dispositivo
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.SessionId">
+            <summary>
+            ID de sesión
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.IsAuthenticated">
+            <summary>
+            Indica si el usuario está autenticado
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.IsTrustedDevice">
+            <summary>
+            Indica si es un dispositivo de confianza
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.RequestTimestamp">
+            <summary>
+            Timestamp de la solicitud
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.Country">
+            <summary>
+            Información geográfica derivada de la IP
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.City">
+            <summary>
+            Ciudad derivada de la IP
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.RiskLevel">
+            <summary>
+            Score de riesgo de la sesión
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.RequiresTwoFactor">
+            <summary>
+            Indica si se requiere autenticación de segundo factor
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.SessionDuration">
+            <summary>
+            Duración de la sesión actual
+            </summary>
+        </member>
+        <member name="P:SecureBank.Infrastructure.Services.SecurityContext.LastAccess">
+            <summary>
+            Último acceso registrado
+            </summary>
+        </member>
+    </members>
+</doc>

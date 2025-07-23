@@ -760,6 +760,82 @@ dotnet test
 dotnet run --project src/Services/SecureBank.AuthAPI
 ```
 
+### Comandos de Desarrollo
+
+#### Compilación con Diferentes Niveles de Verbosity
+
+El parámetro `--verbosity` controla el nivel de detalle mostrado durante la compilación:
+
+```bash
+# Compilación básica (por defecto - minimal)
+dotnet build SecureBankDigital.sln
+
+# Compilación con información normal (recomendado para desarrollo)
+dotnet build SecureBankDigital.sln --verbosity normal
+
+# Compilación con información detallada
+dotnet build SecureBankDigital.sln --verbosity detailed
+
+# Compilación con información de diagnóstico (muy verboso)
+dotnet build SecureBankDigital.sln --verbosity diagnostic
+
+# Compilación silenciosa (solo errores críticos)
+dotnet build SecureBankDigital.sln --verbosity quiet
+```
+
+#### Niveles de Verbosity Disponibles:
+
+- **q[uiet]**: Solo errores críticos
+- **m[inimal]**: Errores y resumen básico (por defecto)
+- **n[ormal]**: Errores, advertencias y resumen detallado ⭐ **Recomendado**
+- **d[etailed]**: Información detallada de cada paso
+- **diag[nostic]**: Toda la información posible (muy verboso)
+
+#### Comandos Útiles para el Desarrollo
+
+```bash
+# Limpiar y recompilar
+dotnet clean SecureBankDigital.sln
+dotnet build SecureBankDigital.sln
+
+# Compilar en modo Release
+dotnet build SecureBankDigital.sln --configuration Release
+
+# Compilar con información detallada y en Release
+dotnet build SecureBankDigital.sln --configuration Release --verbosity normal
+
+# Restaurar paquetes específicos
+dotnet restore SecureBankDigital.sln
+
+# Ejecutar tests con información detallada
+dotnet test SecureBankDigital.sln --verbosity normal
+
+# Ejecutar tests específicos
+dotnet test tests/SecureBank.Tests/ --filter "Category=Unit"
+
+# Ejecutar tests con cobertura
+dotnet test SecureBankDigital.sln --collect:"XPlat Code Coverage"
+
+# Ejecutar análisis de código
+dotnet build SecureBankDigital.sln --verbosity normal /p:TreatWarningsAsErrors=true
+
+# Publicar aplicación
+dotnet publish src/Services/SecureBank.AuthAPI --configuration Release --output ./publish
+```
+
+#### Comandos para Debugging
+
+```bash
+# Compilar con símbolos de debug
+dotnet build SecureBankDigital.sln --configuration Debug
+
+# Ejecutar con logging detallado
+dotnet run --project src/Services/SecureBank.AuthAPI --verbosity normal
+
+# Ejecutar con variables de entorno específicas
+dotnet run --project src/Services/SecureBank.AuthAPI --environment Development
+```
+
 ### Docker Compose
 
 ```bash

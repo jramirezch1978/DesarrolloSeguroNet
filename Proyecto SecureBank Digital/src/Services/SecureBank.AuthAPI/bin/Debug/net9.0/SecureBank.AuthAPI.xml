@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SecureBank.AuthAPI</name>
+    </assembly>
+    <members>
+        <member name="T:SecureBank.AuthAPI.Attributes.EnableRateLimitingAttribute">
+            <summary>
+            Atributo para habilitar rate limiting en endpoints (implementación básica)
+            </summary>
+        </member>
+        <member name="T:SecureBank.AuthAPI.Controllers.AuthController">
+            <summary>
+            Controlador simplificado de autenticación que compila sin errores
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Controllers.AuthController.Register(SecureBank.AuthAPI.Controllers.RegisterRequestSimple)">
+            <summary>
+            Registro de usuario simplificado
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Controllers.AuthController.Login(SecureBank.AuthAPI.Controllers.LoginRequestSimple)">
+            <summary>
+            Login de usuario simplificado
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Controllers.AuthController.Logout">
+            <summary>
+            Logout simplificado
+            </summary>
+        </member>
+        <member name="T:SecureBank.AuthAPI.Services.IAzureMonitorService">
+            <summary>
+            Servicio de Azure Monitor para SecureBank Digital
+            Envía logs estructurados y telemetría para análisis con Machine Learning
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Services.AzureMonitorService.LogSecurityEventAsync(System.String,System.Object,System.String)">
+            <summary>
+            Registra eventos de seguridad para análisis de fraude con ML
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Services.AzureMonitorService.LogTransactionEventAsync(System.String,System.Object,System.String)">
+            <summary>
+            Registra eventos de transacciones para análisis de patrones con ML
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Services.AzureMonitorService.LogUserBehaviorAsync(System.String,System.Object,System.String)">
+            <summary>
+            Registra comportamiento del usuario para análisis de UX y patrones con ML
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Services.AzureMonitorService.LogFraudDetectionEventAsync(System.String,System.Object,System.String)">
+            <summary>
+            Registra eventos específicos de detección de fraude para entrenamiento ML
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Services.AzureMonitorService.LogPerformanceMetricAsync(System.String,System.Double,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Registra métricas de rendimiento para monitoreo y análisis
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Services.AzureMonitorService.LogBusinessMetricAsync(System.String,System.Double,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Registra métricas de negocio para análisis y BI
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Services.AzureMonitorService.TrackException(System.Exception,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Rastrea excepciones para análisis de errores
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Services.AzureMonitorService.TrackPageView(System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Rastrea vistas de página para análisis de UX
+            </summary>
+        </member>
+        <member name="M:SecureBank.AuthAPI.Services.AzureMonitorService.TrackDependency(System.String,System.String,System.TimeSpan,System.Boolean)">
+            <summary>
+            Rastrea dependencias externas para monitoreo de performance
+            </summary>
+        </member>
+    </members>
+</doc>
