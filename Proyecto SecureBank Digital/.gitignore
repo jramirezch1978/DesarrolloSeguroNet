@@ -1,0 +1,338 @@
+# SecureBank Digital - .gitignore
+# Archivos y carpetas que NO deben ser versionados
+
+## ===========================================
+## .NET Core / .NET 9
+## ===========================================
+
+# Archivos de compilación
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+
+# Archivos de configuración de usuario
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Archivos de configuración de Visual Studio
+.vs/
+*.vcxproj.filters
+*.vcxproj.user
+
+# Archivos de configuración de Rider
+.idea/
+*.sln.iml
+
+# Archivos de configuración de VS Code
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/extensions.json
+
+## ===========================================
+## Archivos de Configuración Sensibles
+## ===========================================
+
+# Configuraciones de desarrollo local
+appsettings.Development.json
+appsettings.Local.json
+appsettings.Production.json
+appsettings.Staging.json
+
+# Archivos de configuración de Azure
+azure-settings.json
+azure-config.json
+*.publishsettings
+
+# Archivos de certificados y claves
+*.pfx
+*.key
+*.pem
+*.crt
+*.cer
+*.p12
+
+# Archivos de configuración de base de datos
+connectionstrings.json
+database-config.json
+
+# Archivos de configuración de Key Vault
+keyvault-config.json
+secrets.json
+
+## ===========================================
+## Logs y Archivos Temporales
+## ===========================================
+
+# Logs
+logs/
+*.log
+*.log.*
+log.txt
+error.log
+debug.log
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Archivos de caché
+.cache/
+*.cache
+
+## ===========================================
+## Base de Datos
+## ===========================================
+
+# Archivos de SQL Server
+*.mdf
+*.ldf
+*.ndf
+
+# Archivos de SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos de PostgreSQL
+*.sql
+*.dump
+*.backup
+
+# Archivos de Entity Framework
+Migrations/
+*.Designer.cs
+
+## ===========================================
+## Docker y Contenedores
+## ===========================================
+
+# Archivos de Docker
+Dockerfile.local
+docker-compose.override.yml
+.dockerignore
+
+# Imágenes y contenedores
+*.tar
+*.tar.gz
+
+## ===========================================
+## Azure y Cloud
+## ===========================================
+
+# Archivos de Azure CLI
+.azure/
+azure-cli-*.log
+
+# Archivos de Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Archivos de Azure Bicep
+*.bicep.local.json
+
+# Archivos de Azure Functions
+local.settings.json
+
+## ===========================================
+## Testing y Cobertura
+## ===========================================
+
+# Archivos de cobertura de código
+coverage/
+*.coverage
+*.coveragexml
+*.opencover.xml
+
+# Archivos de resultados de tests
+TestResults/
+*.trx
+*.html
+
+# Archivos de performance
+*.perf
+*.diag
+
+## ===========================================
+## Machine Learning y AI
+## ===========================================
+
+# Modelos de ML
+*.pkl
+*.joblib
+*.h5
+*.onnx
+*.pb
+
+# Datos de entrenamiento
+data/
+datasets/
+*.csv
+*.json
+*.parquet
+
+# Archivos de configuración de ML
+ml-config.json
+model-config.json
+
+## ===========================================
+## Archivos de Backup y Respaldo
+## ===========================================
+
+# Archivos de backup
+backup/
+backups/
+*.backup
+*.bak
+*.old
+
+# Archivos de respaldo del proyecto
+*_backup/
+*_backup.cs
+*_backup.json
+
+## ===========================================
+## Archivos de Desarrollo Local
+## ===========================================
+
+# Archivos de configuración local
+local-config/
+local-settings/
+*.local
+
+# Archivos de desarrollo personal
+dev-notes.txt
+todo.txt
+notes.md
+
+# Archivos de IDE específicos
+*.sublime-project
+*.sublime-workspace
+
+## ===========================================
+## Archivos de Seguridad
+## ===========================================
+
+# Archivos de auditoría
+audit-logs/
+security-logs/
+*.audit
+
+# Archivos de configuración de seguridad
+security-config.json
+firewall-rules.json
+
+# Archivos de certificados de desarrollo
+dev-certificates/
+test-certificates/
+
+## ===========================================
+## Archivos de Build y Deploy
+## ===========================================
+
+# Archivos de publicación
+publish/
+dist/
+build/
+out/
+
+# Archivos de paquetes
+*.nupkg
+*.snupkg
+packages/
+
+# Archivos de configuración de CI/CD
+.github/workflows/local/
+.gitlab-ci-local.yml
+
+## ===========================================
+## Archivos de Monitoreo y Telemetría
+## ===========================================
+
+# Archivos de Application Insights
+ApplicationInsights.config
+*.ai
+
+# Archivos de logging
+serilog-config.json
+logging-config.json
+
+# Archivos de métricas
+metrics/
+telemetry/
+
+## ===========================================
+## Archivos Específicos del Proyecto
+## ===========================================
+
+# Archivos de configuración específicos de SecureBank
+securebank-local.json
+securebank-dev.json
+securebank-test.json
+
+# Archivos de configuración de servicios
+services-config/
+api-config/
+
+# Archivos de configuración de frontend
+wwwroot/dist/
+wwwroot/build/
+
+## ===========================================
+## Archivos de Sistema
+## ===========================================
+
+# Archivos de Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Archivos de macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Archivos de Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+## ===========================================
+## Archivos de Documentación Temporal
+## ===========================================
+
+# Archivos de documentación temporal
+docs/temp/
+docs/draft/
+*.draft.md
+*.temp.md
+
+# Archivos de especificaciones temporales
+specs/temp/
+requirements/temp/
+
+## ===========================================
+## Comentarios Finales
+## ===========================================
+
+# NOTA: Este archivo .gitignore está diseñado específicamente para
+# el proyecto SecureBank Digital y considera las mejores prácticas
+# de seguridad para aplicaciones bancarias.
+
+# Si necesitas agregar archivos específicos que están siendo ignorados,
+# puedes usar el comando: git add -f archivo-especifico 
