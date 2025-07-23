@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SecureBank.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7dd7dfa118ff4e6cd0c15d9139d1f38748633d4b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cd046b5e5fbca4ef394f02310f9c58b05eb4bb72")]
 [assembly: System.Reflection.AssemblyProductAttribute("SecureBank.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SecureBank.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
