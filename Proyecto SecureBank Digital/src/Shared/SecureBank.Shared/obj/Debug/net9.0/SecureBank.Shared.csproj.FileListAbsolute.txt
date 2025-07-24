@@ -1,0 +1,12 @@
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\bin\Debug\net9.0\SecureBank.Shared.deps.json
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\bin\Debug\net9.0\SecureBank.Shared.dll
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\bin\Debug\net9.0\SecureBank.Shared.pdb
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\obj\Debug\net9.0\SecureBank.Shared.GeneratedMSBuildEditorConfig.editorconfig
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\obj\Debug\net9.0\SecureBank.Shared.AssemblyInfoInputs.cache
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\obj\Debug\net9.0\SecureBank.Shared.AssemblyInfo.cs
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\obj\Debug\net9.0\SecureBank.Shared.csproj.CoreCompileInputs.cache
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\obj\Debug\net9.0\SecureBank.Shared.sourcelink.json
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\obj\Debug\net9.0\SecureBank.Shared.dll
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\obj\Debug\net9.0\refint\SecureBank.Shared.dll
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\obj\Debug\net9.0\SecureBank.Shared.pdb
+E:\Work\New Horizonts\Desarrollo Seguro de Aplicacion (.Net en Azure)\DesarrolloSeguroNet\Proyecto SecureBank Digital\src\Shared\SecureBank.Shared\obj\Debug\net9.0\ref\SecureBank.Shared.dll

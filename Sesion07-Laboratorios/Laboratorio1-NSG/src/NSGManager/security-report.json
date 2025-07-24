@@ -1,0 +1,35 @@
+﻿{
+  "GeneratedAt": "2025-07-22T15:34:28.1212026Z",
+  "Summary": {
+    "TotalNSGs": 0,
+    "TotalRules": 0,
+    "ValidRules": 0,
+    "SecurityScore": 0.0,
+    "Warnings": 0,
+    "Errors": 0
+  },
+  "NSGDetails": [],
+  "ValidationResults": {
+    "AnalyzedNSGs": 0,
+    "TotalRules": 0,
+    "ValidRules": 0,
+    "Warnings": [],
+    "Errors": [],
+    "Details": [],
+    "ComplianceResults": {}
+  },
+  "Recommendations": [
+    "🚨 CRÍTICO: No se encontraron Network Security Groups. Implementar NSGs es fundamental para la seguridad de red.",
+    "📊 MEDIO: Habilite Flow Logs para monitoreo y análisis de tráfico de red.",
+    "🔒 Implemente el principio de menor privilegio en todas las reglas NSG",
+    "📝 Mantenga documentación actualizada de todas las reglas de seguridad",
+    "🔄 Revise y audite regularmente las configuraciones NSG",
+    "📊 Implemente monitoreo continuo con Flow Logs y alertas",
+    "🏷️ Use tags consistentes para identificar propósito y propietario",
+    "🔗 Considere usar ASGs para mejor escalabilidad y mantenimiento",
+    "🛡️ Implemente reglas de denegación explícitas además del deny-by-default",
+    "⚡ Optimice prioridades de reglas para mejor performance",
+    "🌐 Use Service Tags cuando sea posible en lugar de rangos IP específicos",
+    "🔍 Implemente testing regular de conectividad para validar configuraciones"
+  ]
+}

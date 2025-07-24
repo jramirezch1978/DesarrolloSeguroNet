@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<title>Reporte de Seguridad NSG</title>
+<style>
+
+            body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+            .header { background-color: #2c3e50; color: white; padding: 20px; border-radius: 5px; text-align: center; }
+            .summary { background-color: white; padding: 15px; margin: 20px 0; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            .details { background-color: white; padding: 15px; margin: 20px 0; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            .recommendations { background-color: #e8f5e8; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #27ae60; }
+            .nsg-detail { border-left: 3px solid #3498db; padding-left: 15px; margin: 10px 0; }
+            table { width: 100%; border-collapse: collapse; }
+            td { padding: 8px; border-bottom: 1px solid #ddd; }
+            .warning { color: #f39c12; font-weight: bold; }
+            .error { color: #e74c3c; font-weight: bold; }
+            h1, h2 { color: #2c3e50; }
+            h3 { color: #3498db; }
+        
+</style>
+</head>
+<body>
+<div class='header'>
+<h1>🛡️ Reporte de Seguridad - Network Security Groups</h1>
+<p>Generado: 2025-07-22 10:47:11</p>
+</div>
+<div class='summary'>
+<h2>📊 Resumen Ejecutivo</h2>
+<table>
+<tr><td>NSGs Analizados</td><td>0</td></tr>
+<tr><td>Reglas Totales</td><td>0</td></tr>
+<tr><td>Reglas Válidas</td><td>0</td></tr>
+<tr><td>Advertencias</td><td class='warning'>0</td></tr>
+<tr><td>Errores</td><td class='error'>0</td></tr>
+</table>
+</div>
+<div class='details'>
+<h2>🔍 Detalles por NSG</h2>
+</div>
+<div class='recommendations'>
+<h2>💡 Recomendaciones Generales</h2>
+<ul>
+<li>🚨 CRÍTICO: No se encontraron Network Security Groups. Implementar NSGs es fundamental para la seguridad de red.</li>
+<li>📊 MEDIO: Habilite Flow Logs para monitoreo y análisis de tráfico de red.</li>
+<li>🔒 Implemente el principio de menor privilegio en todas las reglas NSG</li>
+<li>📝 Mantenga documentación actualizada de todas las reglas de seguridad</li>
+<li>🔄 Revise y audite regularmente las configuraciones NSG</li>
+<li>📊 Implemente monitoreo continuo con Flow Logs y alertas</li>
+<li>🏷️ Use tags consistentes para identificar propósito y propietario</li>
+<li>🔗 Considere usar ASGs para mejor escalabilidad y mantenimiento</li>
+<li>🛡️ Implemente reglas de denegación explícitas además del deny-by-default</li>
+<li>⚡ Optimice prioridades de reglas para mejor performance</li>
+<li>🌐 Use Service Tags cuando sea posible en lugar de rangos IP específicos</li>
+<li>🔍 Implemente testing regular de conectividad para validar configuraciones</li>
+</ul>
+</div>
+</body>
+</html>

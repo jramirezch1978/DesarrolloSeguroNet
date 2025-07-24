@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SecureBank.Security</name>
+    </assembly>
+    <members>
+        <member name="T:SecureBank.Infrastructure.Security.Services.EncryptionService">
+            <summary>
+            Implementación del servicio de encriptación
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Security.Services.JwtTokenService">
+            <summary>
+            Implementación del servicio de tokens JWT
+            </summary>
+        </member>
+        <member name="T:SecureBank.Infrastructure.Security.Services.RefreshTokenInfo">
+            <summary>
+            Información del refresh token
+            </summary>
+        </member>
+    </members>
+</doc>

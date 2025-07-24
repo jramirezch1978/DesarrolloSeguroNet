@@ -1,0 +1,84 @@
+SecureBank Digital
+Historia del Banco
+Fundación y Orígenes (2018)
+SecureBank Digital fue fundado en Lima, Perú, en 2018 por un grupo de ex-ejecutivos de tecnología financiera y expertos en ciberseguridad, liderados por la visionaria María Elena Vásquez (ex-CTO de una fintech internacional) y el especialista en seguridad Carlos Mendoza (ex-CISO de una institución bancaria tradicional).
+La Visión Inicial
+Los fundadores identificaron una brecha crítica en el mercado financiero peruano: la necesidad de un banco 100% digital que pusiera la seguridad cibernética en el centro de su propuesta de valor, no como una característica adicional, sino como su principal diferenciador competitivo.
+Hitos Importantes
+
+2018: Constitución de la empresa y obtención de licencia bancaria digital
+2019: Lanzamiento del primer producto: cuentas de ahorro con autenticación biométrica
+2020: Durante la pandemia, experimentó un crecimiento del 300% al ser el único banco que garantizó cero brechas de seguridad
+2021: Expansión a servicios empresariales con foco en PyMES del sector tecnológico
+2022: Implementación pionera de tecnología blockchain para validación de transacciones
+2023: Reconocimiento como "Banco Más Seguro de Latinoamérica" por CyberSecurity Excellence Awards
+2024: Alianza estratégica con Microsoft Azure para infraestructura cloud híbrida
+2025: Lanzamiento de la plataforma de Open Banking más segura de la región
+
+Filosofía Empresarial
+SecureBank Digital opera bajo el principio de "Security First, Innovation Always" - entendiendo que la innovación financiera solo es sostenible cuando se construye sobre bases de seguridad inquebrantables.
+
+Misión
+"Democratizar el acceso a servicios financieros digitales de clase mundial, garantizando los más altos estándares de seguridad cibernética y protección de datos, mientras promovemos la inclusión financiera y el crecimiento económico sostenible de nuestros clientes en Perú y la región."
+Componentes Clave de la Misión:
+
+Democratización: Hacer la banca accesible para todos los segmentos
+Excelencia digital: Tecnología de vanguardia en todos los servicios
+Seguridad inquebrantable: Máximos estándares de protección
+Inclusión financiera: Llegar a poblaciones tradicionalmente desatendidas
+Crecimiento sostenible: Acompañar el desarrollo económico de clientes
+
+
+Valores Corporativos
+1. SEGURIDAD PRIMERO 🛡️
+"La seguridad no es negociable"
+
+Implementamos controles de seguridad desde el diseño
+Invertimos continuamente en tecnologías de protección avanzada
+Mantenemos certificaciones internacionales de seguridad
+Transparencia total en nuestras prácticas de ciberseguridad
+
+2. INNOVACIÓN RESPONSABLE 🚀
+"Innovamos sin comprometer la seguridad"
+
+Adoptamos nuevas tecnologías solo después de rigurosas evaluaciones de seguridad
+Desarrollamos soluciones propias cuando el mercado no ofrece alternativas seguras
+Contribuimos al ecosistema open source de seguridad financiera
+Investigación y desarrollo constante en fintech segura
+
+3. TRANSPARENCIA RADICAL 🔍
+"Nuestros clientes conocen exactamente cómo protegemos su información"
+
+Comunicación clara sobre políticas de seguridad y privacidad
+Reportes regulares de auditorías de seguridad
+Educación continua a clientes sobre mejores prácticas de seguridad
+Admisión proactiva de incidentes y medidas correctivas
+
+4. EXCELENCIA OPERACIONAL ⭐
+"Cada proceso está diseñado para la perfección y la seguridad"
+
+Automatización inteligente de procesos críticos
+Monitoreo 24/7 de todos los sistemas
+Mejora continua basada en métricas de seguridad y satisfacción
+Personal altamente calificado y certificado en seguridad
+
+5. INCLUSIÓN DIGITAL 🌍
+"Tecnología segura para todos"
+
+Interfaces accesibles para personas con discapacidades
+Servicios financieros para poblaciones rurales y de bajos ingresos
+Educación financiera digital gratuita
+Tecnología que se adapta a diferentes niveles de alfabetización digital
+
+6. SOSTENIBILIDAD 🌱
+"Crecimiento responsable con el planeta y la sociedad"
+
+Infraestructura cloud eficiente energéticamente
+Digitalización de procesos para reducir huella de carbono
+Inversión en proyectos de impacto social positivo
+Gobierno corporativo ético y responsable
+
+
+Propuesta de Valor Única
+"El único banco que te garantiza que tu seguridad financiera digital es inquebrantable, mientras te ofrece la experiencia más innovadora y conveniente del mercado."
+Esta base narrativa proporciona un contexto realista y motivador para que los estudiantes desarrollen una aplicación bancaria que verdaderamente requiera implementar todos los aspectos de seguridad cubiertos en el curso.

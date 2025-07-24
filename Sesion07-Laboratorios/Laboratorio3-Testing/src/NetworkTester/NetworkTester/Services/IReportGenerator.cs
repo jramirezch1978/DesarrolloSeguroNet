@@ -250,7 +250,7 @@ public class ReportGenerator : IReportGenerator
 
     private string GenerateSecurityHtml(SecurityAnalysisReport report)
     {
-        return $@"
+        var html = $@"
 <!DOCTYPE html>
 <html>
 <head>
