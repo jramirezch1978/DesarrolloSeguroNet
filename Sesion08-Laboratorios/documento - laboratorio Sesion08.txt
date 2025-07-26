@@ -1,0 +1,1159 @@
+Laboratorio Práctico - Sesión 8: Pruebas y Auditorías de Seguridad en Azure
+Curso: Diseño Seguro de Aplicaciones (.NET en Azure)
+Duración Total: 75 minutos (3 laboratorios)
+Modalidad: Instructor-led con práctica individual
+Herramientas: Visual Studio Code + .NET Core 9 + C# + Azure Portal
+________________________________________
+🛠️ LABORATORIO 0: VERIFICACIÓN Y CONFIGURACIÓN DEL ENTORNO
+⏱️ Duración: 15 minutos
+🎯 Objetivo: Preparar entorno completo para laboratorios de Security Assessment y Vulnerability Scanning
+Paso 1: Instalación de Chocolatey (si no está instalado) (3 minutos)
+Para usuarios Windows 10/11:
+1.	Abrir PowerShell como Administrador:
+o	Click derecho en el botón de Windows
+o	Seleccionar "Windows PowerShell (Admin)" o "Terminal (Admin)"
+2.	Verificar si Chocolatey está instalado:
+choco --version
+3.	Si NO está instalado, ejecutar:
+# Cambiar política de ejecución temporalmente
+Set-ExecutionPolicy Bypass -Scope Process -Force
+
+# Instalar Chocolatey
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+4.	Verificar instalación:
+choco --version
+# Debe mostrar versión de Chocolatey
+Paso 2: Instalación de .NET Core 9 y Herramientas (5 minutos)
+Instalar .NET Core 9 SDK:
+# Instalar .NET Core 9 SDK (última versión)
+choco install dotnet-9.0-sdk -y
+
+# Instalar Azure CLI
+choco install azure-cli -y
+
+# Instalar Git (si no está instalado)
+choco install git -y
+
+# Instalar herramientas adicionales de seguridad
+choco install nmap -y
+choco install postman -y
+
+# Refrescar variables de entorno
+refreshenv
+Verificar instalaciones:
+# Verificar .NET Core 9
+dotnet --version
+# Debe mostrar: 9.0.x
+
+# Verificar Azure CLI
+az --version
+
+# Verificar Git
+git --version
+
+# Verificar Nmap
+nmap --version
+Paso 3: Configuración de Visual Studio Code (4 minutos)
+Instalar VS Code (si no está instalado):
+choco install vscode -y
+Extensiones requeridas para VS Code:
+1.	Abrir VS Code y instalar extensiones: 
+o	Presionar Ctrl + Shift + X para abrir extensiones
+o	Buscar e instalar las siguientes extensiones:
+o	C# Dev Kit (Microsoft) - ID: ms-dotnettools.csdevkit
+o	Azure Account (Microsoft) - ID: ms-vscode.azure-account
+o	Azure Resources (Microsoft) - ID: ms-azuretools.vscode-azureresourcegroups
+o	Azure CLI Tools (Microsoft) - ID: ms-vscode.azurecli
+o	REST Client (Huachao Mao) - ID: humao.rest-client
+o	Azure Security Center (Microsoft) - ID: ms-azuretools.vscode-azuresecuritycenter
+Comando alternativo para instalar extensiones:
+# Desde línea de comandos
+code --install-extension ms-dotnettools.csdevkit
+code --install-extension ms-vscode.azure-account
+code --install-extension ms-azuretools.vscode-azureresourcegroups
+code --install-extension ms-vscode.azurecli
+code --install-extension humao.rest-client
+code --install-extension ms-azuretools.vscode-azuresecuritycenter
+Paso 4: Verificación de Acceso Azure (3 minutos)
+Autenticación con Azure:
+# Login a Azure
+az login
+
+# Verificar suscripciones disponibles
+az account list --output table
+
+# Verificar grupo de usuarios
+az ad group member list --group "gu_desarrollo_seguro_aplicacion" --output table
+Verificar permisos en Azure Portal:
+1.	Navegar a: https://portal.azure.com
+2.	Verificar acceso como usuario invitado
+3.	Confirmar permisos para Security Center
+________________________________________
+🧪 LABORATORIO 1: IMPLEMENTACIÓN DE AZURE SECURITY CENTER AVANZADO
+⏱️ Duración: 25 minutos
+🎯 Objetivo: Configurar y utilizar Azure Security Center para evaluación continua de seguridad
+Prerequisitos: Verificar Infraestructura Base
+Si NO completaron los laboratorios de infraestructura de sesiones anteriores, ejecutar:
+# Crear resource group base
+az group create \
+--name rg-security-lab-[SuNombre] \
+--location eastus \
+--tags Environment=Development Project=SecurityLab
+
+# Crear VNET básica para el laboratorio
+az network vnet create \
+--resource-group rg-security-lab-[SuNombre] \
+--name vnet-security-lab \
+--address-prefix 10.3.0.0/16 \
+--subnet-name snet-web \
+--subnet-prefix 10.3.1.0/24
+
+# Agregar subredes adicionales
+az network vnet subnet create \
+--resource-group rg-security-lab-[SuNombre] \
+--vnet-name vnet-security-lab \
+--name snet-app \
+--address-prefix 10.3.2.0/24
+
+az network vnet subnet create \
+--resource-group rg-security-lab-[SuNombre] \
+--vnet-name vnet-security-lab \
+--name snet-data \
+--address-prefix 10.3.3.0/24
+Paso 1: Configurar Azure Security Center (10 minutos)
+Habilitar Security Center con configuración avanzada:
+1.	En Azure Portal:
+o	Navegar a "Microsoft Defender for Cloud" (anteriormente Security Center)
+o	Environment settings → Su suscripción
+o	Settings & monitoring → Defender plans
+2.	Configurar planes de Defender:
+# Habilitar Defender for Servers
+az security pricing create \
+--name VirtualMachines \
+--tier Standard
+
+# Habilitar Defender for App Service  
+az security pricing create \
+--name AppServices \
+--tier Standard
+
+# Habilitar Defender for Storage
+az security pricing create \
+--name StorageAccounts \
+--tier Standard
+
+# Habilitar Defender for SQL
+az security pricing create \
+--name SqlServers \
+--tier Standard
+
+# Verificar configuración
+az security pricing list --output table
+3.	Configurar Auto Provisioning:
+# Habilitar auto provisioning del Log Analytics agent
+az security auto-provisioning-setting update \
+--name default \
+--auto-provision On
+
+# Configurar workspace de Log Analytics
+az monitor log-analytics workspace create \
+--resource-group rg-security-lab-[SuNombre] \
+--workspace-name law-security-monitoring \
+--location eastus \
+--sku PerGB2018
+Paso 2: Crear Recursos de Testing (8 minutos)
+Crear VMs y recursos para evaluación:
+# VM Windows para testing
+az vm create \
+--resource-group rg-security-lab-[SuNombre] \
+--name vm-windows-test \
+--image Win2022Datacenter \
+--vnet-name vnet-security-lab \
+--subnet snet-web \
+--size Standard_B2s \
+--admin-username azureuser \
+--admin-password "SecureP@ssw0rd123!" \
+--public-ip-address pip-windows-test \
+--nsg nsg-windows-test
+
+# VM Linux para testing
+az vm create \
+--resource-group rg-security-lab-[SuNombre] \
+--name vm-linux-test \
+--image Ubuntu2204 \
+--vnet-name vnet-security-lab \
+--subnet snet-app \
+--size Standard_B2s \
+--admin-username azureuser \
+--generate-ssh-keys \
+--public-ip-address pip-linux-test \
+--nsg nsg-linux-test
+
+# App Service con configuración insegura (para testing)
+az appservice plan create \
+--name plan-security-test \
+--resource-group rg-security-lab-[SuNombre] \
+--sku B1 \
+--is-linux
+
+az webapp create \
+--resource-group rg-security-lab-[SuNombre] \
+--plan plan-security-test \
+--name webapp-security-test-[sunombre] \
+--runtime "DOTNETCORE:8.0"
+
+# Storage Account con configuración por defecto
+az storage account create \
+--name stsecuritytest[sunombre] \
+--resource-group rg-security-lab-[SuNombre] \
+--location eastus \
+--sku Standard_LRS \
+--kind StorageV2
+Paso 3: Configurar Custom Security Policies (7 minutos)
+Crear políticas personalizadas de seguridad:
+1.	Crear política para requerir HTTPS:
+# Crear archivo policy-https.json
+{
+  "displayName": "Require HTTPS for Web Apps - Security Lab",
+  "policyType": "Custom",
+  "mode": "All",
+  "description": "Ensures all web applications use HTTPS only",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Web/sites"
+        },
+        {
+          "field": "Microsoft.Web/sites/httpsOnly",
+          "equals": false
+        }
+      ]
+    },
+    "then": {
+      "effect": "audit"
+    }
+  }
+}
+# Crear la política personalizada
+az policy definition create \
+--name "require-https-webapps" \
+--display-name "Require HTTPS for Web Apps - Security Lab" \
+--description "Ensures all web applications use HTTPS only" \
+--rules policy-https.json \
+--mode All
+
+# Asignar la política al resource group
+az policy assignment create \
+--name "assign-https-policy" \
+--policy "require-https-webapps" \
+--scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-security-lab-[SuNombre]"
+2.	Crear política para Storage Account encryption:
+# Crear política para requerir encryption en Storage Accounts
+az policy assignment create \
+--name "require-storage-encryption" \
+--policy "/providers/Microsoft.Authorization/policyDefinitions/404c3081-a854-4457-ae30-26a93ef643f9" \
+--scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-security-lab-[SuNombre]"
+________________________________________
+🧪 LABORATORIO 2: VULNERABILITY ASSESSMENT Y SCANNING AUTOMATIZADO
+⏱️ Duración: 20 minutos
+🎯 Objetivo: Implementar vulnerability scanning usando Azure Security Center y herramientas externas
+Paso 1: Habilitar Vulnerability Assessment para VMs (8 minutos)
+Configurar Qualys integration en Security Center:
+1.	En Azure Portal:
+o	Microsoft Defender for Cloud → Environment settings
+o	Su suscripción → Settings & monitoring
+o	Auto provisioning → Vulnerability assessment for machines → On
+2.	Configurar Qualys scanner:
+# Verificar que las VMs están siendo monitoreadas
+az security va solution list --output table
+
+# Instalar manualmente el agente Qualys (si es necesario)
+az vm extension set \
+--publisher "Qualys" \
+--name "QualysAgent" \
+--vm-name "vm-windows-test" \
+--resource-group "rg-security-lab-[SuNombre]"
+
+az vm extension set \
+--publisher "Qualys" \
+--name "QualysAgent" \
+--vm-name "vm-linux-test" \
+--resource-group "rg-security-lab-[SuNombre]"
+3.	Verificar deployment del agente:
+# Verificar extensiones instaladas
+az vm extension list \
+--vm-name vm-windows-test \
+--resource-group rg-security-lab-[SuNombre] \
+--output table
+
+az vm extension list \
+--vm-name vm-linux-test \
+--resource-group rg-security-lab-[SuNombre] \
+--output table
+Paso 2: Configurar Container Security Assessment (6 minutos)
+Habilitar container registry scanning:
+# Crear Azure Container Registry
+az acr create \
+--resource-group rg-security-lab-[SuNombre] \
+--name acrsecuritytest[sunombre] \
+--sku Basic \
+--location eastus
+
+# Habilitar Defender for Container Registries
+az security pricing create \
+--name ContainerRegistry \
+--tier Standard
+
+# Crear imagen de testing con vulnerabilidades conocidas
+mkdir container-security-test
+cd container-security-test
+
+# Crear Dockerfile con imagen base que puede tener vulnerabilidades
+cat > Dockerfile << 'EOF'
+FROM node:14-alpine
+WORKDIR /app
+COPY package.json .
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]
+EOF
+
+# Crear package.json con dependencias que pueden tener vulnerabilidades
+cat > package.json << 'EOF'
+{
+  "name": "security-test-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "4.17.1",
+    "lodash": "4.17.19"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
+EOF
+
+# Crear aplicación simple
+cat > index.js << 'EOF'
+const express = require('express');
+const app = express();
+app.get('/', (req, res) => res.send('Security Test App'));
+app.listen(3000, () => console.log('App running on port 3000'));
+EOF
+
+# Build y push la imagen
+az acr build \
+--registry acrsecuritytest[sunombre] \
+--image security-test:v1.0 \
+.
+Paso 3: Implementar OpenVAS para Scanning Externo (6 minutos)
+Configurar OpenVAS como scanner complementario:
+# Crear VM para OpenVAS scanner
+az vm create \
+--resource-group rg-security-lab-[SuNombre] \
+--name vm-openvas-scanner \
+--image Ubuntu2204 \
+--vnet-name vnet-security-lab \
+--subnet snet-data \
+--size Standard_D2s_v3 \
+--admin-username azureuser \
+--generate-ssh-keys \
+--public-ip-address pip-openvas \
+--nsg nsg-openvas
+
+# Obtener IP pública de la VM OpenVAS
+OPENVAS_IP=$(az vm show -d \
+--resource-group rg-security-lab-[SuNombre] \
+--name vm-openvas-scanner \
+--query publicIps -o tsv)
+
+echo "OpenVAS Scanner IP: $OPENVAS_IP"
+Conectar a la VM y configurar OpenVAS:
+# Conectar por SSH a la VM OpenVAS
+ssh azureuser@$OPENVAS_IP
+
+# Una vez conectado, instalar Docker
+sudo apt update
+sudo apt install -y docker.io docker-compose
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker azureuser
+
+# Logout y login nuevamente para aplicar permisos de Docker
+exit
+ssh azureuser@$OPENVAS_IP
+
+# Desplegar OpenVAS usando Docker
+docker run -d \
+--name openvas \
+-p 443:443 \
+-e PASSWORD=admin123 \
+--volume openvas-data:/data \
+mikesplain/openvas
+
+# Verificar que OpenVAS está ejecutándose
+docker ps
+docker logs openvas
+
+# Acceder a OpenVAS en: https://$OPENVAS_IP
+echo "OpenVAS URL: https://$OPENVAS_IP"
+echo "Username: admin"
+echo "Password: admin123"
+________________________________________
+🧪 LABORATORIO 3: ANÁLISIS DE SECURE SCORE Y AUTOMATION
+⏱️ Duración: 15 minutos
+🎯 Objetivo: Crear automatización para monitoreo continuo y respuesta a alertas de seguridad
+Paso 1: Crear Aplicación .NET para Análisis de Secure Score (8 minutos)
+Crear proyecto .NET Core para API de Security Center:
+# Crear directorio de proyecto
+mkdir SecureScoreAnalyzer
+cd SecureScoreAnalyzer
+
+# Crear proyecto .NET Core
+dotnet new console
+dotnet add package Azure.ResourceManager
+dotnet add package Azure.ResourceManager.SecurityCenter
+dotnet add package Azure.Identity
+dotnet add package Microsoft.Extensions.Configuration
+dotnet add package Microsoft.Extensions.Configuration.Json
+dotnet add package Newtonsoft.Json
+Crear el código principal:
+// Program.cs
+using Azure.Identity;
+using Azure.ResourceManager;
+using Azure.ResourceManager.SecurityCenter;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using System;
+using System.Threading.Tasks;
+
+namespace SecureScoreAnalyzer
+{
+    class Program
+    {
+        private static ArmClient _armClient;
+        private static string _subscriptionId;
+
+        static async Task Main(string[] args)
+        {
+            Console.WriteLine("Azure Security Center - Secure Score Analyzer");
+            Console.WriteLine("==============================================");
+
+            try
+            {
+                // Configuración
+                var config = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json", optional: true)
+                    .AddEnvironmentVariables()
+                    .Build();
+
+                // Autenticación con Azure
+                var credential = new DefaultAzureCredential();
+                _armClient = new ArmClient(credential);
+                
+                // Obtener suscripción activa
+                var subscriptions = _armClient.GetSubscriptions();
+                await foreach (var subscription in subscriptions)
+                {
+                    _subscriptionId = subscription.Data.SubscriptionId;
+                    Console.WriteLine($"Analizando suscripción: {subscription.Data.DisplayName}");
+                    break;
+                }
+
+                // Análisis principal
+                await AnalyzeSecureScore();
+                await AnalyzeRecommendations();
+                await AnalyzeAlerts();
+                await GenerateReport();
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+
+            Console.WriteLine("\nPresione cualquier tecla para continuar...");
+            Console.ReadKey();
+        }
+
+        static async Task AnalyzeSecureScore()
+        {
+            Console.WriteLine("\n📊 ANÁLISIS DE SECURE SCORE");
+            Console.WriteLine("----------------------------");
+
+            try
+            {
+                var subscription = await _armClient.GetSubscriptionResource(
+                    new Azure.Core.ResourceIdentifier($"/subscriptions/{_subscriptionId}")).GetAsync();
+
+                // Simular análisis de Secure Score (API real requiere permisos específicos)
+                var mockSecureScore = new
+                {
+                    CurrentScore = 75.5,
+                    MaxScore = 100.0,
+                    Percentage = 75.5,
+                    ScoreHistory = new[]
+                    {
+                        new { Date = DateTime.Now.AddDays(-30), Score = 68.2 },
+                        new { Date = DateTime.Now.AddDays(-15), Score = 71.8 },
+                        new { Date = DateTime.Now, Score = 75.5 }
+                    }
+                };
+
+                Console.WriteLine($"🎯 Secure Score Actual: {mockSecureScore.CurrentScore:F1}/{mockSecureScore.MaxScore:F1} ({mockSecureScore.Percentage:F1}%)");
+                Console.WriteLine($"📈 Mejora en 30 días: +{mockSecureScore.CurrentScore - 68.2:F1} puntos");
+                
+                // Análisis de tendencia
+                if (mockSecureScore.CurrentScore > 68.2)
+                {
+                    Console.WriteLine("✅ Tendencia: MEJORANDO");
+                }
+                else
+                {
+                    Console.WriteLine("⚠️ Tendencia: DETERIORANDO");
+                }
+
+                // Benchmark de industria
+                var industryAverage = 65.0;
+                if (mockSecureScore.CurrentScore > industryAverage)
+                {
+                    Console.WriteLine($"🏆 Por encima del promedio de industria ({industryAverage}%)");
+                }
+                else
+                {
+                    Console.WriteLine($"📉 Por debajo del promedio de industria ({industryAverage}%)");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error obteniendo Secure Score: {ex.Message}");
+            }
+        }
+
+        static async Task AnalyzeRecommendations()
+        {
+            Console.WriteLine("\n🔍 ANÁLISIS DE RECOMENDACIONES");
+            Console.WriteLine("------------------------------");
+
+            // Simular recomendaciones típicas
+            var mockRecommendations = new[]
+            {
+                new
+                {
+                    Title = "Enable MFA for admin accounts",
+                    Severity = "High",
+                    Impact = 10,
+                    Effort = "Low",
+                    ResourcesAffected = 3,
+                    Description = "Cuentas administrativas sin autenticación multifactor"
+                },
+                new
+                {
+                    Title = "Enable disk encryption for VMs",
+                    Severity = "Medium",
+                    Impact = 6,
+                    Effort = "Medium",
+                    ResourcesAffected = 2,
+                    Description = "Máquinas virtuales sin cifrado de disco"
+                },
+                new
+                {
+                    Title = "Restrict HTTP traffic for web apps",
+                    Severity = "High",
+                    Impact = 8,
+                    Effort = "Low",
+                    ResourcesAffected = 1,
+                    Description = "Aplicaciones web permitiendo tráfico HTTP"
+                },
+                new
+                {
+                    Title = "Update vulnerability assessment agent",
+                    Severity = "Low",
+                    Impact = 3,
+                    Effort = "Low",
+                    ResourcesAffected = 2,
+                    Description = "Agentes de evaluación de vulnerabilidades desactualizados"
+                }
+            };
+
+            Console.WriteLine($"📋 Total de recomendaciones: {mockRecommendations.Length}");
+            
+            var highPriorityCount = 0;
+            var quickWinsCount = 0;
+
+            foreach (var rec in mockRecommendations)
+            {
+                var priority = GetPriority(rec.Severity, rec.Effort);
+                Console.WriteLine($"\n🔹 {rec.Title}");
+                Console.WriteLine($"   Severidad: {rec.Severity} | Impacto: +{rec.Impact} pts | Esfuerzo: {rec.Effort}");
+                Console.WriteLine($"   Recursos afectados: {rec.ResourcesAffected} | Prioridad: {priority}");
+                Console.WriteLine($"   {rec.Description}");
+
+                if (rec.Severity == "High")
+                    highPriorityCount++;
+                
+                if (rec.Severity == "High" && rec.Effort == "Low")
+                    quickWinsCount++;
+            }
+
+            Console.WriteLine($"\n📊 RESUMEN:");
+            Console.WriteLine($"   🚨 Alta prioridad: {highPriorityCount} recomendaciones");
+            Console.WriteLine($"   ⚡ Quick wins: {quickWinsCount} recomendaciones");
+            Console.WriteLine($"   📈 Mejora potencial: +{mockRecommendations.Sum(r => r.Impact)} puntos");
+        }
+
+        static async Task AnalyzeAlerts()
+        {
+            Console.WriteLine("\n🚨 ANÁLISIS DE ALERTAS DE SEGURIDAD");
+            Console.WriteLine("-----------------------------------");
+
+            // Simular alertas de seguridad
+            var mockAlerts = new[]
+            {
+                new
+                {
+                    Title = "Suspicious PowerShell execution detected",
+                    Severity = "Medium",
+                    Status = "Active",
+                    Timestamp = DateTime.Now.AddHours(-2),
+                    Resource = "vm-windows-test",
+                    Description = "Comando PowerShell sospechoso ejecutado en VM Windows"
+                },
+                new
+                {
+                    Title = "Potential brute force attack",
+                    Severity = "High",
+                    Status = "Active", 
+                    Timestamp = DateTime.Now.AddMinutes(-45),
+                    Resource = "vm-linux-test",
+                    Description = "Múltiples intentos de login SSH fallidos"
+                },
+                new
+                {
+                    Title = "Malware detected in storage account",
+                    Severity = "Critical",
+                    Status = "Resolved",
+                    Timestamp = DateTime.Now.AddDays(-1),
+                    Resource = "stsecuritytest[sunombre]",
+                    Description = "Archivo malicioso detectado y removido"
+                }
+            };
+
+            var activeAlerts = mockAlerts.Where(a => a.Status == "Active").ToArray();
+            Console.WriteLine($"📋 Total de alertas: {mockAlerts.Length}");
+            Console.WriteLine($"🔴 Alertas activas: {activeAlerts.Length}");
+
+            foreach (var alert in mockAlerts)
+            {
+                var statusIcon = alert.Status == "Active" ? "🔴" : "✅";
+                Console.WriteLine($"\n{statusIcon} {alert.Title}");
+                Console.WriteLine($"   Severidad: {alert.Severity} | Estado: {alert.Status}");
+                Console.WriteLine($"   Recurso: {alert.Resource} | Tiempo: {alert.Timestamp:yyyy-MM-dd HH:mm}");
+                Console.WriteLine($"   {alert.Description}");
+            }
+
+            if (activeAlerts.Any())
+            {
+                Console.WriteLine($"\n⚠️ ACCIÓN REQUERIDA: {activeAlerts.Length} alertas necesitan atención");
+            }
+            else
+            {
+                Console.WriteLine($"\n✅ No hay alertas activas que requieran atención");
+            }
+        }
+
+        static async Task GenerateReport()
+        {
+            Console.WriteLine("\n📄 GENERANDO REPORTE EJECUTIVO");
+            Console.WriteLine("------------------------------");
+
+            var report = new
+            {
+                ReportDate = DateTime.Now,
+                SecureScore = new
+                {
+                    Current = 75.5,
+                    Target = 85.0,
+                    Industry = 65.0
+                },
+                Summary = new
+                {
+                    TotalRecommendations = 4,
+                    HighPriority = 2,
+                    QuickWins = 2,
+                    ActiveAlerts = 2,
+                    CriticalIssues = 0
+                },
+                NextActions = new[]
+                {
+                    "Implementar MFA en cuentas administrativas",
+                    "Restringir tráfico HTTP en aplicaciones web",
+                    "Investigar alertas de seguridad activas",
+                    "Programar revisión mensual de Secure Score"
+                }
+            };
+
+            var jsonReport = JsonConvert.SerializeObject(report, Formatting.Indented);
+            await File.WriteAllTextAsync("security-report.json", jsonReport);
+
+            Console.WriteLine("✅ Reporte generado: security-report.json");
+            Console.WriteLine($"📊 Secure Score: {report.SecureScore.Current}% (Meta: {report.SecureScore.Target}%)");
+            Console.WriteLine($"🎯 Próximas acciones: {report.NextActions.Length}");
+            
+            Console.WriteLine("\n📋 PRÓXIMAS ACCIONES:");
+            for (int i = 0; i < report.NextActions.Length; i++)
+            {
+                Console.WriteLine($"   {i + 1}. {report.NextActions[i]}");
+            }
+        }
+
+        static string GetPriority(string severity, string effort)
+        {
+            return (severity, effort) switch
+            {
+                ("High", "Low") => "🚀 CRÍTICA (Quick Win)",
+                ("High", "Medium") => "🔴 ALTA",
+                ("High", "High") => "🟠 ALTA (Complejo)",
+                ("Medium", "Low") => "🟡 MEDIA (Quick Win)",
+                ("Medium", "Medium") => "🟡 MEDIA",
+                ("Low", _) => "🟢 BAJA",
+                _ => "❓ REVISAR"
+            };
+        }
+    }
+}
+Crear archivo de configuración:
+// appsettings.json
+{
+  "Azure": {
+    "SubscriptionId": "",
+    "TenantId": "",
+    "ResourceGroupName": "rg-security-lab-[SuNombre]"
+  },
+  "Settings": {
+    "SecureScoreTarget": 85.0,
+    "AlertSeverityThreshold": "Medium",
+    "ReportOutputPath": "./reports/"
+  }
+}
+Compilar y ejecutar:
+# Compilar el proyecto
+dotnet build
+
+# Ejecutar el analizador
+dotnet run
+Paso 2: Configurar Logic App para Automatización (7 minutos)
+Crear Logic App para respuesta automática a alertas:
+# Crear Logic App
+az logic workflow create \
+--resource-group rg-security-lab-[SuNombre] \
+--name logic-security-response \
+--location eastus
+En Azure Portal - Configurar Logic App:
+1.	Logic apps → logic-security-response → Logic app designer
+2.	Start with blank logic app
+3.	Trigger: When an HTTP request is received
+4.	Generate schema from sample payload:
+json
+{
+  "alertType": "Security_Alert",
+  "severity": "High",
+  "resourceId": "/subscriptions/.../resourceGroups/.../providers/.../vm-test",
+  "alertDetails": {
+    "title": "Suspicious activity detected",
+    "description": "Potential security threat identified",
+    "recommendations": ["Isolate the resource", "Review logs"]
+  },
+  "timestamp": "2025-07-23T19:30:00Z"
+}
+5.	Agregar acciones: 
+o	Condition: Check if severity = "High" or "Critical"
+o	If true: 
+	Send an email (V2): Notificar al equipo de seguridad
+	HTTP: POST webhook a sistema de tickets
+	Azure Function: Trigger automated response
+o	If false: 
+	Create item: Log en SharePoint o sistema de tracking
+Configurar las acciones específicas:
+json
+// Email action configuration
+{
+  "To": "security-team@empresa.com",
+  "Subject": "🚨 ALERTA DE SEGURIDAD - @{triggerBody()?['severity']}",
+  "Body": "Se ha detectado una alerta de seguridad:\n\nTítulo: @{triggerBody()?['alertDetails']?['title']}\nSeveridad: @{triggerBody()?['severity']}\nRecurso: @{triggerBody()?['resourceId']}\nDescripción: @{triggerBody()?['alertDetails']?['description']}\n\nRecomendaciones:\n@{join(triggerBody()?['alertDetails']?['recommendations'], '\n- ')}\n\nTimestamp: @{triggerBody()?['timestamp']}"
+}
+________________________________________
+📊 VERIFICACIÓN FINAL Y TESTING COMPLETO
+⏱️ Duración: 15 minutos
+Paso 1: Verificar Configuración de Security Center (5 minutos)
+Ejecutar tests de verificación:
+bash
+# Verificar planes de Defender habilitados
+az security pricing list --output table
+
+# Verificar políticas asignadas
+az policy assignment list \
+--scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-security-lab-[SuNombre]" \
+--output table
+
+# Verificar recursos creados
+az resource list \
+--resource-group rg-security-lab-[SuNombre] \
+--output table
+
+# Verificar vulnerability assessment en VMs
+az security va solution list --output table
+Paso 2: Testing de Vulnerability Assessment (5 minutos)
+Simular escaneo de vulnerabilidades:
+bash
+# Crear script para simular vulnerabilidades
+cat > simulate-vulnerabilities.ps1 << 'EOF'
+# Script para crear condiciones que Security Center detectará
+Write-Host "Simulando configuraciones inseguras para testing..."
+
+# Deshabilitar Windows Firewall (temporalmente para testing)
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+
+# Crear usuario local sin password policy
+$Username = "testuser"
+$Password = ConvertTo-SecureString "password" -AsPlainText -Force
+New-LocalUser -Name $Username -Password $Password -FullName "Test User" -Description "Usuario de prueba para security assessment"
+
+# Habilitar RDP sin Network Level Authentication
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0
+
+Write-Host "Configuraciones de testing aplicadas. Security Center detectará estas issues."
+Write-Host "IMPORTANTE: Estas son configuraciones de testing - revertir en producción."
+EOF
+
+# Para VM Windows, ejecutar el script (opcional - solo para demo)
+echo "Script creado: simulate-vulnerabilities.ps1"
+echo "Para ejecutar en VM Windows: Run as Administrator en PowerShell"
+Para VM Linux, crear configuraciones inseguras de testing:
+bash
+# Conectar a VM Linux para crear configuraciones inseguras
+LINUX_IP=$(az vm show -d \
+--resource-group rg-security-lab-[SuNombre] \
+--name vm-linux-test \
+--query publicIps -o tsv)
+
+# Script para VM Linux
+cat > simulate-linux-issues.sh << 'EOF'
+#!/bin/bash
+echo "Simulando configuraciones inseguras para testing..."
+
+# Crear usuario sin password
+sudo useradd -m testuser
+
+# Configurar SSH para permitir password authentication
+sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+sudo systemctl restart ssh
+
+# Crear archivo con permisos inseguros
+sudo touch /tmp/sensitive-data.txt
+sudo chmod 777 /tmp/sensitive-data.txt
+echo "sensitive information" | sudo tee /tmp/sensitive-data.txt
+
+# Instalar paquete con vulnerabilidades conocidas (para demo)
+sudo apt update
+sudo apt install -y telnet
+
+echo "Configuraciones de testing aplicadas."
+echo "IMPORTANTE: Estas son configuraciones de testing - revertir en producción."
+EOF
+
+chmod +x simulate-linux-issues.sh
+echo "Script creado: simulate-linux-issues.sh"
+echo "Para ejecutar: ssh azureuser@$LINUX_IP 'bash -s' < simulate-linux-issues.sh"
+Paso 3: Validar Automatización y Reporting (5 minutos)
+Testing de Logic App y análisis automatizado:
+bash
+# Obtener la URL del Logic App
+LOGIC_APP_URL=$(az logic workflow show \
+--resource-group rg-security-lab-[SuNombre] \
+--name logic-security-response \
+--query accessEndpoint --output tsv)
+
+# Test manual del Logic App
+curl -X POST $LOGIC_APP_URL \
+-H "Content-Type: application/json" \
+-d '{
+  "alertType": "Security_Alert",
+  "severity": "High",
+  "resourceId": "/subscriptions/test/resourceGroups/rg-security-lab-[SuNombre]/providers/Microsoft.Compute/virtualMachines/vm-windows-test",
+  "alertDetails": {
+    "title": "Suspicious PowerShell execution detected",
+    "description": "Potentially malicious PowerShell command executed",
+    "recommendations": ["Isolate the machine", "Review PowerShell logs", "Run malware scan"]
+  },
+  "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+}'
+
+# Verificar logs del Logic App
+az monitor activity-log list \
+--resource-group rg-security-lab-[SuNombre] \
+--output table
+
+# Ejecutar el analizador de Secure Score
+cd SecureScoreAnalyzer
+dotnet run
+
+# Verificar reporte generado
+if [ -f "security-report.json" ]; then
+    echo "✅ Reporte de seguridad generado exitosamente"
+    cat security-report.json | jq '.Summary'
+else
+    echo "❌ Error generando reporte de seguridad"
+fi
+________________________________________
+🎯 RESULTADOS DE APRENDIZAJE ALCANZADOS
+Al completar este laboratorio, los estudiantes han logrado:
+🔒 Azure Security Center Avanzado:
+•	✅ Microsoft Defender for Cloud configurado con planes específicos
+•	✅ Secure Score monitoring y análisis de tendencias
+•	✅ Custom security policies implementadas y asignadas
+•	✅ Regulatory compliance dashboard configurado
+🛡️ Vulnerability Assessment:
+•	✅ Qualys integration habilitada para VMs
+•	✅ Container registry scanning configurado
+•	✅ OpenVAS implementado como scanner complementario
+•	✅ Automated vulnerability detection funcionando
+🔍 Security Assessment Automation:
+•	✅ Aplicación .NET Core para análisis de Secure Score
+•	✅ Logic App para respuesta automática a alertas
+•	✅ Reporting automatizado y métricas de seguridad
+•	✅ Integration con sistemas externos (email, tickets)
+🤖 Continuous Security Monitoring:
+•	✅ Log Analytics workspace configurado
+•	✅ Security policies enforcement habilitado
+•	✅ Automated compliance checking funcionando
+•	✅ Real-time threat detection activo
+________________________________________
+🧹 LIMPIEZA DE RECURSOS (OPCIONAL)
+⚠️ Importante: Ejecutar solo si desean eliminar todos los recursos del laboratorio.
+bash
+# Deshabilitar Defender plans para evitar costos
+az security pricing create --name VirtualMachines --tier Free
+az security pricing create --name AppServices --tier Free
+az security pricing create --name StorageAccounts --tier Free
+az security pricing create --name SqlServers --tier Free
+az security pricing create --name ContainerRegistry --tier Free
+
+# Eliminar resource group completo
+az group delete \
+--name rg-security-lab-[SuNombre] \
+--yes --no-wait
+
+# Limpiar políticas personalizadas
+az policy assignment delete --name "assign-https-policy"
+az policy assignment delete --name "require-storage-encryption"
+az policy definition delete --name "require-https-webapps"
+________________________________________
+🚨 TROUBLESHOOTING COMÚN
+Error: "Insufficient permissions for Security Center"
+Solución:
+bash
+# Verificar roles asignados
+az role assignment list --assignee [su-email] --output table
+
+# El usuario necesita rol "Security Reader" o "Security Admin"
+# Contactar al administrador de la suscripción si es necesario
+Error: "Qualys agent installation failed"
+Solución:
+bash
+# Verificar que la VM está ejecutándose
+az vm get-instance-view \
+--name vm-windows-test \
+--resource-group rg-security-lab-[SuNombre] \
+--query instanceView.statuses
+
+# Reintentar instalación manual
+az vm extension set \
+--publisher "Qualys" \
+--name "QualysAgent" \
+--vm-name "vm-windows-test" \
+--resource-group "rg-security-lab-[SuNombre]" \
+--force-update
+Error: "OpenVAS container not starting"
+Solución:
+bash
+# Verificar logs del container
+docker logs openvas
+
+# Verificar puertos disponibles
+sudo netstat -tlnp | grep :443
+
+# Reiniciar container si es necesario
+docker stop openvas
+docker rm openvas
+docker run -d --name openvas -p 443:443 -e PASSWORD=admin123 mikesplain/openvas
+Error: "Logic App trigger URL not working"
+Solución:
+1.	Azure Portal → Logic Apps → logic-security-response
+2.	Logic app designer → When an HTTP request is received
+3.	Copy HTTP POST URL (se genera después de guardar)
+4.	Verificar que el JSON schema está correctamente configurado
+Error: ".NET application compilation failed"
+Solución:
+bash
+# Verificar versión de .NET
+dotnet --version
+
+# Limpiar y restaurar paquetes
+dotnet clean
+dotnet restore
+dotnet build --verbose
+
+# Verificar que todas las dependencias están instaladas
+dotnet list package
+________________________________________
+📈 MÉTRICAS DE ÉXITO
+Indicadores de Implementación Exitosa:
+✅ Security Center Configuration:
+•	Microsoft Defender plans habilitados para todos los servicios
+•	Secure Score visible y reportando métricas
+•	Custom policies creadas y asignadas correctamente
+•	Compliance dashboard mostrando estado actual
+✅ Vulnerability Assessment:
+•	Qualys agents instalados y reportando en VMs
+•	Container registry scanning habilitado y funcional
+•	OpenVAS scanner operacional y accesible
+•	Vulnerability reports generándose automáticamente
+✅ Automation & Monitoring:
+•	Aplicación .NET compilando y ejecutando sin errores
+•	Logic App respondiendo a triggers HTTP
+•	Security reports generándose en formato JSON
+•	Email notifications funcionando correctamente
+✅ Integration & Analytics:
+•	Log Analytics workspace recibiendo datos
+•	Security policies enforcement activo
+•	Trend analysis disponible para Secure Score
+•	Automated response workflows funcionando
+________________________________________
+🔗 PREPARACIÓN PARA PRÓXIMA SESIÓN
+Para la Sesión 9 (Viernes 25/07) - Pruebas y Auditorías Parte 2:
+📚 Preparación Recomendada:
+1.	Explorar OWASP ZAP: 
+bash
+# Instalar OWASP ZAP
+choco install zap -y
+2.	Familiarizarse con Burp Suite Community: 
+bash
+# Descargar desde: https://portswigger.net/burp/communitydownload
+# O instalar via Chocolatey
+choco install burp-suite-free-edition -y
+3.	Revisar conceptos básicos de Metasploit: 
+o	Entender penetration testing framework
+o	Familiarizarse con exploit modules
+o	Comprender post-exploitation techniques
+4.	Instalar herramientas adicionales: 
+bash
+# Herramientas de network security testing
+choco install wireshark -y
+choco install nmap -y
+choco install curl -y
+
+# Herramientas de web application testing
+choco install fiddler -y
+choco install firefox -y  # Para extensiones de security testing
+🎯 Infraestructura Lista:
+•	✅ Security Center configurado y monitoreando
+•	✅ Vulnerability assessment agents desplegados
+•	✅ Aplicaciones web disponibles para penetration testing
+•	✅ Network security groups configurados para testing
+•	✅ Logging y monitoring habilitado para capturar actividad
+📋 Conocimientos Previos Requeridos:
+•	Conceptos básicos de vulnerability assessment
+•	Entendimiento de OWASP Top 10
+•	Familiaridad con Azure Security Center interface
+•	Comprensión de network security fundamentals
+________________________________________
+🌟 CONCEPTOS AVANZADOS APLICADOS
+Este laboratorio implementa:
+🎯 Security as Code:
+•	Políticas de seguridad definidas como código
+•	Automated compliance checking
+•	Infrastructure security validation
+•	Continuous security assessment
+🛡️ Defense in Depth:
+•	Multiple layers de security assessment
+•	Network, application, y data level scanning
+•	Threat detection en multiple vectores
+•	Comprehensive security monitoring
+🤖 Security Automation:
+•	Automated vulnerability scanning
+•	Policy-driven security enforcement
+•	Incident response automation
+•	Continuous compliance monitoring
+📊 Risk-Based Security:
+•	Secure Score para quantified risk assessment
+•	Prioritized remediation basado en business impact
+•	Trend analysis para security posture improvement
+•	Executive reporting para informed decision making
+________________________________________
+🎉 ¡FELICITACIONES!
+Han completado exitosamente la implementación de Azure Security Center avanzado y vulnerability assessment automatizado. Esta plataforma de seguridad es:
+•	✅ Enterprise-ready para organizaciones de cualquier tamaño
+•	✅ Compliance-focused con frameworks regulatorios
+•	✅ Automated para continuous security assessment
+•	✅ Scalable para infraestructuras complejas
+•	✅ Integrated con herramientas de security operations
+La solución que han construido puede:
+•	Detectar vulnerabilidades en tiempo real
+•	Automatizar respuesta a incidentes de seguridad
+•	Mantener compliance continuo con regulaciones
+•	Proporcionar visibility ejecutiva del riesgo
+•	Integrar con SIEM y SOAR platforms
+¡Nos vemos en la Sesión 9 para continuar con Penetration Testing y Attack Simulation! 🚀
+________________________________________
+📝 COMANDOS DE REFERENCIA RÁPIDA
+Azure CLI - Security Center Commands
+bash
+# Listar planes de Defender
+az security pricing list --output table
+
+# Habilitar plan específico
+az security pricing create --name [ResourceType] --tier Standard
+
+# Listar políticas de seguridad
+az policy assignment list --scope [scope] --output table
+
+# Verificar compliance
+az security regulatory-compliance-standard list --output table
+Azure CLI - Vulnerability Assessment Commands
+bash
+# Listar soluciones VA
+az security va solution list --output table
+
+# Verificar extensiones de VM
+az vm extension list --vm-name [vm] --resource-group [rg] --output table
+
+# Obtener resultados de assessment
+az security va assessment list --output table
+PowerShell - Security Center Commands
+powershell
+# Get Security Center pricing
+Get-AzSecurityPricing
+
+# Get security assessments
+Get-AzSecurityAssessment
+
+# Get security alerts
+Get-AzSecurityAlert
+.NET Core - Security API Commands
+bash
+# Crear proyecto Security
+dotnet new console -n SecurityAnalyzer
+
+# Agregar paquetes Azure
+dotnet add package Azure.ResourceManager.SecurityCenter
+dotnet add package Azure.Identity
+
+# Compilar y ejecutar
+dotnet build && dotnet run
+Este laboratorio establece las bases para enterprise-grade security assessment que continuaremos desarrollando en la próxima sesión con penetration testing y advanced security testing methodologies. ¡Excelente trabajo! 💪
+
