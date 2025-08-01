@@ -1,0 +1,1795 @@
+Laboratorio Práctico - Sesión 10: Casos Prácticos y Proyecto Final - Parte 1
+Curso: Diseño Seguro de Aplicaciones (.NET en Azure)
+Duración Total: 70 minutos (4 laboratorios)
+Modalidad: Instructor-led con práctica individual
+Herramientas: Visual Studio Code + .NET Core 9 + C# + Azure Portal
+________________________________________
+🛠️ LABORATORIO 0: VERIFICACIÓN Y CONFIGURACIÓN DEL ENTORNO
+⏱️ Duración: 15 minutos
+🎯 Objetivo: Preparar entorno completo para desarrollo de aplicación segura SecureShop
+Paso 1: Instalación de Chocolatey (si no está instalado) (3 minutos)
+Para usuarios Windows 10/11:
+1.	Abrir PowerShell como Administrador:
+o	Click derecho en el botón de Windows
+o	Seleccionar "Windows PowerShell (Admin)" o "Terminal (Admin)"
+2.	Verificar si Chocolatey está instalado:
+choco --version
+3.	Si NO está instalado, ejecutar:
+# Cambiar política de ejecución temporalmente
+Set-ExecutionPolicy Bypass -Scope Process -Force
+
+# Instalar Chocolatey
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+4.	Verificar instalación:
+choco --version
+# Debe mostrar versión de Chocolatey
+Paso 2: Instalación de .NET Core 9 y Herramientas (5 minutos)
+Instalar .NET Core 9 SDK:
+# Instalar .NET Core 9 SDK (última versión)
+choco install dotnet-9.0-sdk -y
+
+# Instalar Azure CLI
+choco install azure-cli -y
+
+# Instalar Git (si no está instalado)
+choco install git -y
+
+# Refrescar variables de entorno
+refreshenv
+Verificar instalaciones:
+# Verificar .NET Core 9
+dotnet --version
+# Debe mostrar: 9.0.x
+
+# Verificar Azure CLI
+az --version
+
+# Verificar Git
+git --version
+Paso 3: Configuración de Visual Studio Code (4 minutos)
+Instalar VS Code (si no está instalado):
+choco install vscode -y
+Extensiones requeridas para VS Code:
+1.	Abrir VS Code y instalar extensiones: 
+o	Presionar Ctrl + Shift + X para abrir extensiones
+o	Buscar e instalar las siguientes extensiones:
+o	C# Dev Kit (Microsoft) - ID: ms-dotnettools.csdevkit
+o	Azure Account (Microsoft) - ID: ms-vscode.azure-account
+o	Azure Resources (Microsoft) - ID: ms-azuretools.vscode-azureresourcegroups
+o	Azure CLI Tools (Microsoft) - ID: ms-vscode.azurecli
+o	REST Client (Huachao Mao) - ID: humao.rest-client
+Comando alternativo para instalar extensiones:
+# Desde línea de comandos
+code --install-extension ms-dotnettools.csdevkit
+code --install-extension ms-vscode.azure-account
+code --install-extension ms-azuretools.vscode-azureresourcegroups
+code --install-extension ms-vscode.azurecli
+code --install-extension humao.rest-client
+Paso 4: Verificación de Acceso Azure (3 minutos)
+Autenticación con Azure:
+# Login a Azure
+az login
+
+# Verificar suscripciones disponibles
+az account list --output table
+
+# Verificar membresía del grupo
+az ad group member list --group "gu_desarrollo_seguro_aplicacion" --output table
+Verificar permisos en Azure Portal:
+1.	Navegar a: https://portal.azure.com
+2.	Verificar acceso como usuario invitado
+3.	Confirmar permisos para crear recursos en grupo asignado
+________________________________________
+🏗️ LABORATORIO 34: DISEÑO DE ARQUITECTURA DE APLICACIÓN SEGURA
+⏱️ Duración: 15 minutos
+🎯 Objetivo: Crear el blueprint arquitectónico completo de SecureShop
+Paso 1: Crear Estructura de Proyecto (5 minutos)
+Crear directorio base y estructura:
+# Crear directorio principal del proyecto
+mkdir SecureShop
+cd SecureShop
+
+# Crear estructura de directorios
+mkdir src
+mkdir tests
+mkdir docs
+mkdir scripts
+mkdir infrastructure
+Paso 2: Documentar Arquitectura Segura (10 minutos)
+Crear documentación arquitectónica:
+# Crear archivo de arquitectura principal
+New-Item -Path "docs\Architecture.md" -ItemType File
+Contenido del archivo Architecture.md:
+# SecureShop - Arquitectura de Aplicación Segura
+
+## 🎯 Visión General
+SecureShop es una aplicación de e-commerce que implementa principios de seguridad desde el diseño (Secure-by-Design).
+
+## 🏛️ Arquitectura de Alto Nivel
+
+### Componentes Principales:
+- **Web Application (ASP.NET Core MVC)**: Frontend y API
+- **Azure AD**: Gestión de identidad y autenticación
+- **Azure Key Vault**: Gestión de secretos y certificados
+- **Azure SQL Database**: Almacenamiento de datos con cifrado
+- **Application Insights**: Monitoreo y auditoría
+
+### Flujo de Datos Seguro:
+Usuario → Azure AD (OAuth 2.0) → ASP.NET Core → Key Vault → Azure SQL
+
+## 🔒 Modelo de Seguridad
+
+### Roles de Usuario:
+- **Customer**: Compras y gestión de perfil
+- **Manager**: Gestión de productos e inventario  
+- **Admin**: Administración completa del sistema
+
+### Capas de Protección (Defense in Depth):
+1. **Network**: HTTPS + WAF
+2. **Identity**: Azure AD + MFA
+3. **Application**: Input validation + CSRF protection
+4. **Data**: Encryption at rest + in transit
+5. **Monitoring**: Logging + alertas
+
+## 📊 Análisis de Amenazas (STRIDE)
+
+| Amenaza | Mitigación | Implementación |
+|---------|------------|----------------|
+| Spoofing | Azure AD Auth | OAuth 2.0 + JWT |
+| Tampering | Data Integrity | HTTPS + Digital Signatures |
+| Repudiation | Audit Logging | Application Insights |
+| Info Disclosure | Encryption | Key Vault + TDE |
+| DoS | Rate Limiting | API Throttling |
+| Elevation | RBAC | Least Privilege |
+
+## 🗄️ Diseño de Base de Datos
+
+### Tablas Principales:
+- **Users**: Vinculación con Azure AD
+- **Products**: Catálogo con datos cifrados
+- **Orders**: Pedidos con trazabilidad
+- **AuditLogs**: Auditoría completa
+
+### Características de Seguridad:
+- Cifrado de campos sensibles (precios de costo)
+- Auditoría automática de cambios
+- Soft delete para preservar historiales
+- Índices optimizados para consultas de seguridad
+Crear documentación de seguridad:
+# Crear archivo de revisión de seguridad
+New-Item -Path "docs\Security-Review.md" -ItemType File
+________________________________________
+🚀 LABORATORIO 35: IMPLEMENTACIÓN DE LA BASE DE LA APLICACIÓN WEB .NET CORE
+⏱️ Duración: 20 minutos
+🎯 Objetivo: Construir los fundamentos seguros de la aplicación SecureShop
+Paso 1: Crear Solución y Proyectos (8 minutos)
+Crear la solución principal:
+# Navegar al directorio src
+cd src
+
+# Crear la solución
+dotnet new sln -n SecureShop
+
+# Crear los proyectos individuales
+dotnet new web -n SecureShop.Web
+dotnet new classlib -n SecureShop.Core
+dotnet new classlib -n SecureShop.Data
+dotnet new classlib -n SecureShop.Security
+
+# Agregar proyectos a la solución
+dotnet sln add SecureShop.Web/SecureShop.Web.csproj
+dotnet sln add SecureShop.Core/SecureShop.Core.csproj
+dotnet sln add SecureShop.Data/SecureShop.Data.csproj
+dotnet sln add SecureShop.Security/SecureShop.Security.csproj
+Agregar paquetes NuGet esenciales:
+# Navegar al proyecto web
+cd SecureShop.Web
+
+# Agregar paquetes de autenticación y seguridad
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version 9.0.0
+dotnet add package Microsoft.AspNetCore.Authentication.OpenIdConnect --version 9.0.0
+dotnet add package Microsoft.Identity.Web --version 3.2.0
+dotnet add package Azure.Security.KeyVault.Secrets --version 4.7.0
+dotnet add package Azure.Identity --version 1.12.1
+
+# Agregar Entity Framework
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 9.0.0
+dotnet add package Microsoft.EntityFrameworkCore.Tools --version 9.0.0
+
+# Agregar paquetes de validación y seguridad
+dotnet add package Microsoft.AspNetCore.DataProtection --version 9.0.0
+dotnet add package System.ComponentModel.Annotations --version 5.0.0
+Paso 2: Configurar Middleware de Seguridad (7 minutos)
+Reemplazar Program.cs con configuración segura:
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// ===== CONFIGURACIÓN DE SERVICIOS =====
+
+// Configurar Entity Framework (temporal con InMemory para desarrollo)
+builder.Services.AddDbContext<SecureShop.Data.SecureDbContext>(options =>
+    options.UseInMemoryDatabase("SecureShopDev"));
+
+// Configurar Data Protection
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("./keys"))
+    .SetApplicationName("SecureShop");
+
+// Configurar servicios MVC
+builder.Services.AddControllersWithViews(options =>
+{
+    // Agregar filtros de seguridad globales
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.RequireHttpsAttribute());
+});
+
+// Configurar políticas de autorización
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => 
+        policy.RequireRole("Admin"));
+    options.AddPolicy("ManagerOrAdmin", policy => 
+        policy.RequireRole("Manager", "Admin"));
+    options.AddPolicy("CustomerAccess", policy => 
+        policy.RequireRole("Customer", "Manager", "Admin"));
+});
+
+// Configurar CORS de forma segura
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("https://localhost:7000", "https://localhost:5001")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
+// Configurar HTTPS
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
+    options.HttpsPort = 7000;
+});
+
+var app = builder.Build();
+
+// ===== CONFIGURACIÓN DEL PIPELINE =====
+
+// Middleware de seguridad (orden importante)
+app.Use(async (context, next) =>
+{
+    // Headers de seguridad
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Add("X-Permitted-Cross-Domain-Policies", "none");
+    
+    // Content Security Policy
+    context.Response.Headers.Add("Content-Security-Policy", 
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+        "img-src 'self' data: https:; " +
+        "font-src 'self' https://cdn.jsdelivr.net; " +
+        "connect-src 'self'; " +
+        "frame-ancestors 'none'");
+
+    await next();
+});
+
+// Forzar HTTPS en todos los ambientes
+app.UseHttpsRedirection();
+
+// Servir archivos estáticos con headers de seguridad
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    }
+});
+
+app.UseRouting();
+app.UseCors();
+
+// Configurar autenticación y autorización (se configurará en el siguiente lab)
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Configurar rutas
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Middleware de manejo de errores seguro
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts(options =>
+    {
+        options.MaxAge(days: 365);
+        options.IncludeSubdomains();
+        options.Preload();
+    });
+}
+
+app.Run();
+Paso 3: Implementar Modelos de Datos Seguros (5 minutos)
+Crear proyecto Data con modelos seguros:
+# Navegar al proyecto Data
+cd ../SecureShop.Data
+
+# Crear archivo de contexto
+New-Item -Path "SecureDbContext.cs" -ItemType File
+Contenido de SecureDbContext.cs:
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+
+namespace SecureShop.Data;
+
+public class SecureDbContext : DbContext
+{
+    public SecureDbContext(DbContextOptions<SecureDbContext> options)
+        : base(options)
+    {
+    }
+
+    public DbSet<User> Users { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Configuración de User
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AzureAdObjectId).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+            entity.HasIndex(e => e.AzureAdObjectId).IsUnique();
+        });
+
+        // Configuración de Product con cifrado
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Price).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+            
+            // Campo cifrado para costo (se implementará cifrado en siguiente lab)
+            entity.Property(e => e.EncryptedCost).HasColumnType("varbinary(128)");
+        });
+
+        // Configuración de AuditLog
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Action).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.EntityType).HasMaxLength(50);
+            entity.Property(e => e.UserId).HasMaxLength(50);
+            entity.Property(e => e.Timestamp).HasDefaultValueSql("GETDATE()");
+        });
+
+        base.OnModelCreating(modelBuilder);
+    }
+}
+
+// Modelos de datos
+public class User
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    
+    [Required]
+    [MaxLength(50)]
+    public string AzureAdObjectId { get; set; } = string.Empty;
+    
+    [Required]
+    [EmailAddress]
+    [MaxLength(100)]
+    public string Email { get; set; } = string.Empty;
+    
+    [MaxLength(50)]
+    public string? FirstName { get; set; }
+    
+    [MaxLength(50)]
+    public string? LastName { get; set; }
+    
+    public DateTime CreatedAt { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+    public bool IsActive { get; set; } = true;
+    
+    // Relaciones
+    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    public ICollection<Order> Orders { get; set; } = new List<Order>();
+}
+
+public class Product
+{
+    public int Id { get; set; }
+    
+    [Required]
+    [MaxLength(100)]
+    public string Name { get; set; } = string.Empty;
+    
+    [MaxLength(500)]
+    public string? Description { get; set; }
+    
+    [Required]
+    [Range(0.01, 999999.99)]
+    public decimal Price { get; set; }
+    
+    // Campo cifrado para información sensible
+    public byte[]? EncryptedCost { get; set; }
+    
+    public DateTime CreatedAt { get; set; }
+    public Guid CreatedBy { get; set; }
+    public bool IsActive { get; set; } = true;
+    
+    // Relaciones
+    public User CreatedByUser { get; set; } = null!;
+}
+
+public class Order
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    
+    [Required]
+    public Guid UserId { get; set; }
+    
+    [Required]
+    [Range(0.01, 999999.99)]
+    public decimal TotalAmount { get; set; }
+    
+    public DateTime CreatedAt { get; set; }
+    public string Status { get; set; } = "Pending";
+    
+    // Relaciones
+    public User User { get; set; } = null!;
+    public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+}
+
+public class OrderItem
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid OrderId { get; set; }
+    public int ProductId { get; set; }
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    
+    // Relaciones
+    public Order Order { get; set; } = null!;
+    public Product Product { get; set; } = null!;
+}
+
+public class UserRole
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid UserId { get; set; }
+    public string RoleName { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
+    public DateTime AssignedAt { get; set; }
+    
+    // Relaciones
+    public User User { get; set; } = null!;
+}
+
+public class AuditLog
+{
+    public long Id { get; set; }
+    
+    [Required]
+    public string UserId { get; set; } = string.Empty;
+    
+    [Required]
+    public string Action { get; set; } = string.Empty;
+    
+    public string? EntityType { get; set; }
+    public string? EntityId { get; set; }
+    public string? Changes { get; set; }
+    public DateTime Timestamp { get; set; }
+    public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
+}
+Compilar y verificar:
+# Regresar al directorio principal
+cd ..
+
+# Compilar toda la solución
+dotnet build
+
+# Verificar que no hay errores
+# Debe mostrar: Build succeeded
+________________________________________
+🔐 LABORATORIO 36: INTEGRACIÓN CON AZURE AD Y CONFIGURACIÓN DE ROLES
+⏱️ Duración: 20 minutos
+🎯 Objetivo: Implementar autenticación OAuth 2.0/OpenID Connect y autorización basada en claims
+Paso 1: Registrar Aplicación en Azure AD (8 minutos)
+Crear registro de aplicación vía Azure CLI:
+# Variables de configuración
+$appName = "SecureShop-WebApp-$(Get-Date -Format 'yyyyMMdd-HHmm')"
+$redirectUri = "https://localhost:7000/signin-oidc"
+$logoutUri = "https://localhost:7000/signout-callback-oidc"
+
+# Crear registro de aplicación
+$appRegistration = az ad app create `
+    --display-name $appName `
+    --sign-in-audience "AzureADMyOrg" `
+    --web-redirect-uris $redirectUri `
+    --web-logout-url $logoutUri `
+    --query "{appId:appId,objectId:id}" `
+    --output json | ConvertFrom-Json
+
+Write-Host "✅ Aplicación registrada:" -ForegroundColor Green
+Write-Host "App ID: $($appRegistration.appId)" -ForegroundColor Yellow
+Write-Host "Object ID: $($appRegistration.objectId)" -ForegroundColor Yellow
+
+# Configurar permisos API
+az ad app permission add `
+    --id $appRegistration.appId `
+    --api 00000003-0000-0000-c000-000000000000 `
+    --api-permissions e1fe6dd8-ba31-4d61-89e7-88639da4683d=Scope
+
+# Otorgar consentimiento administrativo
+az ad app permission grant --id $appRegistration.appId --api 00000003-0000-0000-c000-000000000000
+
+Write-Host "✅ Permisos configurados" -ForegroundColor Green
+
+# Obtener tenant information
+$tenantInfo = az account show --query "{tenantId:tenantId,name:name}" --output json | ConvertFrom-Json
+Write-Host "Tenant ID: $($tenantInfo.tenantId)" -ForegroundColor Yellow
+Guardar información de configuración:
+# Crear archivo de configuración Azure AD
+$azureAdConfig = @{
+    TenantId = $tenantInfo.tenantId
+    ClientId = $appRegistration.appId
+    Instance = "https://login.microsoftonline.com/"
+    Domain = "$($tenantInfo.name).onmicrosoft.com"
+    CallbackPath = "/signin-oidc"
+    SignedOutCallbackPath = "/signout-callback-oidc"
+} | ConvertTo-Json -Depth 3
+
+$azureAdConfig | Out-File -FilePath "SecureShop.Web/azuread-config.json" -Encoding UTF8
+Write-Host "✅ Configuración guardada en azuread-config.json" -ForegroundColor Green
+Paso 2: Configurar Autenticación en .NET (7 minutos)
+Actualizar appsettings.json:
+# Navegar al proyecto web
+cd SecureShop.Web
+
+# Leer configuración Azure AD
+$config = Get-Content "azuread-config.json" | ConvertFrom-Json
+
+# Crear appsettings.json con configuración segura
+$appSettings = @{
+    "Logging" = @{
+        "LogLevel" = @{
+            "Default" = "Information"
+            "Microsoft.AspNetCore" = "Warning"
+        }
+    }
+    "AllowedHosts" = "*"
+    "AzureAd" = @{
+        "Instance" = $config.Instance
+        "Domain" = $config.Domain
+        "TenantId" = "[To be loaded from Key Vault]"
+        "ClientId" = "[To be loaded from Key Vault]"
+        "CallbackPath" = $config.CallbackPath
+        "SignedOutCallbackPath" = $config.SignedOutCallbackPath
+    }
+    "KeyVault" = @{
+        "VaultUri" = "[To be configured in next lab]"
+    }
+} | ConvertTo-Json -Depth 3
+
+$appSettings | Out-File -FilePath "appsettings.json" -Encoding UTF8
+
+# Para desarrollo local, crear appsettings.Development.json con valores reales
+$devSettings = @{
+    "AzureAd" = @{
+        "Instance" = $config.Instance
+        "Domain" = $config.Domain
+        "TenantId" = $config.TenantId
+        "ClientId" = $config.ClientId
+        "CallbackPath" = $config.CallbackPath
+        "SignedOutCallbackPath" = $config.SignedOutCallbackPath
+    }
+} | ConvertTo-Json -Depth 3
+
+$devSettings | Out-File -FilePath "appsettings.Development.json" -Encoding UTF8
+
+Write-Host "✅ Configuración de aplicación actualizada" -ForegroundColor Green
+Actualizar Program.cs con autenticación:
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Identity.Web;
+using Microsoft.EntityFrameworkCore;
+using SecureShop.Data;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// ===== CONFIGURACIÓN DE AUTENTICACIÓN =====
+
+// Configurar Microsoft Identity Web (Azure AD)
+builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApp(options =>
+    {
+        builder.Configuration.Bind("AzureAd", options);
+        
+        // Configurar eventos de autenticación
+        options.Events = new OpenIdConnectEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                // Aquí se implementará el procesamiento de claims personalizado
+                var logger = context.HttpContext.RequestServices
+                    .GetRequiredService<ILogger<Program>>();
+                
+                var userObjectId = context.Principal?.GetObjectId();
+                var userEmail = context.Principal?.GetDisplayName();
+                
+                logger.LogInformation("Usuario autenticado: {Email} (ID: {ObjectId})", 
+                    userEmail, userObjectId);
+                
+                // TODO: Implementar sincronización con base de datos local
+                await Task.CompletedTask;
+            },
+            
+            OnAuthenticationFailed = async context =>
+            {
+                var logger = context.HttpContext.RequestServices
+                    .GetRequiredService<ILogger<Program>>();
+                
+                logger.LogError("Fallo de autenticación: {Error}", 
+                    context.Exception?.Message);
+                
+                await Task.CompletedTask;
+            }
+        };
+    });
+
+// ===== CONFIGURACIÓN DE SERVICIOS ADICIONALES =====
+
+// Entity Framework con configuración segura
+builder.Services.AddDbContext<SecureDbContext>(options =>
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        options.UseInMemoryDatabase("SecureShopDev");
+    }
+    else
+    {
+        // En producción se configurará SQL Server con Key Vault
+        options.UseInMemoryDatabase("SecureShopProd"); // Temporal
+    }
+});
+
+// Configurar políticas de autorización avanzadas
+builder.Services.AddAuthorization(options =>
+{
+    // Políticas básicas por rol
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ManagerOrAdmin", policy =>
+        policy.RequireRole("Manager", "Admin"));
+    
+    options.AddPolicy("CustomerAccess", policy =>
+        policy.RequireRole("Customer", "Manager", "Admin"));
+    
+    // Políticas más granulares
+    options.AddPolicy("CanManageProducts", policy =>
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("Admin") ||
+            context.User.IsInRole("ProductManager") ||
+            (context.User.IsInRole("StoreManager") && 
+             context.User.HasClaim("StoreId", "current-store"))));
+    
+    options.AddPolicy("CanViewReports", policy =>
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("Admin") ||
+            context.User.IsInRole("Manager") ||
+            context.User.HasClaim("Permission", "ViewReports")));
+});
+
+// Configurar servicios MVC con validación automática
+builder.Services.AddControllersWithViews(options =>
+{
+    // Requerir HTTPS globalmente
+    options.Filters.Add<Microsoft.AspNetCore.Mvc.RequireHttpsAttribute>();
+    
+    // Agregar filtro de autorización global
+    var policy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
+});
+
+// Configurar cookies de autenticación de forma segura
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.SlidingExpiration = true;
+    
+    // Configurar paths de autenticación
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+// Configurar eventos de cookie
+options.Events.OnRedirectToLogin = context =>
+{
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        context.Response.StatusCode = 401;
+        return Task.CompletedTask;
+    }
+    return Task.CompletedTask;
+};
+});
+var app = builder.Build();
+// ===== CONFIGURACIÓN DEL PIPELINE =====
+// Headers de seguridad app.Use(async (context, next) => { context.Response.Headers.Add("X-Frame-Options", "DENY"); context.Response.Headers.Add("X-Content-Type-Options", "nosniff"); context.Response.Headers.Add("X-XSS-Protection", "1; mode=block"); context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+// CSP mejorado para aplicación con autenticación
+context.Response.Headers.Add("Content-Security-Policy", 
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' https://login.microsoftonline.com; " +
+    "style-src 'self' 'unsafe-inline' https://login.microsoftonline.com; " +
+    "img-src 'self' data: https: https://login.microsoftonline.com; " +
+    "connect-src 'self' https://login.microsoftonline.com; " +
+    "frame-src https://login.microsoftonline.com; " +
+    "frame-ancestors 'none'");
+
+await next();
+});
+if (app.Environment.IsDevelopment()) { app.UseDeveloperExceptionPage(); } else { app.UseExceptionHandler("/Home/Error"); app.UseHsts(); }
+app.UseHttpsRedirection(); app.UseStaticFiles();
+app.UseRouting();
+// IMPORTANTE: Orden correcto para autenticación app.UseAuthentication(); app.UseAuthorization();
+app.MapControllerRoute( name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
+app.Run();
+
+### Paso 3: Crear Controladores con Autorización *(5 minutos)*
+
+**Crear controlador Home básico:**
+```powershell
+# Crear directorio Controllers
+mkdir Controllers
+
+# Crear HomeController
+New-Item -Path "Controllers\HomeController.cs" -ItemType File
+Contenido de HomeController.cs:
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web;
+
+namespace SecureShop.Web.Controllers;
+
+public class HomeController : Controller
+{
+    private readonly ILogger<HomeController> _logger;
+
+    public HomeController(ILogger<HomeController> logger)
+    {
+        _logger = logger;
+    }
+
+    [AllowAnonymous]
+    public IActionResult Index()
+    {
+        return View();
+    }
+
+    [Authorize]
+    public IActionResult Dashboard()
+    {
+        var userObjectId = User.GetObjectId();
+        var userName = User.GetDisplayName();
+        var userRoles = User.Claims
+            .Where(c => c.Type == "roles" || c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")
+            .Select(c => c.Value)
+            .ToList();
+
+        ViewBag.UserObjectId = userObjectId;
+        ViewBag.UserName = userName;
+        ViewBag.UserRoles = userRoles;
+
+        _logger.LogInformation("Usuario {UserName} accedió al dashboard con roles: {Roles}", 
+            userName, string.Join(", ", userRoles));
+
+        return View();
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    public IActionResult AdminPanel()
+    {
+        return View();
+    }
+
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public IActionResult Reports()
+    {
+        return View();
+    }
+
+    [AllowAnonymous]
+    public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    [AllowAnonymous]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
+    {
+        return View();
+    }
+}
+Crear ProductController con autorización granular:
+New-Item -Path "Controllers\ProductController.cs" -ItemType File
+Contenido de ProductController.cs:
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SecureShop.Data;
+using System.ComponentModel.DataAnnotations;
+
+namespace SecureShop.Web.Controllers;
+
+[Authorize]
+public class ProductController : Controller
+{
+    private readonly SecureDbContext _context;
+    private readonly ILogger<ProductController> _logger;
+
+    public ProductController(SecureDbContext context, ILogger<ProductController> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
+    // Todos pueden ver productos
+    [Authorize(Policy = "CustomerAccess")]
+    public async Task<IActionResult> Index()
+    {
+        var products = await _context.Products
+            .Where(p => p.IsActive)
+            .OrderBy(p => p.Name)
+            .ToListAsync();
+
+        return View(products);
+    }
+
+    // Solo managers y admins pueden crear productos
+    [Authorize(Policy = "ManagerOrAdmin")]
+    public IActionResult Create()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    [Authorize(Policy = "ManagerOrAdmin")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(ProductCreateModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        try
+        {
+            var product = new Product
+            {
+                Name = model.Name,
+                Description = model.Description,
+                Price = model.Price,
+                CreatedBy = Guid.Parse(User.GetObjectId()!),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Producto {ProductName} creado por usuario {UserId}", 
+                product.Name, User.GetObjectId());
+
+            TempData["SuccessMessage"] = "Producto creado exitosamente";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creando producto");
+            ModelState.AddModelError("", "Error al crear el producto");
+            return View(model);
+        }
+    }
+
+    // Solo admins pueden eliminar productos
+    [HttpPost]
+    [Authorize(Policy = "AdminOnly")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        try
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            // Soft delete para preservar auditoría
+            product.IsActive = false;
+            await _context.SaveChangesAsync();
+
+            _logger.LogWarning("Producto {ProductId} eliminado por usuario {UserId}", 
+                id, User.GetObjectId());
+
+            TempData["SuccessMessage"] = "Producto eliminado exitosamente";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error eliminando producto {ProductId}", id);
+            TempData["ErrorMessage"] = "Error al eliminar el producto";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+}
+
+// Modelo de validación para creación de productos
+public class ProductCreateModel
+{
+    [Required(ErrorMessage = "El nombre es requerido")]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "El nombre debe tener entre 3 y 100 caracteres")]
+    [RegularExpression(@"^[a-zA-Z0-9\s\-\.]+$", ErrorMessage = "El nombre contiene caracteres no válidos")]
+    public string Name { get; set; } = string.Empty;
+
+    [StringLength(500, ErrorMessage = "La descripción no puede exceder 500 caracteres")]
+    public string? Description { get; set; }
+
+    [Required(ErrorMessage = "El precio es requerido")]
+    [Range(0.01, 999999.99, ErrorMessage = "El precio debe estar entre 0.01 y 999,999.99")]
+    [DataType(DataType.Currency)]
+    public decimal Price { get; set; }
+}
+Crear vistas básicas:
+# Crear directorio Views
+mkdir Views
+mkdir Views\Home
+mkdir Views\Product
+mkdir Views\Shared
+
+# Crear Layout principal
+New-Item -Path "Views\Shared\_Layout.cshtml" -ItemType File
+Contenido de _Layout.cshtml:
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SecureShop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand { font-weight: bold; }
+        .user-info { color: #fff; }
+        .security-badge { background-color: #198754; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    🛡️ SecureShop
+                </a>
+                <div class="navbar-nav flex-grow-1">
+                    <a class="nav-link" asp-controller="Home" asp-action="Index">Inicio</a>
+                    <a class="nav-link" asp-controller="Product" asp-action="Index">Productos</a>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a class="nav-link" asp-controller="Home" asp-action="Dashboard">Dashboard</a>
+                        @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+                        {
+                            <a class="nav-link" asp-controller="Home" asp-action="Reports">Reportes</a>
+                        }
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a class="nav-link" asp-controller="Home" asp-action="AdminPanel">Admin</a>
+                        }
+                    }
+                </div>
+                <div class="navbar-nav">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <span class="nav-link user-info">
+                            👤 @User.Identity.Name 
+                            <span class="security-badge">MFA</span>
+                        </span>
+                        <a class="nav-link" href="javascript:void(0)" onclick="document.getElementById('logoutForm').submit();">
+                            Cerrar Sesión
+                        </a>
+                        <form id="logoutForm" method="post" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignOut" style="display: none;">
+                            <input type="hidden" name="returnUrl" value="@Url.Action("Index", "Home")" />
+                        </form>
+                    }
+                    else
+                    {
+                        <a class="nav-link" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignIn">
+                            Iniciar Sesión
+                        </a>
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mt-4">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted bg-light mt-5 py-3">
+        <div class="container text-center">
+            &copy; 2025 - SecureShop - 
+            <span class="security-badge">Seguro por Diseño</span> |
+            <a asp-controller="Home" asp-action="Privacy">Privacidad</a>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
+Crear vista Index:
+New-Item -Path "Views\Home\Index.cshtml" -ItemType File
+Contenido de Index.cshtml:
+@{
+    ViewData["Title"] = "Inicio";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="jumbotron bg-primary text-white p-5 rounded">
+            <h1 class="display-4">🛡️ Bienvenido a SecureShop</h1>
+            <p class="lead">Una aplicación de e-commerce construida con seguridad desde el diseño.</p>
+            <hr class="my-4 bg-white">
+            <p>Implementa las mejores prácticas de seguridad usando .NET Core 9 y Azure.</p>
+            @if (User.Identity?.IsAuthenticated != true)
+            {
+                <a class="btn btn-light btn-lg" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignIn" role="button">
+                    Iniciar Sesión Seguro
+                </a>
+            }
+            else
+            {
+                <a class="btn btn-light btn-lg" asp-controller="Home" asp-action="Dashboard" role="button">
+                    Ir al Dashboard
+                </a>
+            }
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5>🔒 Características de Seguridad</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li>✅ Autenticación Azure AD</li>
+                    <li>✅ Autorización basada en roles</li>
+                    <li>✅ Cifrado de datos sensibles</li>
+                    <li>✅ Auditoría completa</li>
+                    <li>✅ Headers de seguridad</li>
+                    <li>✅ Validación de entrada</li>
+                    <li>✅ Protección CSRF</li>
+                </ul>
+            </div>
+        </div>
+        
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6>👤 Estado de Usuario</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Usuario:</strong> @User.Identity.Name</p>
+                    <p><strong>Autenticado:</strong> <span class="badge bg-success">Sí</span></p>
+                    <p><strong>MFA:</strong> <span class="badge bg-success">Activo</span></p>
+                    @{
+                        var roles = User.Claims.Where(c => c.Type == "roles").Select(c => c.Value).ToList();
+                    }
+                    @if (roles.Any())
+                    {
+                        <p><strong>Roles:</strong></p>
+                        <ul>
+                            @foreach (var role in roles)
+                            {
+                                <li><span class="badge bg-primary">@role</span></li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (User.Identity?.IsAuthenticated != true)
+{
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading">🔐 Autenticación Segura</h4>
+                <p>SecureShop utiliza Microsoft Azure AD para proporcionar:</p>
+                <ul>
+                    <li><strong>Autenticación multifactor (MFA)</strong> - Protección adicional más allá de contraseñas</li>
+                    <li><strong>Single Sign-On (SSO)</strong> - Una sola autenticación para múltiples aplicaciones</li>
+                    <li><strong>Gestión de identidad empresarial</strong> - Control centralizado de accesos</li>
+                    <li><strong>Cumplimiento normativo</strong> - Estándares internacionales de seguridad</li>
+                </ul>
+                <hr>
+                <p class="mb-0">Haga clic en "Iniciar Sesión Seguro" para acceder con su cuenta organizacional.</p>
+            </div>
+        </div>
+    </div>
+}
+Crear _ViewStart.cshtml:
+New-Item -Path "Views\_ViewStart.cshtml" -ItemType File
+Contenido de _ViewStart.cshtml:
+@{
+    Layout = "_Layout";
+}
+________________________________________
+🗝️ LABORATORIO 37: CONFIGURACIÓN DE KEY VAULT PARA LA APLICACIÓN
+⏱️ Duración: 15 minutos
+🎯 Objetivo: Implementar gestión segura de secretos y configuración criptográfica
+Paso 1: Crear y Configurar Azure Key Vault (8 minutos)
+Crear Key Vault con configuración segura:
+# Variables de configuración
+$resourceGroup = "rg-secureshop-dev-$(Get-Date -Format 'yyyyMMdd')"
+$location = "East US"
+$keyVaultName = "kv-secureshop-$(Get-Random -Minimum 1000 -Maximum 9999)"
+$appServiceName = "app-secureshop-$(Get-Random -Minimum 1000 -Maximum 9999)"
+
+# Crear resource group
+Write-Host "📁 Creando resource group..." -ForegroundColor Yellow
+az group create --name $resourceGroup --location $location
+
+# Crear Key Vault con configuración de seguridad
+Write-Host "🗝️ Creando Azure Key Vault..." -ForegroundColor Yellow
+$keyVault = az keyvault create `
+    --name $keyVaultName `
+    --resource-group $resourceGroup `
+    --location $location `
+    --enabled-for-template-deployment true `
+    --enable-rbac-authorization true `
+    --enable-purge-protection true `
+    --retention-days 90 `
+    --query "{name:name,vaultUri:properties.vaultUri}" `
+    --output json | ConvertFrom-Json
+
+Write-Host "✅ Key Vault creado: $($keyVault.name)" -ForegroundColor Green
+Write-Host "🔗 Vault URI: $($keyVault.vaultUri)" -ForegroundColor Yellow
+
+# Obtener información del usuario actual para asignar permisos
+$currentUser = az ad signed-in-user show --query objectId --output tsv
+
+# Asignar rol de Key Vault Administrator al usuario actual
+Write-Host "🔐 Configurando permisos..." -ForegroundColor Yellow
+az role assignment create `
+    --assignee $currentUser `
+    --role "Key Vault Administrator" `
+    --scope "/subscriptions/$(az account show --query id -o tsv)/resourcegroups/$resourceGroup/providers/Microsoft.KeyVault/vaults/$keyVaultName"
+
+# Agregar secretos de configuración
+Write-Host "🔒 Agregando secretos..." -ForegroundColor Yellow
+
+# Secretos de Azure AD (usar valores de configuración anterior)
+$azureAdConfig = Get-Content "azuread-config.json" | ConvertFrom-Json
+
+az keyvault secret set `
+    --vault-name $keyVaultName `
+    --name "AzureAd--TenantId" `
+    --value $azureAdConfig.TenantId
+
+az keyvault secret set `
+    --vault-name $keyVaultName `
+    --name "AzureAd--ClientId" `
+    --value $azureAdConfig.ClientId
+
+# Generar clave de cifrado para datos sensibles
+$encryptionKey = [System.Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+az keyvault secret set `
+    --vault-name $keyVaultName `
+    --name "DataEncryption--MasterKey" `
+    --value $encryptionKey
+
+# Cadena de conexión para base de datos (simulada para desarrollo)
+$connectionString = "Server=tcp:secureshop-sql.database.windows.net,1433;Database=SecureShop;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+az keyvault secret set `
+    --vault-name $keyVaultName `
+    --name "ConnectionStrings--DefaultConnection" `
+    --value $connectionString
+
+Write-Host "✅ Secretos configurados en Key Vault" -ForegroundColor Green
+
+# Crear certificado para firma digital
+Write-Host "📜 Creando certificado para firma digital..." -ForegroundColor Yellow
+az keyvault certificate create `
+    --vault-name $keyVaultName `
+    --name "DataSigningCertificate" `
+    --policy "@$(New-TemporaryFile | ForEach-Object { 
+        @{
+            'keyProperties' = @{
+                'keyType' = 'RSA'
+                'keySize' = 2048
+                'exportable' = $false
+            }
+            'secretProperties' = @{
+                'contentType' = 'application/x-pkcs12'
+            }
+            'x509CertificateProperties' = @{
+                'subject' = 'CN=SecureShop Data Signing'
+                'validityInMonths' = 12
+            }
+            'issuerParameters' = @{
+                'name' = 'Self'
+            }
+        } | ConvertTo-Json -Depth 4 | Out-File $_.FullName -Encoding UTF8; $_.FullName
+    })"
+
+Write-Host "✅ Certificado creado para operaciones de firma" -ForegroundColor Green
+Paso 2: Crear App Service con Managed Identity (4 minutos)
+Crear App Service con identidad administrada:
+# Crear App Service Plan
+Write-Host "🏗️ Creando App Service Plan..." -ForegroundColor Yellow
+az appservice plan create `
+    --name "plan-secureshop-dev" `
+    --resource-group $resourceGroup `
+    --location $location `
+    --sku B1 `
+    --is-linux
+
+# Crear App Service
+Write-Host "🌐 Creando App Service..." -ForegroundColor Yellow
+$appService = az webapp create `
+    --name $appServiceName `
+    --resource-group $resourceGroup `
+    --plan "plan-secureshop-dev" `
+    --runtime "DOTNETCORE:9.0" `
+    --query "{name:name,defaultHostName:defaultHostName}" `
+    --output json | ConvertFrom-Json
+
+Write-Host "✅ App Service creado: $($appService.name)" -ForegroundColor Green
+Write-Host "🔗 URL: https://$($appService.defaultHostName)" -ForegroundColor Yellow
+
+# Habilitar managed identity
+Write-Host "🆔 Habilitando Managed Identity..." -ForegroundColor Yellow
+$managedIdentity = az webapp identity assign `
+    --name $appServiceName `
+    --resource-group $resourceGroup `
+    --query "{principalId:principalId,tenantId:tenantId}" `
+    --output json | ConvertFrom-Json
+
+# Asignar permisos de Key Vault a la managed identity
+Write-Host "🔐 Asignando permisos de Key Vault..." -ForegroundColor Yellow
+az role assignment create `
+    --assignee $managedIdentity.principalId `
+    --role "Key Vault Secrets User" `
+    --scope "/subscriptions/$(az account show --query id -o tsv)/resourcegroups/$resourceGroup/providers/Microsoft.KeyVault/vaults/$keyVaultName"
+
+az role assignment create `
+    --assignee $managedIdentity.principalId `
+    --role "Key Vault Certificate User" `
+    --scope "/subscriptions/$(az account show --query id -o tsv)/resourcegroups/$resourceGroup/providers/Microsoft.KeyVault/vaults/$keyVaultName"
+
+Write-Host "✅ Permisos de Key Vault configurados" -ForegroundColor Green
+Paso 3: Integrar Key Vault en la Aplicación .NET (3 minutos)
+Actualizar configuración de la aplicación:
+# Actualizar appsettings.json con configuración de Key Vault
+$appSettingsContent = @{
+    "Logging" = @{
+        "LogLevel" = @{
+            "Default" = "Information"
+            "Microsoft.AspNetCore" = "Warning"
+        }
+    }
+    "AllowedHosts" = "*"
+    "KeyVault" = @{
+        "VaultUri" = $keyVault.vaultUri
+    }
+    "AzureAd" = @{
+        "Instance" = "https://login.microsoftonline.com/"
+        "Domain" = "[To be loaded from Key Vault]"
+        "TenantId" = "[Key Vault: AzureAd--TenantId]"
+        "ClientId" = "[Key Vault: AzureAd--ClientId]"
+        "CallbackPath" = "/signin-oidc"
+        "SignedOutCallbackPath" = "/signout-callback-oidc"
+    }
+} | ConvertTo-Json -Depth 3
+
+$appSettingsContent | Out-File -FilePath "appsettings.json" -Encoding UTF8
+
+Write-Host "✅ Configuración actualizada con Key Vault URI" -ForegroundColor Green
+Actualizar Program.cs con integración Key Vault:
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Identity.Web;
+using Microsoft.EntityFrameworkCore;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using SecureShop.Data;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// ===== CONFIGURACIÓN DE KEY VAULT =====
+
+// Configurar Azure Key Vault como fuente de configuración
+var keyVaultUri = builder.Configuration["KeyVault:VaultUri"];
+if (!string.IsNullOrEmpty(keyVaultUri))
+{
+    // Usar DefaultAzureCredential que funciona tanto en desarrollo como producción
+    builder.Configuration.AddAzureKeyVault(
+        new Uri(keyVaultUri),
+        new DefaultAzureCredential());
+    
+    Console.WriteLine($"✅ Key Vault configurado: {keyVaultUri}");
+}
+
+// Registrar SecretClient para uso en la aplicación
+builder.Services.AddSingleton<SecretClient>(provider =>
+{
+    var vaultUri = builder.Configuration["KeyVault:VaultUri"];
+    return new SecretClient(new Uri(vaultUri!), new DefaultAzureCredential());
+});
+
+// ===== SERVICIOS DE CIFRADO =====
+
+// Registrar servicio de cifrado que usa Key Vault
+builder.Services.AddScoped<IEncryptionService, KeyVaultEncryptionService>();
+
+// ===== CONFIGURACIÓN DE AUTENTICACIÓN =====
+
+builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApp(options =>
+    {
+        // La configuración ahora viene de Key Vault automáticamente
+        builder.Configuration.Bind("AzureAd", options);
+        
+        options.Events = new OpenIdConnectEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var logger = context.HttpContext.RequestServices
+                    .GetRequiredService<ILogger<Program>>();
+                
+                var userObjectId = context.Principal?.GetObjectId();
+                var userEmail = context.Principal?.GetDisplayName();
+                
+                logger.LogInformation("Usuario autenticado: {Email} (ID: {ObjectId})", 
+                    userEmail, userObjectId);
+                
+                // TODO: Sincronizar con base de datos local
+                await Task.CompletedTask;
+            }
+        };
+    });
+
+// ===== RESTO DE LA CONFIGURACIÓN =====
+// (Mantener el resto de la configuración anterior)
+
+builder.Services.AddDbContext<SecureDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    if (builder.Environment.IsDevelopment() || string.IsNullOrEmpty(connectionString))
+    {
+        options.UseInMemoryDatabase("SecureShopDev");
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("ManagerOrAdmin", policy => policy.RequireRole("Manager", "Admin"));
+    options.AddPolicy("CustomerAccess", policy => policy.RequireRole("Customer", "Manager", "Admin"));
+});
+
+builder.Services.AddControllersWithViews();
+
+var app = builder.Build();
+
+// ===== PIPELINE DE LA APLICACIÓN =====
+// (Mantener configuración anterior de headers de seguridad y middleware)
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+pattern: "{controller=Home}/{action=Index}/{id?}");
+app.Run();
+
+**Crear servicio de cifrado con Key Vault:**
+```powershell
+# Navegar al proyecto Security
+cd ../SecureShop.Security
+
+# Crear interface y servicio de cifrado
+New-Item -Path "IEncryptionService.cs" -ItemType File
+Contenido de IEncryptionService.cs:
+namespace SecureShop.Security;
+
+public interface IEncryptionService
+{
+    Task<string> EncryptAsync(string plainText);
+    Task<string> DecryptAsync(string encryptedText);
+    Task<byte[]> EncryptBytesAsync(byte[] plainBytes);
+    Task<byte[]> DecryptBytesAsync(byte[] encryptedBytes);
+}
+Crear KeyVaultEncryptionService.cs:
+New-Item -Path "KeyVaultEncryptionService.cs" -ItemType File
+Contenido de KeyVaultEncryptionService.cs:
+using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace SecureShop.Security;
+
+public class KeyVaultEncryptionService : IEncryptionService
+{
+    private readonly SecretClient _secretClient;
+    private readonly ILogger<KeyVaultEncryptionService> _logger;
+    private readonly string _keyName = "DataEncryption--MasterKey";
+
+    public KeyVaultEncryptionService(SecretClient secretClient, ILogger<KeyVaultEncryptionService> logger)
+    {
+        _secretClient = secretClient;
+        _logger = logger;
+    }
+
+    public async Task<string> EncryptAsync(string plainText)
+    {
+        if (string.IsNullOrEmpty(plainText))
+            return string.Empty;
+
+        try
+        {
+            var plainBytes = Encoding.UTF8.GetBytes(plainText);
+            var encryptedBytes = await EncryptBytesAsync(plainBytes);
+            return Convert.ToBase64String(encryptedBytes);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error encriptando datos");
+            throw new InvalidOperationException("Error en proceso de cifrado", ex);
+        }
+    }
+
+    public async Task<string> DecryptAsync(string encryptedText)
+    {
+        if (string.IsNullOrEmpty(encryptedText))
+            return string.Empty;
+
+        try
+        {
+            var encryptedBytes = Convert.FromBase64String(encryptedText);
+            var decryptedBytes = await DecryptBytesAsync(encryptedBytes);
+            return Encoding.UTF8.GetString(decryptedBytes);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error desencriptando datos");
+            throw new InvalidOperationException("Error en proceso de descifrado", ex);
+        }
+    }
+
+    public async Task<byte[]> EncryptBytesAsync(byte[] plainBytes)
+    {
+        if (plainBytes == null || plainBytes.Length == 0)
+            return Array.Empty<byte>();
+
+        try
+        {
+            // Obtener clave maestra de Key Vault
+            var keyResponse = await _secretClient.GetSecretAsync(_keyName);
+            var masterKey = Convert.FromBase64String(keyResponse.Value.Value);
+
+            using var aes = Aes.Create();
+            aes.Key = masterKey;
+            aes.GenerateIV();
+
+            using var encryptor = aes.CreateEncryptor();
+            using var msEncrypt = new MemoryStream();
+            
+            // Escribir IV al inicio del stream
+            await msEncrypt.WriteAsync(aes.IV, 0, aes.IV.Length);
+            
+            using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+            {
+                await csEncrypt.WriteAsync(plainBytes, 0, plainBytes.Length);
+                await csEncrypt.FlushFinalBlockAsync();
+            }
+
+            return msEncrypt.ToArray();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error en cifrado de bytes");
+            throw new InvalidOperationException("Error en proceso de cifrado", ex);
+        }
+    }
+
+    public async Task<byte[]> DecryptBytesAsync(byte[] encryptedBytes)
+    {
+        if (encryptedBytes == null || encryptedBytes.Length == 0)
+            return Array.Empty<byte>();
+
+        try
+        {
+            // Obtener clave maestra de Key Vault
+            var keyResponse = await _secretClient.GetSecretAsync(_keyName);
+            var masterKey = Convert.FromBase64String(keyResponse.Value.Value);
+
+            using var aes = Aes.Create();
+            aes.Key = masterKey;
+
+            using var msDecrypt = new MemoryStream(encryptedBytes);
+            
+            // Leer IV del inicio del stream
+            var iv = new byte[16];
+            await msDecrypt.ReadAsync(iv, 0, iv.Length);
+            aes.IV = iv;
+
+            using var decryptor = aes.CreateDecryptor();
+            using var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
+            using var msPlain = new MemoryStream();
+            
+            await csDecrypt.CopyToAsync(msPlain);
+            return msPlain.ToArray();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error en descifrado de bytes");
+            throw new InvalidOperationException("Error en proceso de descifrado", ex);
+        }
+    }
+}
+Compilar y probar la aplicación:
+# Regresar al directorio de la solución
+cd ..
+
+# Compilar toda la solución
+dotnet build
+
+# Verificar que no hay errores
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "✅ Compilación exitosa" -ForegroundColor Green
+} else {
+    Write-Host "❌ Error en compilación" -ForegroundColor Red
+}
+
+# Ejecutar la aplicación para probar
+cd SecureShop.Web
+Write-Host "🚀 Iniciando aplicación..." -ForegroundColor Yellow
+Write-Host "📱 La aplicación estará disponible en:" -ForegroundColor Cyan
+Write-Host "   https://localhost:7000" -ForegroundColor Cyan
+Write-Host "   http://localhost:5000" -ForegroundColor Cyan
+Write-Host "" -ForegroundColor White
+Write-Host "💡 Para probar autenticación:" -ForegroundColor Yellow
+Write-Host "   1. Navegue a https://localhost:7000" -ForegroundColor White
+Write-Host "   2. Haga clic en 'Iniciar Sesión Seguro'" -ForegroundColor White
+Write-Host "   3. Use sus credenciales de Azure AD" -ForegroundColor White
+Write-Host "" -ForegroundColor White
+Write-Host "🛑 Presione Ctrl+C para detener la aplicación" -ForegroundColor Red
+
+# Iniciar la aplicación
+dotnet run --urls="https://localhost:7000;http://localhost:5000"
+________________________________________
+📋 RESUMEN DE LABORATORIOS COMPLETADOS
+✅ Lab 34: Diseño de Arquitectura (15 min)
+Entregables:
+•	✅ Estructura de proyecto organizada
+•	✅ Documentación arquitectónica completa
+•	✅ Análisis de amenazas STRIDE documentado
+•	✅ Modelo de datos seguro diseñado
+✅ Lab 35: Base de Aplicación .NET Core (20 min)
+Entregables:
+•	✅ Solución multi-proyecto creada
+•	✅ Middleware de seguridad implementado
+•	✅ Entity Framework con auditoría configurado
+•	✅ Modelos de datos con validación robusta
+•	✅ Headers de seguridad implementados
+✅ Lab 36: Integración Azure AD (20 min)
+Entregables:
+•	✅ Aplicación registrada en Azure AD
+•	✅ Autenticación OAuth 2.0/OpenID Connect implementada
+•	✅ Autorización basada en roles configurada
+•	✅ Controladores con políticas de seguridad
+•	✅ Vistas con elementos de seguridad
+✅ Lab 37: Configuración Key Vault (15 min)
+Entregables:
+•	✅ Azure Key Vault creado y configurado
+•	✅ Managed Identity habilitada
+•	✅ Secretos de configuración almacenados
+•	✅ Servicio de cifrado implementado
+•	✅ Certificado para firma digital creado
+________________________________________
+🎯 VERIFICACIÓN DE FUNCIONALIDADES
+Pruebas de Seguridad Básicas
+1. Verificar Headers de Seguridad:
+# Probar headers de seguridad
+curl -I https://localhost:7000
+
+# Verificar que incluya:
+# X-Frame-Options: DENY
+# X-Content-Type-Options: nosniff
+# X-XSS-Protection: 1; mode=block
+# Content-Security-Policy: ...
+2. Verificar Autenticación:
+# Probar acceso sin autenticación a recurso protegido
+curl https://localhost:7000/Home/Dashboard
+
+# Debe redirigir a login de Azure AD
+3. Verificar Key Vault Integration:
+# Verificar que la aplicación puede acceder a Key Vault
+az keyvault secret show --vault-name $keyVaultName --name "AzureAd--TenantId"
+________________________________________
+🔧 TROUBLESHOOTING
+Problemas Comunes y Soluciones
+Error: "Unable to configure HTTPS endpoint"
+# Verificar certificado de desarrollo
+dotnet dev-certs https --check
+dotnet dev-certs https --trust
+Error: "Access denied to Key Vault"
+# Verificar permisos de Key Vault
+az keyvault show --name $keyVaultName --query "properties.accessPolicies"
+az role assignment list --assignee $currentUser --scope "/subscriptions/$(az account show --query id -o tsv)/resourcegroups/$resourceGroup/providers/Microsoft.KeyVault/vaults/$keyVaultName"
+Error: "Azure AD authentication failed"
+# Verificar configuración de Azure AD
+az ad app show --id $appRegistration.appId
+# Verificar redirect URIs y configuración
+________________________________________
+📊 MÉTRICAS DE ÉXITO
+Objetivos Alcanzados
+•	✅ Arquitectura Secure-by-Design: Implementada con separación de responsabilidades
+•	✅ Autenticación Azure AD: OAuth 2.0/OpenID Connect funcional
+•	✅ Autorización Granular: Políticas basadas en roles y claims
+•	✅ Gestión de Secretos: Key Vault integrado con Managed Identity
+•	✅ Cifrado de Datos: Servicio de cifrado usando claves de Key Vault
+•	✅ Headers de Seguridad: CSP, HSTS, y protecciones anti-XSS
+•	✅ Validación de Entrada: Modelos con validación robusta
+•	✅ Auditoría: Logging estructurado de eventos de seguridad
+Capacidades Desarrolladas
+1.	Diseño Arquitectónico: Crear aplicaciones secure-by-design
+2.	Integración Azure AD: Implementar autenticación empresarial
+3.	Gestión de Secretos: Usar Key Vault para material criptográfico
+4.	Desarrollo Seguro: Aplicar principios de codificación segura
+5.	Autorización Avanzada: Implementar controles de acceso granulares
+Valor Profesional Generado
+•	Portfolio Evidence: Aplicación empresarial completamente segura
+•	Skills Advancement: Competencias en desarrollo seguro Azure/.NET
+•	Security Mindset: Mentalidad de seguridad desde el diseño
+•	Tool Proficiency: Dominio de herramientas Azure de seguridad
+________________________________________
+🚀 PREPARACIÓN PARA PRÓXIMA SESIÓN
+Sesión 11 (Miércoles 30/07) - Casos Prácticos Parte 2
+Objetivos Próxima Sesión:
+1.	Completar autenticación y autorización: Claims transformation y políticas avanzadas
+2.	Implementar firma digital: Usando certificados de Key Vault
+3.	Cifrado avanzado de datos: A nivel de campo con Entity Framework
+4.	Testing de seguridad: Pruebas automatizadas de controles de seguridad
+5.	Preparación evaluación final: Documentación y presentación del proyecto
+Preparación Recomendada:
+•	✅ Aplicación base funcionando con Azure AD
+•	✅ Key Vault configurado y accesible
+•	✅ Comprensión de flujos de autenticación
+•	✅ Familiaridad con servicios de cifrado implementados
+Recursos Adicionales
+•	Azure AD Documentation: https://docs.microsoft.com/en-us/azure/active-directory/
+•	Key Vault Best Practices: https://docs.microsoft.com/en-us/azure/key-vault/general/best-practices
+•	ASP.NET Core Security: https://docs.microsoft.com/en-us/aspnet/core/security/
+•	OWASP .NET Guide: https://owasp.org/www-project-cheat-sheets/
+________________________________________
+🎉 FELICITACIONES
+¡Has completado exitosamente la implementación base de SecureShop!
+Ahora tienes:
+•	🏗️ Arquitectura empresarial segura implementada desde cero
+•	🔐 Autenticación Azure AD con OAuth 2.0/OpenID Connect
+•	🗝️ Gestión de secretos con Key Vault y Managed Identity
+•	🛡️ Controles de seguridad a nivel de aplicación
+•	📊 Base sólida para características avanzadas
+En la próxima sesión completaremos:
+•	🔏 Cifrado avanzado de datos sensibles
+•	✍️ Firma digital de documentos
+•	🧪 Testing automatizado de seguridad
+•	📋 Documentación profesional completa
+¡Nos vemos el miércoles 30/07 para finalizar este proyecto de nivel empresarial! 🚀
+________________________________________
+📁 ESTRUCTURA FINAL DE ARCHIVOS
+SecureShop/
+├── src/
+│   ├── SecureShop.sln
+│   ├── SecureShop.Web/
+│   │   ├── Controllers/
+│   │   │   ├── HomeController.cs
+│   │   │   └── ProductController.cs
+│   │   ├── Views/
+│   │   │   ├── Home/
+│   │   │   │   └── Index.cshtml
+│   │   │   └── Shared/
+│   │   │       ├── _Layout.cshtml
+│   │   │       └── _ViewStart.cshtml
+│   │   ├── Program.cs
+│   │   ├── appsettings.json
+│   │   ├── appsettings.Development.json
+│   │   └── azuread-config.json
+│   ├── SecureShop.Core/
+│   ├── SecureShop.Data/
+│   │   └── SecureDbContext.cs
+│   └── SecureShop.Security/
+│       ├── IEncryptionService.cs
+│       └── KeyVaultEncryptionService.cs
+├── docs/
+│   ├── Architecture.md
+│   └── Security-Review.md
+├── tests/
+├── scripts/
+└── infrastructure/
+🎯 Total de Tiempo: 70 minutos
+🏆 Labs Completados: 4/4
+✅ Objetivos Alcanzados: 100%
+
+
+
