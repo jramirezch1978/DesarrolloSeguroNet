@@ -8601,19 +8601,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Jhonny R\\.nuget\\packages\\": {}
+    "C:\\Users\\jramirez\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Services\\SecureBank.ProductAPI\\SecureBank.ProductAPI.csproj",
+      "projectUniqueName": "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Services\\SecureBank.ProductAPI\\SecureBank.ProductAPI.csproj",
       "projectName": "SecureBank.ProductAPI",
-      "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Services\\SecureBank.ProductAPI\\SecureBank.ProductAPI.csproj",
-      "packagesPath": "C:\\Users\\Jhonny R\\.nuget\\packages\\",
-      "outputPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Services\\SecureBank.ProductAPI\\obj\\",
+      "projectPath": "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Services\\SecureBank.ProductAPI\\SecureBank.ProductAPI.csproj",
+      "packagesPath": "C:\\Users\\jramirez\\.nuget\\packages\\",
+      "outputPath": "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Services\\SecureBank.ProductAPI\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Jhonny R\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\jramirez\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -8621,27 +8621,26 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj": {
-              "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj"
+            "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj": {
+              "projectPath": "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Application\\SecureBank.Application.csproj"
             },
-            "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj": {
-              "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj"
+            "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj": {
+              "projectPath": "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Core\\SecureBank.Domain\\SecureBank.Domain.csproj"
             },
-            "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\SecureBank.Infrastructure.csproj": {
-              "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\SecureBank.Infrastructure.csproj"
+            "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\SecureBank.Infrastructure.csproj": {
+              "projectPath": "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Infrastructure\\SecureBank.Infrastructure.csproj"
             },
-            "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj": {
-              "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj"
+            "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj": {
+              "projectPath": "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Infrastructure\\SecureBank.Security\\SecureBank.Security.csproj"
             },
-            "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj": {
-              "projectPath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj"
+            "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj": {
+              "projectPath": "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj"
             }
           }
         }
@@ -8798,7 +8797,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.302/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

@@ -1,0 +1,56 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Laboratorio01-PenetrationTesting", "Laboratorio01-PenetrationTesting", "{CF100AA3-8C86-E12B-1C75-BF822D279AF2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Laboratorio02-ComplianceAssessment", "Laboratorio02-ComplianceAssessment", "{A1D3E325-D52A-A0B9-5C13-BFC9F534DC29}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Laboratorio03-ProfessionalReporting", "Laboratorio03-ProfessionalReporting", "{44C118DD-C808-E1ED-1435-6625F1F09474}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Laboratorio04-AzureAudit", "Laboratorio04-AzureAudit", "{AD6A5683-DE4C-35BC-DB46-FF1456D5292B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VulnerableWebApp", "Laboratorio01-PenetrationTesting\VulnerableWebApp\VulnerableWebApp.csproj", "{53E428B0-3E30-9191-5339-2D9DCCED159C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComplianceAssessmentTool", "Laboratorio02-ComplianceAssessment\ComplianceAssessmentTool\ComplianceAssessmentTool.csproj", "{2844907B-1985-04D4-7A41-66DD41BC00B5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PenetrationTestReporting", "Laboratorio03-ProfessionalReporting\PenetrationTestReporting\PenetrationTestReporting.csproj", "{4983C1A5-409F-34CA-1E11-4A87C38C65A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureComprehensiveAudit", "Laboratorio04-AzureAudit\AzureComprehensiveAudit\AzureComprehensiveAudit.csproj", "{309E1C9E-7194-5211-73A7-0571DF7760F3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{53E428B0-3E30-9191-5339-2D9DCCED159C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53E428B0-3E30-9191-5339-2D9DCCED159C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53E428B0-3E30-9191-5339-2D9DCCED159C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53E428B0-3E30-9191-5339-2D9DCCED159C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2844907B-1985-04D4-7A41-66DD41BC00B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2844907B-1985-04D4-7A41-66DD41BC00B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2844907B-1985-04D4-7A41-66DD41BC00B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2844907B-1985-04D4-7A41-66DD41BC00B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4983C1A5-409F-34CA-1E11-4A87C38C65A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4983C1A5-409F-34CA-1E11-4A87C38C65A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4983C1A5-409F-34CA-1E11-4A87C38C65A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4983C1A5-409F-34CA-1E11-4A87C38C65A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{309E1C9E-7194-5211-73A7-0571DF7760F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{309E1C9E-7194-5211-73A7-0571DF7760F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{309E1C9E-7194-5211-73A7-0571DF7760F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{309E1C9E-7194-5211-73A7-0571DF7760F3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{53E428B0-3E30-9191-5339-2D9DCCED159C} = {CF100AA3-8C86-E12B-1C75-BF822D279AF2}
+		{2844907B-1985-04D4-7A41-66DD41BC00B5} = {A1D3E325-D52A-A0B9-5C13-BFC9F534DC29}
+		{4983C1A5-409F-34CA-1E11-4A87C38C65A0} = {44C118DD-C808-E1ED-1435-6625F1F09474}
+		{309E1C9E-7194-5211-73A7-0571DF7760F3} = {AD6A5683-DE4C-35BC-DB46-FF1456D5292B}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A50F7501-DAB6-4DAB-B7DF-801678A76760}
+	EndGlobalSection
+EndGlobal

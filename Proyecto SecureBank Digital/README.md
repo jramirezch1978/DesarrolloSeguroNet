@@ -878,7 +878,7 @@ Este proyecto es propiedad de SecureBank Digital S.A. Todos los derechos reserva
 
 ## Contacto
 
-- **Email**: developers@securebank.digital
+- **Email**: jramirez@npssac.com.pe
 - **Slack**: #securebank-dev
 - **Wiki**: https://wiki.securebank.digital
 

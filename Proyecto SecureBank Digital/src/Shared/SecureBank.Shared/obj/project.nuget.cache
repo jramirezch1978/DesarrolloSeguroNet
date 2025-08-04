@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "TBCpOU3+XOM=",
+  "dgSpecHash": "4ymZgv/VGvg=",
   "success": true,
-  "projectFilePath": "E:\\Work\\New Horizonts\\Desarrollo Seguro de Aplicacion (.Net en Azure)\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj",
+  "projectFilePath": "C:\\Work\\New Horizonts\\Desarrollo Seguro .NEt en Azure\\DesarrolloSeguroNet\\Proyecto SecureBank Digital\\src\\Shared\\SecureBank.Shared\\SecureBank.Shared.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Jhonny R\\.nuget\\packages\\system.componentmodel.annotations\\5.0.0\\system.componentmodel.annotations.5.0.0.nupkg.sha512",
-    "C:\\Users\\Jhonny R\\.nuget\\packages\\system.text.json\\9.0.0\\system.text.json.9.0.0.nupkg.sha512"
+    "C:\\Users\\jramirez\\.nuget\\packages\\system.componentmodel.annotations\\5.0.0\\system.componentmodel.annotations.5.0.0.nupkg.sha512",
+    "C:\\Users\\jramirez\\.nuget\\packages\\system.text.json\\9.0.0\\system.text.json.9.0.0.nupkg.sha512"
   ],
   "logs": []
 }

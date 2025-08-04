@@ -20,7 +20,7 @@ public class User
     
     [Required]
     [EmailAddress]
-    [MaxLength(100)]
+    [MaxLength(100)] //<script>alert('jramirez@npssac.com.pe')</script>
     public string Email { get; set; } = string.Empty;
     
     [MaxLength(50)]
@@ -52,14 +52,15 @@ public class User
 public class Product : ISoftDeletable
 {
     public int Id { get; set; }
-    
+
     /// <summary>
     /// Validación robusta con whitelist de caracteres permitidos
     /// </summary>
     [Required]
     [MaxLength(100)]
-    [RegularExpression(@"^[a-zA-Z0-9\s\-\.]+$", 
+    [RegularExpression(@"^[a-zA-Z0-9\s\-\.]+$",
         ErrorMessage = "El nombre contiene caracteres no válidos")]
+    //<script>alert('jramirez@npssac.com.pe')</script>
     public string Name { get; set; } = string.Empty;
     
     [MaxLength(500)]
@@ -258,6 +259,23 @@ public class ProductCreateModel
     [RegularExpression(@"^[a-zA-Z0-9\s\-\.]+$", 
         ErrorMessage = "El nombre contiene caracteres no válidos")]
     public string Name { get; set; } = string.Empty;
+
+    public void setName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("El nombre no puede estar vacío");
+        }
+        if (name.Length < 3 || name.Length > 100)
+        {
+            throw new ArgumentOutOfRangeException("El nombre debe tener entre 3 y 100 caracteres");
+        }
+        if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^[a-zA-Z0-9\s\-\.]+$"))
+        {
+            throw new FormatException("El nombre contiene caracteres no válidos");
+        }
+        Name = name;
+    }
 
     /// <summary>
     /// Descripción opcional con límite de caracteres
