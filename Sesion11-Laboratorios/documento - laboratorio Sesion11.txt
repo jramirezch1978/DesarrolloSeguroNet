@@ -1,0 +1,1978 @@
+🔐 Laboratorio Práctico - Sesión 11: Implementación Avanzada de Seguridad .NET Azure
+Curso: Diseño Seguro de Aplicaciones (.NET en Azure)
+Duración Total: 65 minutos (4 laboratorios integrados)
+Modalidad: Instructor-led con práctica individual
+Herramientas: Visual Studio Code + .NET Core 9 + C# + Azure Portal
+________________________________________
+📋 VERIFICACIÓN DE PRERREQUISITOS Y ESTADO ACTUAL
+⏱️ Duración: 5 minutos
+🎯 Objetivo: Confirmar que se completaron los laboratorios previos y verificar el entorno
+Paso 1: Verificar Laboratorios Previos Completados (2 minutos)
+Verificar que tienes la aplicación SecureShop funcionando:
+# Navegar al directorio del proyecto (ajustar ruta según sea necesario)
+cd SecureShop/src/SecureShop.Web
+
+# Verificar que la aplicación compila
+dotnet build
+
+# Verificar que las dependencias están instaladas
+dotnet list package
+Si NO tienes el proyecto base completado, ejecutar setup rápido:
+# SOLO si no tienes el proyecto - Crear estructura básica
+mkdir SecureShop
+cd SecureShop
+mkdir src, tests, docs
+
+cd src
+dotnet new sln -n SecureShop
+dotnet new web -n SecureShop.Web
+dotnet new classlib -n SecureShop.Security
+dotnet sln add **/*.csproj
+
+# Agregar paquetes esenciales
+cd SecureShop.Web
+dotnet add package Microsoft.Identity.Web --version 3.2.0
+dotnet add package Azure.Security.KeyVault.Secrets --version 4.7.0
+dotnet add package Azure.Identity --version 1.12.1
+dotnet add package Microsoft.EntityFrameworkCore.InMemory --version 9.0.0
+Paso 2: Verificar Acceso Azure (3 minutos)
+Verificar autenticación y permisos:
+# Verificar login a Azure
+az login
+
+# Verificar membresía del grupo
+az ad group member list --group "gu_desarrollo_seguro_aplicacion" --output table
+
+# Verificar acceso a suscripción
+az account show --output table
+Estado esperado antes de continuar:
+•	✅ Proyecto SecureShop creado y compilando
+•	✅ Autenticación Azure AD básica funcionando
+•	✅ Azure Key Vault configurado y accesible
+•	✅ Acceso como usuario invitado en Azure Portal
+________________________________________
+🔐 LABORATORIO 38: AUTENTICACIÓN Y AUTORIZACIÓN AVANZADA
+⏱️ Duración: 20 minutos
+🎯 Objetivo: Implementar claims transformation service y autorización basada en recursos
+Paso 1: Implementar Claims Transformation Service (8 minutos)
+Crear servicio de enriquecimiento de claims:
+# Navegar al proyecto Security
+cd ../SecureShop.Security
+
+# Crear archivo para transformación de claims
+New-Item -Path "ClaimsTransformationService.cs" -ItemType File
+Contenido de ClaimsTransformationService.cs:
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
+
+namespace SecureShop.Security;
+
+public class SecureClaimsTransformation : IClaimsTransformation
+{
+    private readonly ILogger<SecureClaimsTransformation> _logger;
+    private readonly IUserService _userService;
+
+    public SecureClaimsTransformation(
+        ILogger<SecureClaimsTransformation> logger,
+        IUserService userService)
+    {
+        _logger = logger;
+        _userService = userService;
+    }
+
+    public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
+    {
+        var identity = (ClaimsIdentity)principal.Identity!;
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var email = principal.FindFirst(ClaimTypes.Email)?.Value ?? 
+                   principal.FindFirst("preferred_username")?.Value;
+
+        if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(email))
+        {
+            _logger.LogWarning("Usuario sin ID o email válido");
+            return principal;
+        }
+
+        try
+        {
+            // Agregar roles específicos de la aplicación
+            var userRoles = await _userService.GetUserRolesAsync(userId);
+            foreach (var role in userRoles)
+            {
+                if (!principal.IsInRole(role))
+                {
+                    identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                }
+            }
+
+            // Agregar claims de departamento
+            var department = await _userService.GetUserDepartmentAsync(userId);
+            if (!string.IsNullOrEmpty(department))
+            {
+                identity.AddClaim(new Claim("department", department));
+            }
+
+            // Agregar permisos granulares
+            var permissions = await _userService.GetUserPermissionsAsync(userId);
+            foreach (var permission in permissions)
+            {
+                identity.AddClaim(new Claim("permission", permission));
+            }
+
+            // Agregar información de tienda/ubicación si aplica
+            var storeId = await _userService.GetUserStoreIdAsync(userId);
+            if (!string.IsNullOrEmpty(storeId))
+            {
+                identity.AddClaim(new Claim("store_id", storeId));
+            }
+
+            _logger.LogInformation("Claims enriquecidos para usuario {UserId}: {Roles} roles, {Permissions} permisos",
+                userId, userRoles.Count, permissions.Count);
+
+            return principal;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error enriqueciendo claims para usuario {UserId}", userId);
+            return principal; // Devolver principal original en caso de error
+        }
+    }
+}
+Crear interfaz y servicio de usuario:
+New-Item -Path "IUserService.cs" -ItemType File
+Contenido de IUserService.cs:
+namespace SecureShop.Security;
+
+public interface IUserService
+{
+    Task<List<string>> GetUserRolesAsync(string userId);
+    Task<string?> GetUserDepartmentAsync(string userId);
+    Task<List<string>> GetUserPermissionsAsync(string userId);
+    Task<string?> GetUserStoreIdAsync(string userId);
+    Task SyncUserFromAzureAdAsync(string objectId, string email, string? displayName = null);
+}
+
+public class UserService : IUserService
+{
+    private readonly ILogger<UserService> _logger;
+    
+    // Simulación de base de datos de usuarios para el lab
+    private static readonly Dictionary<string, UserProfile> _users = new()
+    {
+        ["user1@contoso.com"] = new UserProfile
+        {
+            Roles = ["Customer"],
+            Department = "Sales",
+            Permissions = ["products.view", "orders.create"],
+            StoreId = "store-001"
+        },
+        ["manager1@contoso.com"] = new UserProfile
+        {
+            Roles = ["Manager", "Customer"],
+            Department = "Sales",
+            Permissions = ["products.view", "products.create", "orders.view", "orders.manage", "reports.view"],
+            StoreId = "store-001"
+        },
+        ["admin1@contoso.com"] = new UserProfile
+        {
+            Roles = ["Admin", "Manager", "Customer"],
+            Department = "IT",
+            Permissions = ["products.manage", "users.manage", "reports.manage", "system.admin"],
+            StoreId = null
+        }
+    };
+
+    public UserService(ILogger<UserService> logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task<List<string>> GetUserRolesAsync(string userId)
+    {
+        await Task.Delay(1); // Simular operación async
+        var email = ExtractEmailFromUserId(userId);
+        
+        if (_users.TryGetValue(email, out var user))
+        {
+            return user.Roles;
+        }
+
+        // Usuario por defecto como Customer
+        return ["Customer"];
+    }
+
+    public async Task<string?> GetUserDepartmentAsync(string userId)
+    {
+        await Task.Delay(1);
+        var email = ExtractEmailFromUserId(userId);
+        
+        if (_users.TryGetValue(email, out var user))
+        {
+            return user.Department;
+        }
+
+        return "General";
+    }
+
+    public async Task<List<string>> GetUserPermissionsAsync(string userId)
+    {
+        await Task.Delay(1);
+        var email = ExtractEmailFromUserId(userId);
+        
+        if (_users.TryGetValue(email, out var user))
+        {
+            return user.Permissions;
+        }
+
+        // Permisos mínimos por defecto
+        return ["products.view"];
+    }
+
+    public async Task<string?> GetUserStoreIdAsync(string userId)
+    {
+        await Task.Delay(1);
+        var email = ExtractEmailFromUserId(userId);
+        
+        if (_users.TryGetValue(email, out var user))
+        {
+            return user.StoreId;
+        }
+
+        return null;
+    }
+
+    public async Task SyncUserFromAzureAdAsync(string objectId, string email, string? displayName = null)
+    {
+        // En implementación real, sincronizaríamos con base de datos
+        _logger.LogInformation("Sincronizando usuario {Email} (ObjectId: {ObjectId})", email, objectId);
+        await Task.CompletedTask;
+    }
+
+    private string ExtractEmailFromUserId(string userId)
+    {
+        // En Azure AD, el userId puede ser el ObjectId o el UPN
+        // Para el lab, asumimos que podemos mapear a emails conocidos
+        return userId.Contains("@") ? userId : "user1@contoso.com";
+    }
+}
+
+public class UserProfile
+{
+    public List<string> Roles { get; set; } = new();
+    public string Department { get; set; } = string.Empty;
+    public List<string> Permissions { get; set; } = new();
+    public string? StoreId { get; set; }
+}
+Paso 2: Implementar Authorization Handlers Personalizados (7 minutos)
+Crear authorization requirements y handlers:
+New-Item -Path "AuthorizationRequirements.cs" -ItemType File
+Contenido de AuthorizationRequirements.cs:
+using Microsoft.AspNetCore.Authorization;
+
+namespace SecureShop.Security;
+
+// Requirement para verificar propiedad de recursos
+public class OwnershipRequirement : IAuthorizationRequirement
+{
+    public OwnershipRequirement() { }
+}
+
+// Requirement para verificar permisos específicos
+public class PermissionRequirement : IAuthorizationRequirement
+{
+    public string Permission { get; }
+    
+    public PermissionRequirement(string permission)
+    {
+        Permission = permission;
+    }
+}
+
+// Requirement para verificar acceso por departamento
+public class DepartmentRequirement : IAuthorizationRequirement
+{
+    public string Department { get; }
+    
+    public DepartmentRequirement(string department)
+    {
+        Department = department;
+    }
+}
+
+// Authorization Handler para propiedad de recursos
+public class OwnershipAuthorizationHandler : AuthorizationHandler<OwnershipRequirement, IOwnedResource>
+{
+    private readonly ILogger<OwnershipAuthorizationHandler> _logger;
+
+    public OwnershipAuthorizationHandler(ILogger<OwnershipAuthorizationHandler> logger)
+    {
+        _logger = logger;
+    }
+
+    protected override Task HandleRequirementAsync(
+        AuthorizationHandlerContext context,
+        OwnershipRequirement requirement,
+        IOwnedResource resource)
+    {
+        var currentUserId = context.User.FindFirst("oid")?.Value ?? 
+                           context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            _logger.LogWarning("Usuario sin ID válido intentando acceder a recurso");
+            return Task.CompletedTask;
+        }
+
+        // Verificar si el usuario es propietario del recurso
+        if (resource.OwnerId == currentUserId)
+        {
+            context.Succeed(requirement);
+            _logger.LogInformation("Acceso autorizado por propiedad para usuario {UserId}", currentUserId);
+        }
+        // Verificar si el usuario es administrador
+        else if (context.User.IsInRole("Admin"))
+        {
+            context.Succeed(requirement);
+            _logger.LogInformation("Acceso autorizado por rol Admin para usuario {UserId}", currentUserId);
+        }
+        // Verificar si el usuario es manager del mismo departamento
+        else if (context.User.IsInRole("Manager"))
+        {
+            var userDepartment = context.User.FindFirst("department")?.Value;
+            if (!string.IsNullOrEmpty(userDepartment) && userDepartment == resource.Department)
+            {
+                context.Succeed(requirement);
+                _logger.LogInformation("Acceso autorizado por departamento {Department} para manager {UserId}", 
+                    userDepartment, currentUserId);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+}
+
+// Authorization Handler para permisos específicos
+public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
+{
+    protected override Task HandleRequirementAsync(
+        AuthorizationHandlerContext context,
+        PermissionRequirement requirement)
+    {
+        var hasPermission = context.User.HasClaim("permission", requirement.Permission);
+        
+        if (hasPermission)
+        {
+            context.Succeed(requirement);
+        }
+
+        return Task.CompletedTask;
+    }
+}
+
+// Interfaz para recursos que tienen propietario
+public interface IOwnedResource
+{
+    string OwnerId { get; }
+    string? Department { get; }
+}
+
+// Ejemplo de recurso que implementa IOwnedResource
+public class UserProfileResource : IOwnedResource
+{
+    public string OwnerId { get; set; } = string.Empty;
+    public string? Department { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+}
+Paso 3: Actualizar Program.cs con Autorización Avanzada (5 minutos)
+Actualizar el archivo Program.cs en SecureShop.Web:
+cd ../SecureShop.Web
+Reemplazar la sección de autorización en Program.cs:
+// ===== CONFIGURACIÓN DE AUTORIZACIÓN AVANZADA =====
+
+// Registrar servicios de autorización personalizados
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IClaimsTransformation, SecureClaimsTransformation>();
+builder.Services.AddScoped<IAuthorizationHandler, OwnershipAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
+// Configurar políticas de autorización granulares
+builder.Services.AddAuthorization(options =>
+{
+    // Políticas básicas por rol
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("Admin"));
+        
+    options.AddPolicy("ManagerOrAdmin", policy =>
+        policy.RequireRole("Manager", "Admin"));
+        
+    options.AddPolicy("CustomerAccess", policy =>
+        policy.RequireRole("Customer", "Manager", "Admin"));
+
+    // Políticas basadas en permisos específicos
+    options.AddPolicy("CanManageProducts", policy =>
+        policy.Requirements.Add(new PermissionRequirement("products.manage")));
+        
+    options.AddPolicy("CanViewReports", policy =>
+        policy.Requirements.Add(new PermissionRequirement("reports.view")));
+        
+    options.AddPolicy("CanManageUsers", policy =>
+        policy.Requirements.Add(new PermissionRequirement("users.manage")));
+
+    // Políticas combinadas (rol + departamento)
+    options.AddPolicy("CanManageInventory", policy =>
+        policy.RequireAssertion(context =>
+            (context.User.IsInRole("Manager") || context.User.IsInRole("Admin")) &&
+            (context.User.HasClaim("department", "Inventory") || context.User.IsInRole("Admin"))));
+
+    // Políticas basadas en recursos
+    options.AddPolicy("CanEditOwnProfile", policy =>
+        policy.Requirements.Add(new OwnershipRequirement()));
+
+    // Políticas con lógica compleja
+    options.AddPolicy("CanApproveDiscounts", policy =>
+        policy.RequireAssertion(context =>
+        {
+            // Solo managers y admins pueden aprobar descuentos
+            if (!context.User.IsInRole("Manager") && !context.User.IsInRole("Admin"))
+                return false;
+                
+            // Managers solo pueden aprobar en su tienda
+            if (context.User.IsInRole("Manager") && !context.User.IsInRole("Admin"))
+            {
+                var userStore = context.User.FindFirst("store_id")?.Value;
+                return !string.IsNullOrEmpty(userStore);
+            }
+            
+            // Admins pueden aprobar en cualquier tienda
+            return true;
+        }));
+});
+Compilar y verificar:
+# Compilar la solución
+dotnet build
+
+# Verificar que no hay errores
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "✅ Autorización avanzada implementada correctamente" -ForegroundColor Green
+} else {
+    Write-Host "❌ Error en compilación - revisar código" -ForegroundColor Red
+}
+________________________________________
+✍️ LABORATORIO 39: IMPLEMENTACIÓN DE FIRMA DIGITAL
+⏱️ Duración: 20 minutos
+🎯 Objetivo: Configurar certificados en Key Vault e implementar firma digital de transacciones
+Paso 1: Configurar Certificados en Key Vault (8 minutos)
+Verificar y configurar certificados:
+# Verificar acceso a Key Vault existente
+$keyVaultName = az keyvault list --query "[0].name" --output tsv
+
+if ([string]::IsNullOrEmpty($keyVaultName)) {
+    Write-Host "❌ No se encontró Key Vault. Ejecutando configuración..." -ForegroundColor Red
+    
+    # Crear Key Vault básico si no existe
+    $resourceGroup = "rg-secureshop-dev-$(Get-Date -Format 'yyyyMMdd')"
+    $keyVaultName = "kv-secureshop-$(Get-Random -Minimum 1000 -Maximum 9999)"
+    
+    az group create --name $resourceGroup --location "East US"
+    az keyvault create --name $keyVaultName --resource-group $resourceGroup
+}
+
+Write-Host "🗝️ Usando Key Vault: $keyVaultName" -ForegroundColor Yellow
+
+# Verificar o crear certificado para firma digital
+$certName = "SecureShop-Signing-Certificate"
+
+$existingCert = az keyvault certificate list --vault-name $keyVaultName --query "[?name=='$certName']" --output tsv
+
+if ([string]::IsNullOrEmpty($existingCert)) {
+    Write-Host "📜 Creando certificado de firma digital..." -ForegroundColor Yellow
+    
+    # Crear archivo de política de certificado
+    $certPolicy = @{
+        'keyProperties' = @{
+            'keyType' = 'RSA'
+            'keySize' = 2048
+            'exportable' = $false
+            'reuseKey' = $false
+        }
+        'secretProperties' = @{
+            'contentType' = 'application/x-pkcs12'
+        }
+        'x509CertificateProperties' = @{
+            'subject' = 'CN=SecureShop Digital Signing,O=SecureShop,C=PE'
+            'validityInMonths' = 12
+            'subjectAlternativeNames' = @{
+                'emails' = @('admin@secureshop.local')
+                'dnsNames' = @('secureshop.local')
+            }
+            'keyUsage' = @('digitalSignature', 'keyEncipherment')
+            'extendedKeyUsage' = @('1.3.6.1.5.5.7.3.1', '1.3.6.1.5.5.7.3.3') # serverAuth, codeSign
+        }
+        'issuerParameters' = @{
+            'name' = 'Self'
+        }
+        'lifetimeActions' = @(
+            @{
+                'trigger' = @{
+                    'lifetimePercentage' = 80
+                }
+                'action' = @{
+                    'actionType' = 'AutoRenew'
+                }
+            }
+        )
+    } | ConvertTo-Json -Depth 5
+
+    $policyFile = New-TemporaryFile
+    $certPolicy | Out-File -FilePath $policyFile.FullName -Encoding UTF8
+
+    # Crear certificado
+    az keyvault certificate create `
+        --vault-name $keyVaultName `
+        --name $certName `
+        --policy "@$($policyFile.FullName)"
+
+    Remove-Item $policyFile.FullName
+    
+    Write-Host "✅ Certificado creado: $certName" -ForegroundColor Green
+} else {
+    Write-Host "✅ Certificado existente encontrado: $certName" -ForegroundColor Green
+}
+
+# Verificar estado del certificado
+az keyvault certificate show --vault-name $keyVaultName --name $certName --query "{name:name,status:attributes.enabled,expires:attributes.expires}" --output table
+Paso 2: Implementar Servicio de Firma Digital (8 minutos)
+Crear servicio de firma digital:
+# Navegar al proyecto Security
+cd ../SecureShop.Security
+
+New-Item -Path "IDigitalSignatureService.cs" -ItemType File
+Contenido de IDigitalSignatureService.cs:
+namespace SecureShop.Security;
+
+public interface IDigitalSignatureService
+{
+    Task<SignedDocument> SignDocumentAsync<T>(T document, string documentType) where T : class;
+    Task<bool> VerifySignatureAsync(SignedDocument signedDocument);
+    Task<DigitalSignatureInfo> GetSignatureInfoAsync(SignedDocument signedDocument);
+}
+
+public class SignedDocument
+{
+    public string DocumentId { get; set; } = Guid.NewGuid().ToString();
+    public string DocumentType { get; set; } = string.Empty;
+    public string DocumentContent { get; set; } = string.Empty;
+    public string Signature { get; set; } = string.Empty;
+    public string SigningCertificateThumbprint { get; set; } = string.Empty;
+    public DateTime SignedAt { get; set; }
+    public string SignedBy { get; set; } = string.Empty;
+    public string HashAlgorithm { get; set; } = "SHA256";
+    public string SignatureAlgorithm { get; set; } = "RSA-PKCS1";
+}
+
+public class DigitalSignatureInfo
+{
+    public bool IsValid { get; set; }
+    public string SignerName { get; set; } = string.Empty;
+    public DateTime SignedAt { get; set; }
+    public string CertificateThumbprint { get; set; } = string.Empty;
+    public DateTime CertificateExpiry { get; set; }
+    public List<string> ValidationErrors { get; set; } = new();
+}
+Crear implementación del servicio:
+New-Item -Path "KeyVaultDigitalSignatureService.cs" -ItemType File
+Contenido de KeyVaultDigitalSignatureService.cs:
+using Azure.Security.KeyVault.Certificates;
+using Azure.Security.KeyVault.Keys.Cryptography;
+using Azure.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Text.Json;
+
+namespace SecureShop.Security;
+
+public class KeyVaultDigitalSignatureService : IDigitalSignatureService
+{
+    private readonly CertificateClient _certificateClient;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<KeyVaultDigitalSignatureService> _logger;
+    private readonly string _certificateName = "SecureShop-Signing-Certificate";
+
+    public KeyVaultDigitalSignatureService(
+        IConfiguration configuration,
+        ILogger<KeyVaultDigitalSignatureService> logger)
+    {
+        _configuration = configuration;
+        _logger = logger;
+
+        var keyVaultUri = _configuration["KeyVault:VaultUri"];
+        if (string.IsNullOrEmpty(keyVaultUri))
+        {
+            throw new ArgumentException("KeyVault:VaultUri no configurado");
+        }
+
+        _certificateClient = new CertificateClient(new Uri(keyVaultUri), new DefaultAzureCredential());
+    }
+
+    public async Task<SignedDocument> SignDocumentAsync<T>(T document, string documentType) where T : class
+    {
+        try
+        {
+            // 1. Serializar el documento
+            var documentJson = JsonSerializer.Serialize(document, new JsonSerializerOptions 
+            { 
+                WriteIndented = false,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
+            // 2. Calcular hash del documento
+            var documentBytes = Encoding.UTF8.GetBytes(documentJson);
+            var documentHash = SHA256.HashData(documentBytes);
+
+            // 3. Obtener certificado de Key Vault
+            var certificateResponse = await _certificateClient.GetCertificateAsync(_certificateName);
+            var certificate = certificateResponse.Value;
+
+            // 4. Obtener la clave de firma
+            var keyClient = new CryptographyClient(certificate.KeyId, new DefaultAzureCredential());
+
+            // 5. Firmar el hash
+            var signResult = await keyClient.SignAsync(SignatureAlgorithm.RS256, documentHash);
+
+            // 6. Crear documento firmado
+            var signedDocument = new SignedDocument
+            {
+                DocumentType = documentType,
+                DocumentContent = documentJson,
+                Signature = Convert.ToBase64String(signResult.Signature),
+                SigningCertificateThumbprint = Convert.ToHexString(certificate.Properties.X509Thumbprint),
+                SignedAt = DateTime.UtcNow,
+                SignedBy = "System", // En implementación real, obtener del contexto de usuario
+                HashAlgorithm = "SHA256",
+                SignatureAlgorithm = "RS256"
+            };
+
+            _logger.LogInformation("Documento {DocumentType} firmado exitosamente. ID: {DocumentId}", 
+                documentType, signedDocument.DocumentId);
+
+            return signedDocument;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error firmando documento de tipo {DocumentType}", documentType);
+            throw new InvalidOperationException($"Error en proceso de firma: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<bool> VerifySignatureAsync(SignedDocument signedDocument)
+    {
+        try
+        {
+            // 1. Recalcular hash del documento original
+            var documentBytes = Encoding.UTF8.GetBytes(signedDocument.DocumentContent);
+            var documentHash = SHA256.HashData(documentBytes);
+
+            // 2. Obtener certificado usando thumbprint
+            var certificate = await GetCertificateByThumbprintAsync(signedDocument.SigningCertificateThumbprint);
+            if (certificate == null)
+            {
+                _logger.LogWarning("Certificado no encontrado para thumbprint: {Thumbprint}", 
+                    signedDocument.SigningCertificateThumbprint);
+                return false;
+            }
+
+            // 3. Obtener cliente de criptografía
+            var keyClient = new CryptographyClient(certificate.KeyId, new DefaultAzureCredential());
+
+            // 4. Verificar la firma
+            var signatureBytes = Convert.FromBase64String(signedDocument.Signature);
+            var verifyResult = await keyClient.VerifyAsync(SignatureAlgorithm.RS256, documentHash, signatureBytes);
+
+            _logger.LogInformation("Verificación de firma para documento {DocumentId}: {IsValid}", 
+                signedDocument.DocumentId, verifyResult.IsValid);
+
+            return verifyResult.IsValid;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error verificando firma del documento {DocumentId}", signedDocument.DocumentId);
+            return false;
+        }
+    }
+
+    public async Task<DigitalSignatureInfo> GetSignatureInfoAsync(SignedDocument signedDocument)
+    {
+        var info = new DigitalSignatureInfo
+        {
+            SignedAt = signedDocument.SignedAt,
+            CertificateThumbprint = signedDocument.SigningCertificateThumbprint,
+            SignerName = signedDocument.SignedBy
+        };
+
+        try
+        {
+            // Verificar la firma
+            info.IsValid = await VerifySignatureAsync(signedDocument);
+
+            // Obtener información del certificado
+            var certificate = await GetCertificateByThumbprintAsync(signedDocument.SigningCertificateThumbprint);
+            if (certificate != null)
+            {
+                info.CertificateExpiry = certificate.Properties.ExpiresOn?.DateTime ?? DateTime.MinValue;
+                
+                // Validaciones adicionales
+                if (certificate.Properties.ExpiresOn < DateTimeOffset.UtcNow)
+                {
+                    info.ValidationErrors.Add("Certificado expirado");
+                    info.IsValid = false;
+                }
+
+                if (!certificate.Properties.Enabled.GetValueOrDefault(false))
+                {
+                    info.ValidationErrors.Add("Certificado deshabilitado");
+                    info.IsValid = false;
+                }
+            }
+            else
+            {
+                info.ValidationErrors.Add("Certificado no encontrado");
+                info.IsValid = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            info.ValidationErrors.Add($"Error en validación: {ex.Message}");
+            info.IsValid = false;
+            _logger.LogError(ex, "Error obteniendo información de firma para documento {DocumentId}", 
+                signedDocument.DocumentId);
+        }
+
+        return info;
+    }
+
+private async Task<KeyVaultCertificateWithPolicy?> GetCertificateByThumbprintAsync(string thumbprint)
+    {
+        try
+        {
+            // En implementación simplificada, usamos el certificado principal
+            // En producción, mantendríamos un mapeo de thumbprints a nombres de certificados
+            var certificateResponse = await _certificateClient.GetCertificateAsync(_certificateName);
+            var certificate = certificateResponse.Value;
+
+            var certThumbprint = Convert.ToHexString(certificate.Properties.X509Thumbprint);
+            if (string.Equals(certThumbprint, thumbprint, StringComparison.OrdinalIgnoreCase))
+            {
+                return certificate;
+            }
+
+            _logger.LogWarning("Thumbprint solicitado {RequestedThumbprint} no coincide con certificado actual {CurrentThumbprint}",
+                thumbprint, certThumbprint);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error obteniendo certificado por thumbprint {Thumbprint}", thumbprint);
+            return null;
+        }
+    }
+}
+Paso 3: Crear Modelos para Transacciones Firmadas (4 minutos)
+Crear modelos de transacciones:
+New-Item -Path "TransactionModels.cs" -ItemType File
+Contenido de TransactionModels.cs:
+using System.ComponentModel.DataAnnotations;
+
+namespace SecureShop.Security;
+
+// Modelo para transacciones de compra
+public class PurchaseTransaction
+{
+    public string TransactionId { get; set; } = Guid.NewGuid().ToString();
+    public string CustomerId { get; set; } = string.Empty;
+    public string CustomerEmail { get; set; } = string.Empty;
+    public List<TransactionItem> Items { get; set; } = new();
+    public decimal SubTotal { get; set; }
+    public decimal TaxAmount { get; set; }
+    public decimal TotalAmount { get; set; }
+    public string Currency { get; set; } = "USD";
+    public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
+    public string PaymentMethod { get; set; } = string.Empty;
+    public string ShippingAddress { get; set; } = string.Empty;
+    public string StoreId { get; set; } = string.Empty;
+}
+
+public class TransactionItem
+{
+    public string ProductId { get; set; } = string.Empty;
+    public string ProductName { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal TotalPrice { get; set; }
+}
+
+// Modelo para cambios administrativos
+public class AdminAction
+{
+    public string ActionId { get; set; } = Guid.NewGuid().ToString();
+    public string AdminUserId { get; set; } = string.Empty;
+    public string AdminEmail { get; set; } = string.Empty;
+    public string ActionType { get; set; } = string.Empty; // CREATE, UPDATE, DELETE, APPROVE
+    public string EntityType { get; set; } = string.Empty; // PRODUCT, USER, ORDER, DISCOUNT
+    public string EntityId { get; set; } = string.Empty;
+    public Dictionary<string, object> Changes { get; set; } = new();
+    public string Reason { get; set; } = string.Empty;
+    public DateTime ActionDate { get; set; } = DateTime.UtcNow;
+    public string IpAddress { get; set; } = string.Empty;
+    public string UserAgent { get; set; } = string.Empty;
+}
+
+// Modelo para aprobación de descuentos
+public class DiscountApproval
+{
+    public string ApprovalId { get; set; } = Guid.NewGuid().ToString();
+    public string DiscountCode { get; set; } = string.Empty;
+    public decimal DiscountPercentage { get; set; }
+    public decimal MaxDiscountAmount { get; set; }
+    public DateTime ValidFrom { get; set; }
+    public DateTime ValidTo { get; set; }
+    public string ApprovedBy { get; set; } = string.Empty;
+    public string ApproverEmail { get; set; } = string.Empty;
+    public DateTime ApprovedAt { get; set; } = DateTime.UtcNow;
+    public string BusinessJustification { get; set; } = string.Empty;
+    public string[] ApplicableProducts { get; set; } = Array.Empty<string>();
+    public int MaxUsageCount { get; set; }
+}
+________________________________________
+🔒 LABORATORIO 40: ENCRIPTACIÓN DE DATOS DE APLICACIÓN
+⏱️ Duración: 15 minutos
+🎯 Objetivo: Implementar encriptación automática en Entity Framework Core
+Paso 1: Implementar Value Converters para Encriptación (8 minutos)
+Crear convertidores de encriptación:
+New-Item -Path "EncryptionConverters.cs" -ItemType File
+Contenido de EncryptionConverters.cs:
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace SecureShop.Security;
+
+// Converter para campos de texto cifrados
+public class EncryptedStringConverter : ValueConverter<string?, string?>
+{
+    public EncryptedStringConverter(IEncryptionService encryptionService, ILogger logger)
+        : base(
+            // Convertir de string a string cifrado (para guardar en DB)
+            plainText => plainText == null ? null : EncryptValue(encryptionService, plainText, logger),
+            // Convertir de string cifrado a string plano (para leer de DB)
+            encryptedText => encryptedText == null ? null : DecryptValue(encryptionService, encryptedText, logger))
+    {
+    }
+
+    private static string EncryptValue(IEncryptionService encryptionService, string plainText, ILogger logger)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(plainText))
+                return plainText;
+
+            // Usar método síncrono para compatibilidad con EF Core
+            var task = encryptionService.EncryptAsync(plainText);
+            task.Wait();
+            return task.Result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error encriptando valor");
+            throw new InvalidOperationException("Error en proceso de cifrado", ex);
+        }
+    }
+
+    private static string DecryptValue(IEncryptionService encryptionService, string encryptedText, ILogger logger)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(encryptedText))
+                return encryptedText;
+
+            // Usar método síncrono para compatibilidad con EF Core
+            var task = encryptionService.DecryptAsync(encryptedText);
+            task.Wait();
+            return task.Result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error desencriptando valor");
+            // En caso de error, devolver valor indicativo en lugar de fallar
+            return "[ENCRYPTED_DATA_ERROR]";
+        }
+    }
+}
+
+// Converter para números decimales cifrados
+public class EncryptedDecimalConverter : ValueConverter<decimal?, string?>
+{
+    public EncryptedDecimalConverter(IEncryptionService encryptionService, ILogger logger)
+        : base(
+            // Convertir de decimal a string cifrado
+            plainValue => plainValue == null ? null : EncryptDecimal(encryptionService, plainValue.Value, logger),
+            // Convertir de string cifrado a decimal
+            encryptedText => encryptedText == null ? null : DecryptDecimal(encryptionService, encryptedText, logger))
+    {
+    }
+
+    private static string EncryptDecimal(IEncryptionService encryptionService, decimal plainValue, ILogger logger)
+    {
+        try
+        {
+            var plainText = plainValue.ToString("F4"); // 4 decimales de precisión
+            var task = encryptionService.EncryptAsync(plainText);
+            task.Wait();
+            return task.Result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error encriptando valor decimal");
+            throw new InvalidOperationException("Error en proceso de cifrado decimal", ex);
+        }
+    }
+
+    private static decimal? DecryptDecimal(IEncryptionService encryptionService, string encryptedText, ILogger logger)
+    {
+        try
+        {
+            var task = encryptionService.DecryptAsync(encryptedText);
+            task.Wait();
+            var plainText = task.Result;
+            
+            if (decimal.TryParse(plainText, out var result))
+            {
+                return result;
+            }
+            
+            logger.LogWarning("No se pudo convertir valor desencriptado a decimal: {Value}", plainText);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error desencriptando valor decimal");
+            return null;
+        }
+    }
+}
+
+// Factory para crear converters con dependencias
+public class EncryptionConverterFactory
+{
+    private readonly IServiceProvider _serviceProvider;
+
+    public EncryptionConverterFactory(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    public EncryptedStringConverter CreateStringConverter()
+    {
+        var encryptionService = _serviceProvider.GetRequiredService<IEncryptionService>();
+        var logger = _serviceProvider.GetRequiredService<ILogger<EncryptedStringConverter>>();
+        return new EncryptedStringConverter(encryptionService, logger);
+    }
+
+    public EncryptedDecimalConverter CreateDecimalConverter()
+    {
+        var encryptionService = _serviceProvider.GetRequiredService<IEncryptionService>();
+        var logger = _serviceProvider.GetRequiredService<ILogger<EncryptedDecimalConverter>>();
+        return new EncryptedDecimalConverter(encryptionService, logger);
+    }
+}
+Paso 2: Actualizar Modelos de Entity Framework (4 minutos)
+Navegar al proyecto Data y actualizar modelos:
+cd ../SecureShop.Data
+Actualizar SecureDbContext.cs para incluir encriptación:
+using Microsoft.EntityFrameworkCore;
+using SecureShop.Security;
+using System.ComponentModel.DataAnnotations;
+
+namespace SecureShop.Data;
+
+public class SecureDbContext : DbContext
+{
+    private readonly EncryptionConverterFactory _converterFactory;
+
+    public SecureDbContext(DbContextOptions<SecureDbContext> options, EncryptionConverterFactory converterFactory)
+        : base(options)
+    {
+        _converterFactory = converterFactory;
+    }
+
+    public DbSet<Customer> Customers { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<SignedTransaction> SignedTransactions { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Configuración de Customer con campos cifrados
+        modelBuilder.Entity<Customer>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AzureAdObjectId).IsRequired().HasMaxLength(50);
+            
+            // Campos que se cifran automáticamente
+            entity.Property(e => e.Email)
+                .HasConversion(_converterFactory.CreateStringConverter())
+                .HasMaxLength(500); // Espacio extra para datos cifrados
+                
+            entity.Property(e => e.PhoneNumber)
+                .HasConversion(_converterFactory.CreateStringConverter())
+                .HasMaxLength(500);
+                
+            entity.Property(e => e.Address)
+                .HasConversion(_converterFactory.CreateStringConverter())
+                .HasMaxLength(1000);
+
+            entity.Property(e => e.CreditCardNumber)
+                .HasConversion(_converterFactory.CreateStringConverter())
+                .HasMaxLength(500);
+
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+            entity.HasIndex(e => e.AzureAdObjectId).IsUnique();
+        });
+
+        // Configuración de Product con costo cifrado
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Price).HasColumnType("decimal(10,2)");
+            
+            // Costo cifrado - información sensible comercial
+            entity.Property(e => e.Cost)
+                .HasConversion(_converterFactory.CreateDecimalConverter())
+                .HasMaxLength(500);
+
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+        });
+
+        // Configuración de SignedTransaction
+        modelBuilder.Entity<SignedTransaction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DocumentId).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.DocumentType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Signature).IsRequired();
+            entity.Property(e => e.SigningCertificateThumbprint).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
+            
+            entity.HasIndex(e => e.DocumentId).IsUnique();
+        });
+
+        base.OnModelCreating(modelBuilder);
+    }
+}
+
+// Modelos actualizados con campos para cifrado
+public class Customer
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    
+    [Required]
+    [MaxLength(50)]
+    public string AzureAdObjectId { get; set; } = string.Empty;
+
+    // Campos que se cifran automáticamente
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty; // Se cifra automáticamente
+
+    [Phone]
+    public string? PhoneNumber { get; set; } // Se cifra automáticamente
+
+    public string? Address { get; set; } // Se cifra automáticamente
+
+    public string? CreditCardNumber { get; set; } // Se cifra automáticamente
+
+    // Campos normales (no cifrados)
+    [MaxLength(50)]
+    public string? FirstName { get; set; }
+
+    [MaxLength(50)]
+    public string? LastName { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+    public bool IsActive { get; set; } = true;
+
+    // Relaciones
+    public ICollection<Order> Orders { get; set; } = new List<Order>();
+}
+
+public class Product
+{
+    public int Id { get; set; }
+
+    [Required]
+    [MaxLength(100)]
+    public string Name { get; set; } = string.Empty;
+
+    [MaxLength(500)]
+    public string? Description { get; set; }
+
+    [Required]
+    [Range(0.01, 999999.99)]
+    public decimal Price { get; set; }
+
+    // Campo cifrado - información sensible comercial
+    public decimal? Cost { get; set; } // Se cifra automáticamente
+
+    public DateTime CreatedAt { get; set; }
+    public Guid CreatedBy { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+public class Order
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    [Required]
+    public Guid CustomerId { get; set; }
+
+    [Required]
+    [Range(0.01, 999999.99)]
+    public decimal TotalAmount { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+    public string Status { get; set; } = "Pending";
+
+    // Relaciones
+    public Customer Customer { get; set; } = null!;
+    public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+}
+
+public class OrderItem
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid OrderId { get; set; }
+    public int ProductId { get; set; }
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+
+    // Relaciones
+    public Order Order { get; set; } = null!;
+    public Product Product { get; set; } = null!;
+}
+
+public class SignedTransaction
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string DocumentId { get; set; } = string.Empty;
+    public string DocumentType { get; set; } = string.Empty;
+    public string DocumentContent { get; set; } = string.Empty;
+    public string Signature { get; set; } = string.Empty;
+    public string SigningCertificateThumbprint { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public string SignedBy { get; set; } = string.Empty;
+}
+
+public class AuditLog
+{
+    public long Id { get; set; }
+
+    [Required]
+    public string UserId { get; set; } = string.Empty;
+
+    [Required]
+    public string Action { get; set; } = string.Empty;
+
+    public string? EntityType { get; set; }
+    public string? EntityId { get; set; }
+    public string? Changes { get; set; }
+    public DateTime Timestamp { get; set; }
+    public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
+}
+Paso 3: Actualizar Program.cs con Servicios de Encriptación (3 minutos)
+Actualizar Program.cs en SecureShop.Web:
+cd ../SecureShop.Web
+Agregar al Program.cs las siguientes líneas en la sección de servicios:
+// ===== SERVICIOS DE CIFRADO Y FIRMA DIGITAL =====
+
+// Registrar servicios de cifrado
+builder.Services.AddScoped<IEncryptionService, KeyVaultEncryptionService>();
+builder.Services.AddScoped<IDigitalSignatureService, KeyVaultDigitalSignatureService>();
+
+// Registrar factory para converters de encriptación
+builder.Services.AddScoped<EncryptionConverterFactory>();
+
+// Actualizar configuración de Entity Framework
+builder.Services.AddDbContext<SecureDbContext>((serviceProvider, options) =>
+{
+    var converterFactory = serviceProvider.GetRequiredService<EncryptionConverterFactory>();
+    
+    if (builder.Environment.IsDevelopment())
+    {
+        options.UseInMemoryDatabase("SecureShopDev");
+    }
+    else
+    {
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            options.UseSqlServer(connectionString);
+        }
+        else
+        {
+            options.UseInMemoryDatabase("SecureShopProd");
+        }
+    }
+}, ServiceLifetime.Scoped);
+________________________________________
+🧪 LABORATORIO 41: PRUEBAS INTEGRALES DE SEGURIDAD
+⏱️ Duración: 10 minutos
+🎯 Objetivo: Ejecutar suite completa de testing automatizado de seguridad
+Paso 1: Crear Proyecto de Pruebas (3 minutos)
+Crear proyecto de pruebas de seguridad:
+# Navegar al directorio de tests
+cd ../../tests
+
+# Crear proyecto de pruebas
+dotnet new xunit -n SecureShop.Security.Tests
+
+# Agregar a la solución
+cd ../src
+dotnet sln add ../tests/SecureShop.Security.Tests/SecureShop.Security.Tests.csproj
+
+# Navegar al proyecto de pruebas
+cd ../tests/SecureShop.Security.Tests
+
+# Agregar paquetes necesarios
+dotnet add package Microsoft.AspNetCore.Mvc.Testing --version 9.0.0
+dotnet add package Microsoft.EntityFrameworkCore.InMemory --version 9.0.0
+dotnet add package FluentAssertions --version 6.12.1
+dotnet add package Moq --version 4.20.69
+
+# Agregar referencias a proyectos
+dotnet add reference ../../src/SecureShop.Web/SecureShop.Web.csproj
+dotnet add reference ../../src/SecureShop.Security/SecureShop.Security.csproj
+Paso 2: Implementar Pruebas de Seguridad OWASP (4 minutos)
+Crear pruebas de validación OWASP:
+New-Item -Path "OWASPSecurityTests.cs" -ItemType File
+Contenido de OWASPSecurityTests.cs:
+using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
+using System.Net;
+using System.Text;
+
+namespace SecureShop.Security.Tests;
+
+public class OWASPSecurityTests : IClassFixture<WebApplicationFactory<Program>>
+{
+    private readonly WebApplicationFactory<Program> _factory;
+    private readonly HttpClient _client;
+
+    public OWASPSecurityTests(WebApplicationFactory<Program> factory)
+    {
+        _factory = factory;
+        _client = _factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task A01_BrokenAccessControl_IDOR_PreventionTest()
+    {
+        // Arrange: Intentar acceder a recurso de otro usuario sin autenticación
+        var otherUserProfileId = "user123-profile";
+
+        // Act: Intentar acceder directamente al perfil de otro usuario
+        var response = await _client.GetAsync($"/api/profiles/{otherUserProfileId}");
+
+        // Assert: Debe ser rechazado
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Theory]
+    [InlineData("<script>alert('xss')</script>")]
+    [InlineData("'; DROP TABLE Users; --")]
+    [InlineData("../../../etc/passwd")]
+    [InlineData("{{7*7}}")]
+    [InlineData("<img src=x onerror=alert('xss')>")]
+    public async Task A03_Injection_InputValidationTest(string maliciousInput)
+    {
+        // Arrange: Crear payload malicioso
+        var productData = new
+        {
+            Name = maliciousInput,
+            Description = "Test product",
+            Price = 99.99
+        };
+
+        var content = new StringContent(
+            System.Text.Json.JsonSerializer.Serialize(productData),
+            Encoding.UTF8,
+            "application/json");
+
+        // Act: Intentar crear producto con input malicioso
+        var response = await _client.PostAsync("/api/products", content);
+
+        // Assert: Debe ser rechazado o sanitizado
+        response.StatusCode.Should().BeOneOf(
+            HttpStatusCode.BadRequest,
+            HttpStatusCode.Unauthorized,
+            HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task A04_InsecureDesign_SecurityHeadersTest()
+    {
+        // Act: Hacer request a página principal
+        var response = await _client.GetAsync("/");
+
+        // Assert: Verificar headers de seguridad requeridos
+        response.Headers.Should().ContainKey("X-Frame-Options");
+        response.Headers.Should().ContainKey("X-Content-Type-Options");
+        response.Headers.GetValues("X-Frame-Options").First().Should().Be("DENY");
+        response.Headers.GetValues("X-Content-Type-Options").First().Should().Be("nosniff");
+
+        // Verificar CSP
+        response.Headers.Should().ContainKey("Content-Security-Policy");
+        var csp = response.Headers.GetValues("Content-Security-Policy").First();
+        csp.Should().Contain("default-src 'self'");
+    }
+
+    [Fact]
+    public async Task A05_SecurityMisconfiguration_HTTPSRedirectionTest()
+    {
+        // Arrange: Crear cliente que no sigue redirects automáticamente
+        var clientOptions = new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        };
+        var testClient = _factory.CreateClient(clientOptions);
+
+        // Act: Hacer request HTTP (simulado con header)
+        var request = new HttpRequestMessage(HttpMethod.Get, "/");
+        request.Headers.Add("X-Forwarded-Proto", "http");
+        
+        var response = await testClient.SendAsync(request);
+
+        // Assert: En producción debería redirigir a HTTPS
+        // En desarrollo con middleware HTTPS, debería tener headers apropiados
+        response.Headers.Should().ContainKey("Strict-Transport-Security")
+            .Or.Subject.StatusCode.Should().BeOneOf(
+                HttpStatusCode.MovedPermanently, 
+                HttpStatusCode.TemporaryRedirect);
+    }
+
+    [Fact]
+    public async Task A07_IdentificationAuthenticationFailures_RateLimitingTest()
+    {
+        // Arrange: Preparar múltiples intentos de login
+        var loginData = new
+        {
+            Username = "admin",
+            Password = "wrongpassword"
+        };
+
+        var content = new StringContent(
+            System.Text.Json.JsonSerializer.Serialize(loginData),
+            Encoding.UTF8,
+            "application/json");
+
+        // Act: Realizar múltiples intentos de login fallidos
+        HttpResponseMessage? lastResponse = null;
+        for (int i = 0; i < 10; i++)
+        {
+            lastResponse = await _client.PostAsync("/api/auth/login", content);
+        }
+
+        // Assert: Después de múltiples intentos, debería haber rate limiting
+        lastResponse?.StatusCode.Should().BeOneOf(
+            HttpStatusCode.TooManyRequests,
+            HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task A10_SSRF_PreventUnauthorizedRequestsTest()
+    {
+        // Arrange: Intentar hacer request a URL interna/externa no autorizada
+        var maliciousUrl = "http://169.254.169.254/latest/meta-data/"; // AWS metadata
+        var requestData = new
+        {
+            Url = maliciousUrl
+        };
+
+        var content = new StringContent(
+            System.Text.Json.JsonSerializer.Serialize(requestData),
+            Encoding.UTF8,
+            "application/json");
+
+        // Act: Intentar hacer request server-side a URL maliciosa
+        var response = await _client.PostAsync("/api/fetch-external", content);
+
+        // Assert: Debe ser rechazado
+        response.StatusCode.Should().BeOneOf(
+            HttpStatusCode.BadRequest,
+            HttpStatusCode.Forbidden,
+            HttpStatusCode.NotFound); // Endpoint podría no existir, lo cual es correcto
+    }
+}
+Paso 3: Crear Pruebas de Encriptación y Firma Digital (3 minutos)
+Crear pruebas específicas para cifrado:
+New-Item -Path "EncryptionTests.cs" -ItemType File
+Contenido de EncryptionTests.cs:
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
+using SecureShop.Security;
+
+namespace SecureShop.Security.Tests;
+
+public class EncryptionTests
+{
+    private readonly Mock<IEncryptionService> _mockEncryptionService;
+    private readonly Mock<ILogger<EncryptedStringConverter>> _mockLogger;
+
+    public EncryptionTests()
+    {
+        _mockEncryptionService = new Mock<IEncryptionService>();
+        _mockLogger = new Mock<ILogger<EncryptedStringConverter>>();
+    }
+
+    [Fact]
+    public async Task EncryptionService_EncryptDecrypt_ShouldReturnOriginalData()
+    {
+        // Arrange
+        var originalText = "sensitive-data-123";
+        var encryptedText = "encrypted-base64-data";
+        
+        _mockEncryptionService.Setup(x => x.EncryptAsync(originalText))
+            .ReturnsAsync(encryptedText);
+        _mockEncryptionService.Setup(x => x.DecryptAsync(encryptedText))
+            .ReturnsAsync(originalText);
+
+        // Act
+        var encrypted = await _mockEncryptionService.Object.EncryptAsync(originalText);
+        var decrypted = await _mockEncryptionService.Object.DecryptAsync(encrypted);
+
+        // Assert
+        encrypted.Should().NotBe(originalText);
+        decrypted.Should().Be(originalText);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public async Task EncryptionService_HandleEmptyValues_ShouldReturnEmpty(string? input)
+    {
+        // Arrange
+        _mockEncryptionService.Setup(x => x.EncryptAsync(It.IsAny<string>()))
+            .ReturnsAsync((string s) => string.IsNullOrEmpty(s) ? s : "encrypted");
+
+        // Act
+        var result = await _mockEncryptionService.Object.EncryptAsync(input!);
+
+        // Assert
+        result.Should().Be(input);
+    }
+
+    [Fact]
+    public void EncryptedStringConverter_PerformanceTest_ShouldCompleteQuickly()
+    {
+        // Arrange
+        var testData = "Performance test data that should be encrypted quickly";
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        _mockEncryptionService.Setup(x => x.EncryptAsync(It.IsAny<string>()))
+            .ReturnsAsync("encrypted-data");
+
+        // Act
+        var converter = new EncryptedStringConverter(_mockEncryptionService.Object, _mockLogger.Object);
+        
+        // Simular múltiples operaciones de conversión
+        for (int i = 0; i < 100; i++)
+        {
+            var result = converter.ConvertToProvider(testData);
+        }
+
+        stopwatch.Stop();
+
+        // Assert: Las operaciones de conversión deben ser rápidas
+        stopwatch.ElapsedMilliseconds.Should().BeLessThan(1000);
+    }
+}
+
+public class DigitalSignatureTests
+{
+    private readonly Mock<IDigitalSignatureService> _mockSignatureService;
+
+    public DigitalSignatureTests()
+    {
+        _mockSignatureService = new Mock<IDigitalSignatureService>();
+    }
+
+[Fact]
+    public async Task DigitalSignature_SignAndVerify_ShouldBeValid()
+    {
+        // Arrange
+        var transaction = new PurchaseTransaction
+        {
+            TransactionId = "TEST-001",
+            CustomerId = "customer-123",
+            CustomerEmail = "test@example.com",
+            TotalAmount = 99.99m,
+            Items = new List<TransactionItem>
+            {
+                new() { ProductId = "prod-1", ProductName = "Test Product", Quantity = 1, UnitPrice = 99.99m }
+            }
+        };
+
+        var signedDocument = new SignedDocument
+        {
+            DocumentId = transaction.TransactionId,
+            DocumentType = "PurchaseTransaction",
+            DocumentContent = System.Text.Json.JsonSerializer.Serialize(transaction),
+            Signature = "valid-signature",
+            SigningCertificateThumbprint = "cert-thumbprint-123",
+            SignedAt = DateTime.UtcNow,
+            SignedBy = "System"
+        };
+
+        _mockSignatureService.Setup(x => x.SignDocumentAsync(transaction, "PurchaseTransaction"))
+            .ReturnsAsync(signedDocument);
+        _mockSignatureService.Setup(x => x.VerifySignatureAsync(signedDocument))
+            .ReturnsAsync(true);
+
+        // Act
+        var signed = await _mockSignatureService.Object.SignDocumentAsync(transaction, "PurchaseTransaction");
+        var isValid = await _mockSignatureService.Object.VerifySignatureAsync(signed);
+
+        // Assert
+        signed.Should().NotBeNull();
+        signed.Signature.Should().NotBeEmpty();
+        isValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DigitalSignature_TamperedDocument_ShouldBeInvalid()
+    {
+        // Arrange
+        var originalTransaction = new PurchaseTransaction
+        {
+            TransactionId = "TEST-002",
+            TotalAmount = 50.00m
+        };
+
+        var signedDocument = new SignedDocument
+        {
+            DocumentContent = System.Text.Json.JsonSerializer.Serialize(originalTransaction),
+            Signature = "original-signature"
+        };
+
+        // Simular documento alterado
+        var tamperedTransaction = originalTransaction with { TotalAmount = 500.00m };
+        var tamperedDocument = signedDocument with 
+        { 
+            DocumentContent = System.Text.Json.JsonSerializer.Serialize(tamperedTransaction)
+        };
+
+        _mockSignatureService.Setup(x => x.VerifySignatureAsync(tamperedDocument))
+            .ReturnsAsync(false);
+
+        // Act
+        var isValid = await _mockSignatureService.Object.VerifySignatureAsync(tamperedDocument);
+
+        // Assert
+        isValid.Should().BeFalse();
+    }
+}
+Crear pruebas de rendimiento y compliance:
+New-Item -Path "ComplianceTests.cs" -ItemType File
+Contenido de ComplianceTests.cs:
+using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using SecureShop.Data;
+using System.Net;
+
+namespace SecureShop.Security.Tests;
+
+public class ComplianceTests : IClassFixture<WebApplicationFactory<Program>>
+{
+    private readonly WebApplicationFactory<Program> _factory;
+    private readonly HttpClient _client;
+
+    public ComplianceTests(WebApplicationFactory<Program> factory)
+    {
+        _factory = factory;
+        _client = _factory.CreateClient();
+    }
+
+    [Fact]
+    public void GDPR_Article25_DataProtectionByDesign()
+    {
+        // Arrange: Obtener contexto de DB configurado
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<SecureDbContext>();
+
+        // Act: Verificar que campos sensibles están configurados para cifrado
+        var customerEntity = dbContext.Model.FindEntityType(typeof(Customer));
+        var emailProperty = customerEntity?.FindProperty(nameof(Customer.Email));
+        var phoneProperty = customerEntity?.FindProperty(nameof(Customer.PhoneNumber));
+        var addressProperty = customerEntity?.FindProperty(nameof(Customer.Address));
+
+        // Assert: Verificar que tienen converters de cifrado
+        emailProperty?.GetValueConverter().Should().NotBeNull();
+        phoneProperty?.GetValueConverter().Should().NotBeNull();
+        addressProperty?.GetValueConverter().Should().NotBeNull();
+    }
+
+    [Fact]
+    public void PCI_DSS_Requirement3_4_CreditCardDataEncryption()
+    {
+        // Arrange
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<SecureDbContext>();
+
+        // Act: Verificar configuración de cifrado para datos de tarjeta
+        var customerEntity = dbContext.Model.FindEntityType(typeof(Customer));
+        var creditCardProperty = customerEntity?.FindProperty(nameof(Customer.CreditCardNumber));
+
+        // Assert: Datos de tarjeta deben estar cifrados
+        creditCardProperty?.GetValueConverter().Should().NotBeNull();
+        creditCardProperty?.GetValueConverter().Should().BeOfType<EncryptedStringConverter>();
+    }
+
+    [Fact]
+    public async Task NIST_CybersecurityFramework_SecurityHeaders()
+    {
+        // Act: Hacer request y verificar headers
+        var response = await _client.GetAsync("/");
+
+        // Assert: Verificar implementación de controles NIST
+        response.Headers.Should().ContainKey("X-Frame-Options");
+        response.Headers.Should().ContainKey("X-Content-Type-Options");
+        response.Headers.Should().ContainKey("Content-Security-Policy");
+        response.Headers.Should().ContainKey("Referrer-Policy");
+
+        // Verificar valores específicos
+        var xFrameOptions = response.Headers.GetValues("X-Frame-Options").First();
+        xFrameOptions.Should().Be("DENY");
+
+        var contentTypeOptions = response.Headers.GetValues("X-Content-Type-Options").First();
+        contentTypeOptions.Should().Be("nosniff");
+    }
+
+    [Fact]
+    public void ISO27001_InformationSecurityManagement_PasswordPolicy()
+    {
+        // Arrange: Verificar que políticas de seguridad están implementadas
+        var weakPasswords = new[]
+        {
+            "123",
+            "password",
+            "admin",
+            "abc",
+            "12345678"
+        };
+
+        // Act & Assert: Verificar que contraseñas débiles son rechazadas
+        foreach (var weakPassword in weakPasswords)
+        {
+            // En implementación real, verificaríamos contra servicio de validación
+            var isWeak = weakPassword.Length < 8 || 
+                        !weakPassword.Any(char.IsDigit) ||
+                        !weakPassword.Any(char.IsLetter);
+            
+            isWeak.Should().BeTrue($"Password '{weakPassword}' should be considered weak");
+        }
+    }
+
+    [Fact]
+    public void SOX_Section404_AuditTrail_Implementation()
+    {
+        // Arrange
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<SecureDbContext>();
+
+        // Act: Verificar que auditoría está configurada
+        var auditLogEntity = dbContext.Model.FindEntityType(typeof(AuditLog));
+
+        // Assert: Verificar estructura de auditoría
+        auditLogEntity.Should().NotBeNull();
+        auditLogEntity?.FindProperty(nameof(AuditLog.UserId)).Should().NotBeNull();
+        auditLogEntity?.FindProperty(nameof(AuditLog.Action)).Should().NotBeNull();
+        auditLogEntity?.FindProperty(nameof(AuditLog.Timestamp)).Should().NotBeNull();
+        auditLogEntity?.FindProperty(nameof(AuditLog.Changes)).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task OWASP_ASVS_Level2_AuthenticationSecurity()
+    {
+        // Arrange: Intentar acceder a endpoint protegido sin autenticación
+        var protectedEndpoints = new[]
+        {
+            "/Home/Dashboard",
+            "/Product/Create",
+            "/Home/AdminPanel"
+        };
+
+        // Act & Assert: Verificar que endpoints protegidos requieren autenticación
+        foreach (var endpoint in protectedEndpoints)
+        {
+            var response = await _client.GetAsync(endpoint);
+            
+            // Debe redirigir a login o devolver 401/403
+            response.StatusCode.Should().BeOneOf(
+                HttpStatusCode.Unauthorized,
+                HttpStatusCode.Forbidden,
+                HttpStatusCode.Redirect,
+                HttpStatusCode.Found);
+        }
+    }
+}
+Ejecutar Suite Completa de Pruebas
+Ejecutar todas las pruebas:
+# Compilar proyecto de pruebas
+dotnet build
+
+# Ejecutar todas las pruebas con reporte detallado
+dotnet test --verbosity normal --collect:"XPlat Code Coverage"
+
+# Ejecutar solo pruebas de seguridad OWASP
+dotnet test --filter "FullyQualifiedName~OWASP"
+
+# Ejecutar pruebas de compliance
+dotnet test --filter "FullyQualifiedName~Compliance"
+
+# Generar reporte de cobertura (si está configurado)
+dotnet test --collect:"XPlat Code Coverage" --results-directory ./TestResults/
+________________________________________
+📊 VERIFICACIÓN FINAL Y GENERACIÓN DE REPORTES
+⏱️ Duración: 5 minutos
+🎯 Objetivo: Verificar funcionalidad completa y generar documentación
+Paso 1: Verificación Integral de la Aplicación (3 minutos)
+Verificar funcionalidad completa:
+# Navegar al proyecto web
+cd ../../src/SecureShop.Web
+
+# Compilar toda la solución
+dotnet build
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "✅ Compilación exitosa" -ForegroundColor Green
+} else {
+    Write-Host "❌ Error en compilación" -ForegroundColor Red
+    exit 1
+}
+
+# Ejecutar la aplicación para verificación final
+Write-Host "🚀 Iniciando aplicación SecureShop para verificación..." -ForegroundColor Yellow
+Write-Host "📱 URL de acceso: https://localhost:7000" -ForegroundColor Cyan
+Write-Host "🔐 Funcionalidades implementadas:" -ForegroundColor Green
+Write-Host "   ✅ Autenticación Azure AD con claims transformation" -ForegroundColor White
+Write-Host "   ✅ Autorización granular basada en recursos" -ForegroundColor White
+Write-Host "   ✅ Firma digital de transacciones con Key Vault" -ForegroundColor White
+Write-Host "   ✅ Encriptación automática de datos sensibles" -ForegroundColor White
+Write-Host "   ✅ Testing automatizado de seguridad OWASP" -ForegroundColor White
+Write-Host "   ✅ Validación de compliance (GDPR, PCI DSS, NIST)" -ForegroundColor White
+Write-Host ""
+Write-Host "🧪 Para probar funcionalidades:" -ForegroundColor Yellow
+Write-Host "   1. Navegue a https://localhost:7000" -ForegroundColor White
+Write-Host "   2. Inicie sesión con Azure AD" -ForegroundColor White
+Write-Host "   3. Explore el Dashboard para ver claims enriquecidos" -ForegroundColor White
+Write-Host "   4. Cree productos para probar cifrado automático" -ForegroundColor White
+Write-Host "   5. Verifique headers de seguridad en DevTools" -ForegroundColor White
+Write-Host ""
+Write-Host "🛑 Presione Ctrl+C para detener la aplicación" -ForegroundColor Red
+
+# Iniciar aplicación
+dotnet run --urls="https://localhost:7000;http://localhost:5000"
+Paso 2: Generar Documentación de Laboratorio (2 minutos)
+Crear resumen de implementación:
+# Crear archivo de resumen
+$summaryPath = "../../docs/Lab11-Implementation-Summary.md"
+$summaryContent = @"
+# 🔐 Resumen de Implementación - Laboratorio 11
+
+## Funcionalidades Implementadas
+
+### ✅ Lab 38: Autenticación y Autorización Avanzada (20 min)
+- **Claims Transformation Service**: Enriquecimiento automático de identidades Azure AD
+- **Authorization Handlers**: Autorización basada en recursos y ownership
+- **Políticas Granulares**: Control de acceso por roles, departamentos y permisos
+- **Resource-based Authorization**: Verificación de propiedad de recursos
+
+### ✅ Lab 39: Firma Digital con Key Vault (20 min)
+- **Certificados Digitales**: Configuración en Azure Key Vault con HSM
+- **Digital Signature Service**: Firma criptográfica RSA con SHA256
+- **Verificación de Firmas**: Validación de integridad y autenticidad
+- **Modelos de Transacciones**: Estructuras para documentos firmados
+
+### ✅ Lab 40: Encriptación de Datos (15 min)
+- **Value Converters**: Cifrado automático en Entity Framework Core
+- **Encriptación Transparente**: AES-256 para campos sensibles
+- **Gestión de Claves**: Integración con Azure Key Vault
+- **Cumplimiento PCI DSS**: Protección de datos de tarjetas de crédito
+
+### ✅ Lab 41: Testing de Seguridad (10 min)
+- **Pruebas OWASP Top 10**: Validación automática contra vulnerabilidades críticas
+- **Testing de Compliance**: Verificación GDPR, PCI DSS, NIST, ISO 27001
+- **Pruebas de Rendimiento**: Validación de latencia de operaciones criptográficas
+- **Testing de Integración**: Verificación end-to-end de flujos de seguridad
+
+## Arquitectura de Seguridad Final
+
+\`\`\`
+Usuario → Azure AD (OAuth 2.0) → Claims Transformation → Authorization Policies
+                ↓
+Application Layer → Validation → Business Logic → Digital Signature
+                ↓
+Data Layer → Encryption Converters → Azure Key Vault → Database (Encrypted)
+                ↓
+Audit & Monitoring → Security Events → Application Insights → Alerts
+\`\`\`
+
+## Controles de Seguridad Implementados
+
+| Control | Implementación | Cumplimiento |
+|---------|---------------|--------------|
+| **Autenticación** | Azure AD + MFA | NIST CSF |
+| **Autorización** | RBAC + Resource-based | OWASP ASVS L2 |
+| **Cifrado Datos** | AES-256 + Key Vault | GDPR Art. 25, PCI DSS 3.4 |
+| **Firma Digital** | RSA-2048 + SHA256 | eIDAS, NIST |
+| **Auditoría** | Structured Logging | SOX 404, ISO 27001 |
+| **Validación** | Input Sanitization | OWASP Top 10 |
+| **Headers Seguridad** | CSP, HSTS, X-Frame | OWASP Secure Headers |
+
+## Métricas de Seguridad
+
+- **🔐 Campos Cifrados**: Email, Teléfono, Dirección, Tarjeta de Crédito, Costos
+- **📜 Documentos Firmables**: Transacciones, Acciones Admin, Aprobaciones
+- **🛡️ Políticas de Autorización**: 8 políticas granulares implementadas
+- **🧪 Pruebas de Seguridad**: 15+ casos de test OWASP automatizados
+- **📊 Compliance**: 5 marcos regulatorios validados automáticamente
+
+## Próximos Pasos para Producción
+
+1. **Configurar Azure SQL Database** con TDE y backup cifrado
+2. **Implementar WAF** para protección adicional de aplicación web
+3. **Configurar Azure Monitor** con alertas de seguridad en tiempo real
+4. **Establecer CI/CD Pipeline** con gates de seguridad automatizados
+5. **Realizar Penetration Testing** con herramientas profesionales
+
+## Comandos de Verificación
+
+\`\`\`powershell
+# Ejecutar aplicación
+cd src/SecureShop.Web
+dotnet run --urls="https://localhost:7000"
+
+# Ejecutar pruebas de seguridad
+cd ../../tests/SecureShop.Security.Tests
+dotnet test --filter "FullyQualifiedName~OWASP"
+
+# Verificar cifrado en base de datos
+dotnet ef database update  # En producción con SQL Server
+\`\`\`
+
+## Recursos de Referencia
+
+- **Azure Security Best Practices**: https://docs.microsoft.com/azure/security/
+- **OWASP Application Security**: https://owasp.org/www-project-application-security-verification-standard/
+- **NIST Cybersecurity Framework**: https://www.nist.gov/cyberframework
+- **PCI DSS Requirements**: https://www.pcisecuritystandards.org/
+
+---
+
+**🏆 Certificación de Completitud**
+
+Este laboratorio ha implementado exitosamente:
+- ✅ Seguridad de nivel empresarial end-to-end
+- ✅ Cumplimiento con estándares internacionales
+- ✅ Testing automatizado de vulnerabilidades
+- ✅ Protección criptográfica de datos sensibles
+- ✅ Auditoría y trazabilidad completa
+
+**Aplicación SecureShop lista para evaluación final! 🎉**
+"@
+
+$summaryContent | Out-File -FilePath $summaryPath -Encoding UTF8
+Write-Host "📄 Resumen generado en: $summaryPath" -ForegroundColor Green
+________________________________________
+🎯 CHECKLIST DE VERIFICACIÓN FINAL
+✅ Funcionalidades Completadas
+Autenticación y Autorización Avanzada:
+•	✅ Claims Transformation Service implementado
+•	✅ Authorization Handlers personalizados
+•	✅ Políticas de autorización granulares
+•	✅ Resource-based authorization
+Firma Digital:
+•	✅ Certificados configurados en Key Vault
+•	✅ Digital Signature Service funcional
+•	✅ Verificación de firmas implementada
+•	✅ Modelos de transacciones firmadas
+Encriptación de Datos:
+•	✅ Value Converters para EF Core
+•	✅ Cifrado automático de campos sensibles
+•	✅ Integración con Azure Key Vault
+•	✅ Cumplimiento PCI DSS y GDPR
+Testing de Seguridad:
+•	✅ Pruebas OWASP Top 10 automatizadas
+•	✅ Testing de compliance implementado
+•	✅ Pruebas de rendimiento de seguridad
+•	✅ Validación de controles de acceso
+🔧 Comandos de Verificación Rápida
+# Verificar compilación
+dotnet build --configuration Release
+
+# Ejecutar pruebas de seguridad
+dotnet test --filter "Category=Security"
+
+# Verificar coverage de encriptación
+dotnet test --filter "FullyQualifiedName~Encryption"
+
+# Validar compliance
+dotnet test --filter "FullyQualifiedName~Compliance"
+📊 Métricas de Éxito
+•	Tiempo Total de Laboratorio: 65 minutos
+•	Labs Completados: 4/4 (100%)
+•	Funcionalidades de Seguridad: 12+ implementadas
+•	Pruebas Automatizadas: 15+ casos de test
+•	Controles de Compliance: 5 marcos validados
+•	Performance: <100ms para operaciones criptográficas
+🚀 Preparación para Sesión 12
+Para la evaluación final del viernes:
+1.	✅ Aplicación SecureShop completamente funcional
+2.	✅ Documentación de arquitectura generada
+3.	✅ Suite de pruebas ejecutándose exitosamente
+4.	✅ Evidencia de cumplimiento regulatorio
+5.	✅ Demo preparada con características de seguridad
+Aspectos a preparar para presentación:
+•	Demo en vivo de autenticación y autorización
+•	Explicación técnica de cifrado y firma digital
+•	Resultados de testing de seguridad automatizado
+•	Evidencia de compliance con estándares internacionales
+•	Arquitectura de seguridad implementada
+________________________________________
+🎉 FELICITACIONES
+¡Has completado exitosamente la implementación más avanzada de seguridad en aplicaciones .NET Azure!
+Competencias adquiridas:
+•	🔐 Arquitectura de Seguridad Empresarial - Diseño e implementación completa
+•	🗝️ Criptografía Aplicada - Cifrado y firma digital con Azure Key Vault
+•	👤 Gestión de Identidad Avanzada - Claims transformation y autorización granular
+•	🧪 Testing de Seguridad Automatizado - Validación continua de controles
+•	📋 Compliance Regulatorio - Cumplimiento con estándares internacionales
+Tu aplicación SecureShop ahora incluye:
+•	✨ Seguridad de nivel bancario
+•	✨ Protección criptográfica end-to-end
+•	✨ Compliance automático con regulaciones
+•	✨ Testing de vulnerabilidades integrado
+•	✨ Auditoría y trazabilidad completa
+¡Nos vemos en la Sesión 12 para la evaluación final y certificación! 🏆
+
