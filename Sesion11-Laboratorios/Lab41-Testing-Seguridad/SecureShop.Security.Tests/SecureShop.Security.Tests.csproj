@@ -20,4 +20,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\src\SecureShop.Web\SecureShop.Web.csproj" />
+    <ProjectReference Include="..\src\SecureShop.Security\SecureShop.Security.csproj" />
+  </ItemGroup>
+
 </Project>

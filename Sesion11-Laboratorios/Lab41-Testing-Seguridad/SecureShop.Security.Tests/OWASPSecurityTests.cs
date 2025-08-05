@@ -90,10 +90,13 @@ public class OWASPSecurityTests : IClassFixture<WebApplicationFactory<Program>>
         var response = await testClient.SendAsync(request);
 
         // Assert: En producción debería redirigir a HTTPS
-        response.Headers.Should().ContainKey("Strict-Transport-Security")
-            .Or.Subject.StatusCode.Should().BeOneOf(
-                HttpStatusCode.MovedPermanently, 
-                HttpStatusCode.TemporaryRedirect);
+        // Verificar headers de seguridad O redirección HTTPS
+        var hasSTSHeader = response.Headers.Contains("Strict-Transport-Security");
+        var isRedirect = response.StatusCode == HttpStatusCode.MovedPermanently || 
+                         response.StatusCode == HttpStatusCode.TemporaryRedirect;
+        
+        (hasSTSHeader || isRedirect).Should().BeTrue(
+            "la aplicación debe configurar HTTPS redirection o STS headers");
     }
 
     [Fact]
