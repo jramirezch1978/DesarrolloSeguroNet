@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SecureShop.Security;
+using SecureShop.Web.Models;
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace SecureShop.Web.Controllers;
@@ -86,7 +88,10 @@ public class HomeController : Controller
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
-        return View();
+        return View(new ErrorViewModel 
+        { 
+            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier 
+        });
     }
 }
 

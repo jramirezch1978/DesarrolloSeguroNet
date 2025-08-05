@@ -7,8 +7,13 @@ using SecureShop.Security;
 var builder = WebApplication.CreateBuilder(args);
 
 // ===== CONFIGURACIÓN DE AUTENTICACIÓN AZURE AD =====
-builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "Cookies";
+    options.DefaultChallengeScheme = "OpenIdConnect";
+})
+.AddCookie("Cookies")
+.AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
 
 // ===== CONFIGURACIÓN DE AUTORIZACIÓN AVANZADA =====
 
