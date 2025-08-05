@@ -1,0 +1,108 @@
+@{
+    ViewData["Title"] = "Inicio";
+}
+
+<div class="text-center">
+    <h1 class="display-4">
+        <i class="fas fa-shield-alt text-primary"></i> 
+        Bienvenido a SecureShop
+    </h1>
+    <p class="lead">Aplicación de demostración con autenticación y autorización avanzada</p>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-info-circle"></i> Características de Seguridad</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> Autenticación con Azure AD</li>
+                    <li><i class="fas fa-check text-success"></i> Claims Transformation Service</li>
+                    <li><i class="fas fa-check text-success"></i> Autorización basada en recursos</li>
+                    <li><i class="fas fa-check text-success"></i> Políticas granulares</li>
+                    <li><i class="fas fa-check text-success"></i> Roles y permisos dinámicos</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-users"></i> Estado de Autenticación</h5>
+            </div>
+            <div class="card-body">
+                @if (User.Identity!.IsAuthenticated)
+                {
+                    <div class="alert alert-success">
+                        <i class="fas fa-user-check"></i> 
+                        <strong>Autenticado como:</strong> @(User.Identity.Name ?? User.FindFirst(ClaimTypes.Email)?.Value)
+                    </div>
+                    <a asp-action="Dashboard" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt"></i> Ir al Dashboard
+                    </a>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-user-times"></i> 
+                        <strong>No autenticado</strong>
+                    </div>
+                    <a href="/MicrosoftIdentity/Account/SignIn" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión con Microsoft
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (User.Identity!.IsAuthenticated)
+{
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5><i class="fas fa-key"></i> Accesos Disponibles</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a asp-action="Dashboard" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-tachometer-alt"></i><br>Dashboard
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-action="EditProfile" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-user-edit"></i><br>Mi Perfil
+                            </a>
+                        </div>
+                        @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+                        {
+                            <div class="col-md-3">
+                                <a asp-action="ManageProducts" class="btn btn-outline-warning w-100 mb-2">
+                                    <i class="fas fa-box"></i><br>Productos
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a asp-action="Reports" class="btn btn-outline-success w-100 mb-2">
+                                    <i class="fas fa-chart-bar"></i><br>Reportes
+                                </a>
+                            </div>
+                        }
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <div class="col-md-3">
+                                <a asp-action="AdminPanel" class="btn btn-outline-danger w-100 mb-2">
+                                    <i class="fas fa-user-shield"></i><br>Admin Panel
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
