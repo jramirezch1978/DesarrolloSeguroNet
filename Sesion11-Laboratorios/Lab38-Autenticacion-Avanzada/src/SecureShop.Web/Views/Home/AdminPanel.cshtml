@@ -1,0 +1,155 @@
+@{
+    ViewData["Title"] = "Panel de Administración";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-user-shield text-danger"></i> Panel de Administración</h1>
+    <span class="badge bg-danger fs-6">
+        <i class="fas fa-crown"></i> Solo Administradores
+    </span>
+</div>
+
+<div class="protected-section">
+    <h5><i class="fas fa-exclamation-triangle"></i> Área Protegida</h5>
+    <p class="mb-0">Esta página requiere el rol <strong>"Admin"</strong>. Solo usuarios con permisos administrativos pueden acceder aquí.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="fas fa-users-cog"></i> Gestión de Usuarios</h5>
+            </div>
+            <div class="card-body">
+                <p>Herramientas para administrar usuarios del sistema:</p>
+                <ul>
+                    <li>Crear y modificar cuentas de usuario</li>
+                    <li>Asignar roles y permisos</li>
+                    <li>Gestionar departamentos</li>
+                    <li>Auditoría de accesos</li>
+                </ul>
+                <button class="btn btn-danger" disabled>
+                    <i class="fas fa-users"></i> Gestionar Usuarios
+                    <small>(Demo)</small>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5><i class="fas fa-cogs"></i> Configuración del Sistema</h5>
+            </div>
+            <div class="card-body">
+                <p>Configuraciones avanzadas del sistema:</p>
+                <ul>
+                    <li>Políticas de seguridad</li>
+                    <li>Configuración de Azure AD</li>
+                    <li>Logs de auditoría</li>
+                    <li>Configuración de claims</li>
+                </ul>
+                <button class="btn btn-warning" disabled>
+                    <i class="fas fa-cogs"></i> Configurar Sistema
+                    <small>(Demo)</small>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-chart-line"></i> Métricas del Sistema</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h4 class="text-primary">156</h4>
+                                <p class="mb-0">Usuarios Activos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h4 class="text-success">42</h4>
+                                <p class="mb-0">Sesiones Hoy</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h4 class="text-warning">7</h4>
+                                <p class="mb-0">Intentos Fallidos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h4 class="text-info">99.8%</h4>
+                                <p class="mb-0">Uptime Sistema</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5><i class="fas fa-history"></i> Actividad Reciente del Sistema</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Tiempo</th>
+                                <th>Usuario</th>
+                                <th>Acción</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@DateTime.Now.AddMinutes(-5).ToString("HH:mm")</td>
+                                <td>admin@@contoso.com</td>
+                                <td>Acceso a Panel Admin</td>
+                                <td><span class="badge bg-success">Exitoso</span></td>
+                            </tr>
+                            <tr>
+                                <td>@DateTime.Now.AddMinutes(-12).ToString("HH:mm")</td>
+                                <td>manager@@contoso.com</td>
+                                <td>Intento acceso Admin</td>
+                                <td><span class="badge bg-danger">Denegado</span></td>
+                            </tr>
+                            <tr>
+                                <td>@DateTime.Now.AddMinutes(-18).ToString("HH:mm")</td>
+                                <td>user@@contoso.com</td>
+                                <td>Login exitoso</td>
+                                <td><span class="badge bg-success">Exitoso</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-4">
+    <i class="fas fa-info-circle"></i>
+    <strong>Información:</strong> Este panel demuestra la implementación de autorización granular. 
+    Solo usuarios con el rol "Admin" pueden acceder a esta funcionalidad.
+</div>

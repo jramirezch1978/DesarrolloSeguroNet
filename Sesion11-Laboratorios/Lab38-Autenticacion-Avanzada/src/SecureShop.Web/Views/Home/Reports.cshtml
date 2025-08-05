@@ -1,0 +1,195 @@
+@{
+    ViewData["Title"] = "Reportes";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-chart-bar text-success"></i> Centro de Reportes</h1>
+    <span class="badge bg-warning fs-6">
+        <i class="fas fa-shield-alt"></i> Requiere Permiso: reports.view
+    </span>
+</div>
+
+<div class="protected-section">
+    <h5><i class="fas fa-key"></i> Autorización Basada en Permisos</h5>
+    <p class="mb-0">Esta página utiliza la política <strong>"CanViewReports"</strong> que verifica el permiso específico <code>reports.view</code>.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-shopping-cart"></i> Reportes de Ventas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">$45,678</h4>
+                        <small>Ventas Hoy</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">$312,456</h4>
+                        <small>Ventas Mes</small>
+                    </div>
+                </div>
+                <hr>
+                <p class="text-muted">Análisis de ventas y tendencias</p>
+                <button class="btn btn-primary btn-sm">
+                    <i class="fas fa-download"></i> Descargar Reporte
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5><i class="fas fa-box"></i> Inventario</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-warning">1,234</h4>
+                        <small>Productos</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-danger">23</h4>
+                        <small>Stock Bajo</small>
+                    </div>
+                </div>
+                <hr>
+                <p class="text-muted">Estado del inventario</p>
+                <button class="btn btn-success btn-sm">
+                    <i class="fas fa-eye"></i> Ver Detalles
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-users"></i> Usuarios</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-info">856</h4>
+                        <small>Activos</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">42</h4>
+                        <small>Nuevos</small>
+                    </div>
+                </div>
+                <hr>
+                <p class="text-muted">Actividad de usuarios</p>
+                <button class="btn btn-info btn-sm">
+                    <i class="fas fa-chart-line"></i> Analizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5><i class="fas fa-chart-pie"></i> Dashboard de KPIs</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <canvas id="salesChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Métricas Principales</h6>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-success" style="width: 78%">
+                                <span>Satisfacción Cliente: 78%</span>
+                            </div>
+                        </div>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-info" style="width: 92%">
+                                <span>Disponibilidad: 92%</span>
+                            </div>
+                        </div>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-warning" style="width: 65%">
+                                <span>Eficiencia: 65%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6>Acciones Rápidas</h6>
+                            <button class="btn btn-outline-primary me-2">
+                                <i class="fas fa-refresh"></i> Actualizar
+                            </button>
+                            <button class="btn btn-outline-success">
+                                <i class="fas fa-file-export"></i> Exportar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (User.IsInRole("Admin"))
+{
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5><i class="fas fa-crown"></i> Reportes Administrativos (Solo Admin)</h5>
+                </div>
+                <div class="card-body">
+                    <p>Reportes sensibles disponibles solo para administradores:</p>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-danger w-100">
+                                <i class="fas fa-shield-alt"></i><br>Auditoría de Seguridad
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-warning w-100">
+                                <i class="fas fa-dollar-sign"></i><br>Reportes Financieros
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-info w-100">
+                                <i class="fas fa-database"></i><br>Análisis de Datos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="alert alert-success mt-4">
+    <i class="fas fa-check-circle"></i>
+    <strong>Autorización Exitosa:</strong> Tienes el permiso necesario para ver reportes. 
+    Esta página demuestra autorización basada en permisos específicos.
+</div>
+
+@section Scripts {
+    <script>
+        // Simular un gráfico simple
+        const canvas = document.getElementById('salesChart');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#007bff';
+            ctx.fillRect(50, 150, 50, 50);
+            ctx.fillRect(120, 100, 50, 100);
+            ctx.fillRect(190, 50, 50, 150);
+            ctx.fillRect(260, 120, 50, 80);
+            
+            ctx.fillStyle = '#28a745';
+            ctx.font = '14px Arial';
+            ctx.fillText('Ventas por Mes', 150, 30);
+        }
+    </script>
+}
