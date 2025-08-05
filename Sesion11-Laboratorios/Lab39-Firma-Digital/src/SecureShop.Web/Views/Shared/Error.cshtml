@@ -1,0 +1,67 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="text-center">
+    <h1 class="display-1 text-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+    </h1>
+    <h1 class="display-4">Error</h1>
+    <p class="lead">Se ha producido un error al procesar tu solicitud.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="fas fa-bug"></i> Información del Error</h5>
+            </div>
+            <div class="card-body">
+                @if (Model?.ShowRequestId == true)
+                {
+                    <div class="alert alert-info">
+                        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+                    </div>
+                }
+                
+                <h6>Posibles Causas:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-arrow-right text-muted"></i> Error de configuración de Azure AD</li>
+                    <li><i class="fas fa-arrow-right text-muted"></i> Problema de conectividad</li>
+                    <li><i class="fas fa-arrow-right text-muted"></i> Permisos insuficientes</li>
+                    <li><i class="fas fa-arrow-right text-muted"></i> Configuración de autorización incorrecta</li>
+                </ul>
+
+                <h6>Soluciones Sugeridas:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> Verificar configuración de Azure AD en <code>appsettings.json</code></li>
+                    <li><i class="fas fa-check text-success"></i> Asegurarse de que el usuario tenga los permisos correctos</li>
+                    <li><i class="fas fa-check text-success"></i> Revisar los logs de la aplicación</li>
+                    <li><i class="fas fa-check text-success"></i> Contactar al administrador del sistema</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+        <i class="fas fa-home"></i> Volver al Inicio
+    </a>
+    <button class="btn btn-secondary" onclick="history.back()">
+        <i class="fas fa-arrow-left"></i> Página Anterior
+    </button>
+</div>
+
+<div class="mt-4">
+    <div class="alert alert-light">
+        <h6><i class="fas fa-info-circle"></i> Información Técnica</h6>
+        <p class="text-muted mb-0">
+            <small>
+                Si este error persiste, puede estar relacionado con la configuración de autenticación o autorización de SecureShop. 
+                Revisa los logs del servidor para más detalles.
+            </small>
+        </p>
+    </div>
+</div>

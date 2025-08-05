@@ -1,0 +1,265 @@
+@{
+    ViewData["Title"] = "Aprobar Descuentos";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-percentage text-info"></i> Aprobación de Descuentos</h1>
+    <span class="badge bg-info fs-6">
+        <i class="fas fa-gavel"></i> Lógica de Autorización Compleja
+    </span>
+</div>
+
+<div class="protected-section">
+    <h5><i class="fas fa-code"></i> Política con Lógica Compleja</h5>
+    <p class="mb-0">Esta página utiliza la política <strong>"CanApproveDiscounts"</strong> con validación de roles y tienda. Managers solo en su tienda, Admins en cualquier tienda.</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <h4>12</h4>
+                <p class="mb-0">Pendientes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h4>34</h4>
+                <p class="mb-0">Aprobados Hoy</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h4>3</h4>
+                <p class="mb-0">Rechazados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h4>$45,678</h4>
+                <p class="mb-0">Total Ahorros</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5><i class="fas fa-clock"></i> Descuentos Pendientes de Aprobación</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Cliente</th>
+                                <th>Producto</th>
+                                <th>Descuento</th>
+                                <th>Razón</th>
+                                <th>Tienda</th>
+                                <th>Solicitado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>DSC001</td>
+                                <td>Juan Pérez</td>
+                                <td>Laptop Dell XPS 13</td>
+                                <td class="text-danger"><strong>15%</strong> ($195.00)</td>
+                                <td>Cliente VIP</td>
+                                <td>Store-001</td>
+                                <td>Hace 2 horas</td>
+                                <td>
+                                    <button class="btn btn-success btn-sm"><i class="fas fa-check"></i> Aprobar</button>
+                                    <button class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Rechazar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>DSC002</td>
+                                <td>María García</td>
+                                <td>iPhone 15 Pro</td>
+                                <td class="text-warning"><strong>8%</strong> ($80.00)</td>
+                                <td>Competencia</td>
+                                <td>Store-001</td>
+                                <td>Hace 1 hora</td>
+                                <td>
+                                    <button class="btn btn-success btn-sm"><i class="fas fa-check"></i> Aprobar</button>
+                                    <button class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Rechazar</button>
+                                </td>
+                            </tr>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <tr class="table-info">
+                                    <td>DSC003</td>
+                                    <td>Carlos López</td>
+                                    <td>Monitor 4K Samsung</td>
+                                    <td class="text-danger"><strong>20%</strong> ($90.00)</td>
+                                    <td>Defecto menor</td>
+                                    <td>Store-002</td>
+                                    <td>Hace 3 horas</td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm"><i class="fas fa-check"></i> Aprobar</button>
+                                        <button class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Rechazar</button>
+                                        <small class="text-info d-block">Solo Admin</small>
+                                    </td>
+                                </tr>
+                            }
+                            <tr>
+                                <td>DSC004</td>
+                                <td>Ana Rodríguez</td>
+                                <td>Teclado Mecánico</td>
+                                <td class="text-success"><strong>5%</strong> ($6.50)</td>
+                                <td>Estudiante</td>
+                                <td>Store-001</td>
+                                <td>Hace 30 min</td>
+                                <td>
+                                    <button class="btn btn-success btn-sm"><i class="fas fa-check"></i> Aprobar</button>
+                                    <button class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Rechazar</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-user-tag"></i> Tu Nivel de Autorización</h5>
+            </div>
+            <div class="card-body">
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="alert alert-success">
+                        <i class="fas fa-crown"></i>
+                        <strong>Administrador</strong><br>
+                        Puedes aprobar descuentos en <strong>todas las tiendas</strong>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success"></i> Descuentos hasta 25%</li>
+                        <li><i class="fas fa-check text-success"></i> Todas las tiendas</li>
+                        <li><i class="fas fa-check text-success"></i> Sin límite de monto</li>
+                        <li><i class="fas fa-check text-success"></i> Auditoría completa</li>
+                    </ul>
+                }
+                else if (User.IsInRole("Manager"))
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-star"></i>
+                        <strong>Manager</strong><br>
+                        Solo puedes aprobar en tu tienda asignada: <strong>@(User.FindFirst("store_id")?.Value ?? "N/A")</strong>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success"></i> Descuentos hasta 15%</li>
+                        <li><i class="fas fa-times text-danger"></i> Solo tu tienda</li>
+                        <li><i class="fas fa-check text-success"></i> Montos hasta $500</li>
+                        <li><i class="fas fa-check text-success"></i> Requiere justificación</li>
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-secondary">
+            <div class="card-header bg-secondary text-white">
+                <h5><i class="fas fa-chart-bar"></i> Estadísticas de Aprobación</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Tasa de Aprobación (Este Mes)</label>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: 78%">78%</div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Descuento Promedio</label>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" style="width: 12%">12%</div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Tiempo Promedio de Respuesta</label>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" style="width: 35%">2.1 horas</div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6>Acciones Rápidas:</h6>
+                <button class="btn btn-outline-success btn-sm me-2">
+                    <i class="fas fa-check-double"></i> Aprobar Todo Bajo 5%
+                </button>
+                <button class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-download"></i> Exportar Reporte
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-success mt-4">
+    <i class="fas fa-shield-check"></i>
+    <strong>Autorización Compleja Exitosa:</strong> Has pasado todas las validaciones de la política "CanApproveDiscounts". 
+    @if (User.IsInRole("Admin"))
+    {
+        <span>Como Admin, tienes acceso completo a todas las tiendas.</span>
+    }
+    else if (User.IsInRole("Manager"))
+    {
+        <span>Como Manager, solo puedes aprobar en tu tienda: @(User.FindFirst("store_id")?.Value ?? "N/A").</span>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Simular aprobaciones
+        document.querySelectorAll('.btn-success').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.innerHTML.includes('Aprobar')) {
+                    if (confirm('¿Aprobar este descuento?')) {
+                        this.closest('tr').style.backgroundColor = '#d4edda';
+                        this.innerHTML = '<i class="fas fa-check"></i> Aprobado';
+                        this.disabled = true;
+                        this.nextElementSibling.style.display = 'none';
+                    }
+                }
+            });
+        });
+        
+        document.querySelectorAll('.btn-danger').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.innerHTML.includes('Rechazar')) {
+                    if (confirm('¿Rechazar este descuento?')) {
+                        this.closest('tr').style.backgroundColor = '#f8d7da';
+                        this.innerHTML = '<i class="fas fa-times"></i> Rechazado';
+                        this.disabled = true;
+                        this.previousElementSibling.style.display = 'none';
+                    }
+                }
+            });
+        });
+        
+        console.log('ApproveDiscounts cargado');
+        console.log('Usuario:', '@User.Identity.Name');
+        console.log('Roles:', '@String.Join(", ", User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value))');
+        console.log('Store ID:', '@(User.FindFirst("store_id")?.Value ?? "N/A")');
+    </script>
+}
