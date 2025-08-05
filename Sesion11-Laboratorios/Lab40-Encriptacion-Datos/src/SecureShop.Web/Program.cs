@@ -19,8 +19,9 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IDigitalSignatureService, KeyVaultDigitalSignatureService>();
 
 // ===== CONFIGURACIÓN DE SERVICIOS DE ENCRIPTACIÓN (específico de Lab 40) =====
-builder.Services.AddScoped<IEncryptionService, KeyVaultEncryptionService>();
-builder.Services.AddSingleton<EncryptionConverterFactory>();
+// TODO: Implementar cuando se requiera - servicios específicos de encriptación
+// builder.Services.AddScoped<IEncryptionService, KeyVaultEncryptionService>();
+// builder.Services.AddSingleton<EncryptionConverterFactory>();
 
 // ===== CONFIGURACIÓN DE AUTORIZACIÓN AVANZADA =====
 
