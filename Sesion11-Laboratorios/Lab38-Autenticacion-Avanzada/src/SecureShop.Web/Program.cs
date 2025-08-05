@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
 using SecureShop.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ===== CONFIGURACIÓN DE AUTENTICACIÓN AZURE AD =====
-builder.Services.AddAuthentication()
+builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
 
 // ===== CONFIGURACIÓN DE AUTORIZACIÓN AVANZADA =====
@@ -71,7 +72,8 @@ builder.Services.AddAuthorization(options =>
 });
 
 // ===== CONFIGURACIÓN DE SERVICIOS ADICIONALES =====
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddMicrosoftIdentityUI();
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
