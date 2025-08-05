@@ -1,0 +1,128 @@
+@{
+    ViewData["Title"] = "Política de Privacidad";
+}
+
+<div class="text-center mb-4">
+    <h1><i class="fas fa-shield-alt text-primary"></i> Política de Privacidad</h1>
+    <p class="lead">SecureShop - Laboratorio de Seguridad Avanzada</p>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-info-circle"></i> Información General</h5>
+            </div>
+            <div class="card-body">
+                <p>Esta aplicación es un <strong>laboratorio de demostración</strong> para implementar características avanzadas de seguridad en ASP.NET Core con Azure AD.</p>
+                
+                <h6><i class="fas fa-database"></i> Datos Recopilados</h6>
+                <ul>
+                    <li>Información de perfil de Azure AD (nombre, email)</li>
+                    <li>Claims y tokens de autenticación</li>
+                    <li>Roles y permisos asignados</li>
+                    <li>Información de departamento y tienda</li>
+                    <li>Logs de actividad y auditoría</li>
+                </ul>
+                
+                <h6><i class="fas fa-lock"></i> Protección de Datos</h6>
+                <ul>
+                    <li>Todos los datos están cifrados en tránsito (HTTPS)</li>
+                    <li>Autenticación mediante Azure AD</li>
+                    <li>Autorización granular basada en roles y recursos</li>
+                    <li>Claims transformation para enriquecimiento seguro</li>
+                    <li>Logs de auditoría para todas las acciones</li>
+                </ul>
+                
+                <h6><i class="fas fa-users-cog"></i> Uso de Datos</h6>
+                <p>Los datos se utilizan exclusivamente para:</p>
+                <ul>
+                    <li>Demostrar funcionalidades de autenticación y autorización</li>
+                    <li>Implementar controles de acceso granulares</li>
+                    <li>Generar logs de auditoría con fines educativos</li>
+                    <li>Validar políticas de seguridad avanzadas</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h5><i class="fas fa-code"></i> Características Técnicas Implementadas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Autenticación</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Azure AD Integration</li>
+                            <li><i class="fas fa-check text-success"></i> OpenID Connect</li>
+                            <li><i class="fas fa-check text-success"></i> Claims Transformation</li>
+                            <li><i class="fas fa-check text-success"></i> Multi-factor Authentication</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Autorización</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Role-based Authorization</li>
+                            <li><i class="fas fa-check text-success"></i> Resource-based Authorization</li>
+                            <li><i class="fas fa-check text-success"></i> Custom Authorization Handlers</li>
+                            <li><i class="fas fa-check text-success"></i> Complex Policy Logic</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        @if (User.Identity!.IsAuthenticated)
+        {
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="fas fa-user"></i> Tu Información de Sesión</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Usuario:</strong> @(User.Identity.Name ?? User.FindFirst(ClaimTypes.Email)?.Value)
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Autenticado:</strong> <span class="badge bg-success">Sí</span>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <strong>Roles:</strong> 
+                            @foreach (var role in User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value))
+                            {
+                                <span class="badge bg-primary me-1">@role</span>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Departamento:</strong> @(User.FindFirst("department")?.Value ?? "N/A")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        
+        <div class="card mt-4">
+            <div class="card-header bg-warning text-dark">
+                <h5><i class="fas fa-exclamation-triangle"></i> Aviso Importante</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Entorno de Laboratorio:</strong> Esta aplicación es únicamente para fines educativos y de demostración. 
+                    No utilices datos personales reales o sensibles.
+                </div>
+                
+                <p class="text-muted">
+                    <small>
+                        <i class="fas fa-calendar"></i> Última actualización: @DateTime.Now.ToString("dd/MM/yyyy")<br>
+                        <i class="fas fa-code"></i> Versión: Lab38 - Autenticación y Autorización Avanzada<br>
+                        <i class="fas fa-university"></i> Curso: Desarrollo Seguro de Aplicaciones .NET en Azure
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
