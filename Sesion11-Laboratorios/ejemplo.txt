@@ -1,0 +1,22 @@
+"ADMIN"
+"CONTADOR"
+"TESEORERO"
+
+Roles:[
+        {
+            nomRol: "APROBADOR DESCUENTOS",
+            importe_maximo : 10000
+            moneda: soles,
+            porc_max_descuento: 25
+        },
+        {
+            nomRol: "TESEORERO",
+            importe_maximo : 0
+            moneda: soles,
+            porc_max_descuento: 0,
+            Sucursales: {"Sullana", "Piura"}
+        },
+],
+Departments:[
+    "Soporte", "Contabilidad"
+]
